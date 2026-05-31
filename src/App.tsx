@@ -15,7 +15,9 @@ import {
   MessageSquare, 
   RefreshCw,
   Sparkles,
-  Link2
+  Link2,
+  Phone,
+  PhoneOff
 } from 'lucide-react';
 import { ProfileDetails, Message } from './types';
 import MiteshProfileCard from './components/MiteshProfileCard';
@@ -36,6 +38,49 @@ export default function App() {
   const [autoSpeak, setAutoSpeak] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isFallback, setIsFallback] = useState(false);
+
+  // Active Hands-Free Voice Call status
+  const [isHandsFree, setIsHandsFree] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
+
+  // Timer for calling session
+  useEffect(() => {
+    let timerId: any;
+    if (isHandsFree) {
+      setCallDuration(0);
+      timerId = setInterval(() => {
+        setCallDuration(prev => prev + 1);
+      }, 1000);
+    } else {
+      setCallDuration(0);
+    }
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
+  }, [isHandsFree]);
+
+  // Continuous hands-free audio loop
+  useEffect(() => {
+    if (!isHandsFree) return;
+
+    // Only start speech recognition when Mitesh is silent, the system is not loading, we aren't already recording, and we are not muted!
+    if (!isSpeaking && !isLoading && !isRecording && !isMuted) {
+      const restartSpeechInput = () => {
+        try {
+          if (recognitionRef.current) {
+            recognitionRef.current.start();
+          }
+        } catch (e) {
+          console.warn('Continuous restart blocked:', e);
+        }
+      };
+
+      // Add a slight delay (600ms) to ensure audio context is completely quiet before starting to listen
+      const timeoutId = setTimeout(restartSpeechInput, 600);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isSpeaking, isLoading, isRecording, isHandsFree, isMuted]);
 
   // Time & telemetry states
   const [syncTime, setSyncTime] = useState('');
@@ -113,6 +158,10 @@ export default function App() {
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
         setIsRecording(false);
+        if (event.error === 'not-allowed') {
+          setIsHandsFree(false);
+          alert('Microphone permission denied or blocked. Please enable microphone permissions in your browser bar to talk to Mitesh through audio.');
+        }
       };
 
       recognition.onend = () => {
@@ -123,7 +172,7 @@ export default function App() {
     } else {
       console.warn('SpeechRecognition API not supported in this browser.');
     }
-  }, [voiceName, autoSpeak]);
+  }, [voiceName, autoSpeak, isHandsFree, isMuted]);
 
   // Scroll to bottom of message transcripts
   useEffect(() => {
@@ -340,7 +389,7 @@ export default function App() {
         </div>
         <div className="text-xs font-mono tracking-widest uppercase text-white/40 flex items-center gap-2">
           <Clock className="w-3.5 h-3.5 text-white/30" />
-          {syncTime || 'Synchronizing with CHRO cloud...'}
+          {syncTime || 'Synchronizing with Executive cloud...'}
         </div>
       </nav>
 
@@ -361,7 +410,7 @@ export default function App() {
               Strategic HR Focus
             </h4>
             <div className="flex flex-wrap gap-1.5 pt-1">
-              {['CHRO Choice Award 🏆', 'Sourcing Automation', 'LLM Local Testnets', 'Empathy Transition', 'Data Auditing', 'Talent Mapping'].map((label, idx) => (
+              {['HR Excellence Award 🏆', 'Sourcing Automation', 'LLM Local Testnets', 'Empathy Transition', 'Data Auditing', 'Talent Mapping'].map((label, idx) => (
                 <span key={idx} className="text-[10px] font-mono bg-white/5 border border-white/5 px-2 py-1 rounded text-white/80">
                   {label}
                 </span>
@@ -377,31 +426,55 @@ export default function App() {
         {/* Center Canvas: Interactive Dialogue Hub & Visualizer (6 cols) */}
         <main className="col-span-12 lg:col-span-6 flex flex-col justify-between bg-[#0A0A0B] lg:overflow-hidden border-b lg:border-b-0 border-white/10">
           
-          {/* Wave visualizer banner */}
-          <div className="p-6 border-b border-white/10 bg-white/[0.01] flex flex-col items-center justify-center relative">
-            <div className="absolute inset-0 bg-radial-at-t from-emerald-500/5 to-transparent pointer-events-none" />
-            
-            {/* Visualizer Frame */}
-            <div className="mb-4 mt-2">
-              <TalkingAvatar
-                isSpeaking={isSpeaking}
-                isRecording={isRecording}
-              />
-            </div>
+          {!isHandsFree ? (
+            <>
+              {/* Wave visualizer banner */}
+              <div className="p-6 border-b border-white/10 bg-white/[0.01] flex flex-col items-center justify-center relative">
+                <div className="absolute inset-0 bg-radial-at-t from-emerald-500/5 to-transparent pointer-events-none" />
+                
+                {/* Visualizer Frame */}
+                <div className="mb-4 mt-2">
+                  <TalkingAvatar
+                    isSpeaking={isSpeaking}
+                    isRecording={isRecording}
+                  />
+                </div>
 
-            <div className="text-center">
-              <span className="text-[10px] font-mono tracking-widest uppercase text-white/30">
-                Voice Synthesis Processing // Standard Frequency
-              </span>
-              <p className="text-sm font-serif italic text-white/80 max-w-md mt-1 leading-relaxed">
-                {isSpeaking 
-                  ? '"Speaking synthesized insights from my professional index..."' 
-                  : isRecording 
-                    ? '"Listening to voice input signature..."' 
-                    : '"Select a philosophy card or ask a custom question."'}
-              </p>
-            </div>
-          </div>
+                <div className="text-center">
+                  <span className="text-[10px] font-mono tracking-widest uppercase text-white/30">
+                    Voice Synthesis Processing // Standard Frequency
+                  </span>
+                  <p className="text-sm font-serif italic text-white/80 max-w-md mt-1 leading-relaxed">
+                    {isSpeaking 
+                      ? '"Speaking synthesized insights from my professional index..."' 
+                      : isRecording 
+                        ? '"Listening to voice input signature..."' 
+                        : '"Select a career role on the left or ask a custom question."'}
+                  </p>
+
+                  {/* CALL ESTABLISHMENT BUTTON */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsHandsFree(true);
+                      setAutoSpeak(true); // force autospeak for active voice calls
+                      setIsMuted(false);
+                      // Start mic
+                      if (recognitionRef.current) {
+                        try {
+                          recognitionRef.current.start();
+                        } catch (e) {
+                          console.warn('Initial call mic start:', e);
+                        }
+                      }
+                    }}
+                    className="mt-4 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl border border-emerald-500 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition duration-200"
+                  >
+                    <Phone className="w-4 h-4 animate-bounce" />
+                    Call Mitesh (Hands-Free Speech Mode)
+                  </button>
+                </div>
+              </div>
 
           {/* Dialog Log Timeline */}
           <div className="flex-1 p-6 overflow-y-auto space-y-4 max-h-[380px] min-h-[250px]">
@@ -503,6 +576,191 @@ export default function App() {
               </button>
             </div>
           </div>
+        </>
+      ) : (
+        /* Immersive Spoken Call Mode Template */
+        <div className="flex-1 flex flex-col justify-between p-6 bg-[#0B0C0E] select-none relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.04),transparent_70%)] pointer-events-none" />
+          
+          {/* Header Status Bar */}
+          <div className="flex items-center justify-between border-b border-white/10 pb-4">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span className="text-[11px] font-mono tracking-widest text-[#E0E0E0]/80 uppercase">
+                Secure Connected Hookup // Line MN-01
+              </span>
+            </div>
+            
+            {/* Timer Control */}
+            <div className="flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/30 rounded px-2.5 py-1 text-xs text-emerald-400 font-mono">
+              <Phone className="w-3.5 h-3.5 animate-pulse" />
+              {(() => {
+                const m = Math.floor(callDuration / 60).toString().padStart(2, '0');
+                const s = (callDuration % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+              })()}
+            </div>
+          </div>
+
+          {/* Central Audio Calling Node */}
+          <div className="my-auto flex flex-col items-center justify-center p-4">
+            <TalkingAvatar
+              isSpeaking={isSpeaking}
+              isRecording={isRecording && !isMuted}
+            />
+
+            {/* State Text Feed */}
+            <div className="text-center mt-6">
+              {isMuted ? (
+                <div className="text-amber-400 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 animate-pulse">
+                  <VolumeX className="w-3.5 h-3.5" />
+                  <span>Microphone Muted // Call On Hold</span>
+                </div>
+              ) : isLoading ? (
+                <div className="text-emerald-400 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-1.5">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Mitesh is formulating professional strategy...</span>
+                </div>
+              ) : isSpeaking ? (
+                <div className="text-emerald-400 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-1.5">
+                  <Volume2 className="w-3.5 h-3.5 animate-bounce" />
+                  <span>Mitesh is responding verbally...</span>
+                </div>
+              ) : isRecording ? (
+                <div className="text-rose-400 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 animate-pulse">
+                  <span className="w-2 h-2 rounded-full bg-rose-500" />
+                  <span>Line Active // Speak naturally, listening now</span>
+                </div>
+              ) : (
+                <div className="text-white/40 font-mono text-xs uppercase tracking-wider">
+                  <span>Awaiting vocal signal...</span>
+                </div>
+              )}
+
+              <p className="text-sm font-serif italic text-white/80 max-w-sm mt-2 leading-relaxed">
+                {isMuted 
+                  ? '"Your secure microphone is currently disabled. Toggle mute controls to resume."'
+                  : isLoading 
+                    ? '"Refining human resources intelligence datasets..."' 
+                    : isSpeaking 
+                      ? '"Discussing live talent algorithms based on my executive tenure..."'
+                      : isRecording 
+                        ? '"Listening to your spoken inquiry signature..."' 
+                        : '"Secure spoken portal established. What would you like to discuss?"'}
+              </p>
+            </div>
+
+            {/* Waveform graphic inside Call Panel */}
+            <div className="w-full max-w-sm mt-6">
+              <AcousticWave isPlaying={isSpeaking} isRecording={isRecording && !isMuted} />
+            </div>
+          </div>
+
+          {/* Scrollable Sub-Transcript Section (Catching Spoken History) */}
+          <div className="bg-[#111112]/60 border border-white/5 rounded-xl p-4 my-2 flex flex-col h-28 overflow-hidden">
+            <span className="text-[9px] font-mono text-white/30 uppercase tracking-widest block mb-1 border-b border-white/5 pb-1">
+              Audio Call Transcript // Live Dialogue Subtitles
+            </span>
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin">
+              {messages.slice(-4).map((msg, idx) => (
+                <p key={idx} className="text-xs leading-relaxed">
+                  <span className={`font-mono text-[10px] uppercase mr-1.5 ${
+                    msg.role === 'user' ? 'text-emerald-400/80' : 'text-white/40'
+                  }`}>
+                    {msg.role === 'user' ? 'Visitor:' : 'Mitesh DT:'}
+                  </span>
+                  <span className="text-white/80">{msg.content}</span>
+                </p>
+              ))}
+              {isLoading && (
+                <p className="text-[11px] italic font-mono text-white/30 animate-pulse">
+                  Mitesh is thinking...
+                </p>
+              )}
+              <div ref={transcriptEndRef} />
+            </div>
+          </div>
+
+          {/* Quick Talk Prompts Cluster (verbal spark triggers) */}
+          <div className="py-2 flex flex-col items-center">
+            <span className="text-[8.5px] font-mono text-[#E0E0E0]/35 uppercase tracking-widest mb-1.5 font-bold">
+              STUCK? TAP TO INSTANTLY ISSUE VERBAL INQUIRY
+            </span>
+            <div className="flex flex-wrap justify-center gap-1.5">
+              {[
+                { label: "AI & HR Charter", prompt: "How do you lead the AI transformation charter across all Yubi Group companies?" },
+                { label: "BYJU'S Scaling", prompt: "How did you manage talent scaling and attrition at BYJU'S as DVP of HR?" },
+                { label: "Structural Empathy", prompt: "Can you elaborate on your concept of structural empathy in high-growth organizational changes?" }
+              ].map((preset, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => submitChatMessage(preset.prompt)}
+                  className="px-2.5 py-1 text-[10px] font-mono border border-white/5 hover:border-emerald-500/30 bg-white/[0.02] hover:bg-emerald-500/10 text-white/70 hover:text-emerald-400 rounded transition duration-150"
+                >
+                  🗣️ {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Call Controls Bar */}
+          <div className="flex items-center justify-center gap-6 border-t border-white/10 pt-4 mt-2">
+            
+            {/* Mute toggle button */}
+            <button
+              type="button"
+              onClick={() => {
+                const nextMute = !isMuted;
+                setIsMuted(nextMute);
+                if (nextMute && isRecording) {
+                  try {
+                    recognitionRef.current?.stop();
+                  } catch(e) { console.warn(e); }
+                }
+              }}
+              className={`p-3.5 rounded-full border transition duration-200 outline-none flex items-center justify-center shrink-0 ${
+                isMuted 
+                  ? 'bg-amber-500/20 border-amber-500 text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.25)]' 
+                  : 'bg-white/5 border-white/10 text-white/70 hover:text-emerald-400 hover:border-emerald-500/30'
+              }`}
+              title={isMuted ? "Unmute microphone" : "Mute microphone"}
+            >
+              {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+            </button>
+
+            {/* RED END CALL BUTTON */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsHandsFree(false);
+                stopCurrentSpeech();
+              }}
+              className="p-4 bg-red-600 hover:bg-red-500 text-white rounded-full transition duration-200 shadow-[0_0_20px_rgba(239,68,68,0.4)] flex items-center justify-center hover:scale-105"
+              title="Hang up call"
+                >
+                  <PhoneOff className="w-6 h-6" />
+                </button>
+
+                {/* Standard keyboard view switcher */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsHandsFree(false);
+                    stopCurrentSpeech();
+                  }}
+                  className="p-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 hover:text-white rounded-full transition"
+                  title="Switch to Text Chats"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                </button>
+
+              </div>
+            </div>
+          )}
         </main>
 
         {/* Right Sidebar: Settings & Calibration dashboard (3 cols) */}
