@@ -1,0 +1,6 @@
+{
+  "name": "Mitesh Nijhara AI Audio Twin",
+  "description": "The AI-powered voice and speech twin of Mitesh Nijhara, Senior HR Leader and CHRO Strategist. Explore his strategic insights, technical HR solutions, and professional achievements.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
