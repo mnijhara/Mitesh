@@ -1,1 +1,1571 @@
-<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=./"><title>Sanjeevani Quest</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Hanuman Ji: The Sanjeevani Quest — Divine Flight</title>
+    <meta name="description" content="A mythic arcade flight adventure. Guide Hanuman Ji across the ocean, collect Sanjeevani, and reach Dronagiri. Play free in your browser." />
+    <meta name="theme-color" content="#210811" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --saffron: #FF6B00;
+            --gold: #FFD700;
+            --deep-maroon: #4A0E17;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at center, #2b0912 0%, #120309 100%);
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+        :focus-visible { outline: 3px solid #fff3b0; outline-offset: 3px; }
+        @media (prefers-reduced-motion: reduce) { .float-anim { animation: none; } }
+        .mythic-font {
+            font-family: 'Cinzel Decorative', cursive;
+        }
+        /* Ornate Gold Border Styling */
+        .ornate-border {
+            border: 3px solid #FFD700;
+            box-shadow: 0 0 25px rgba(255, 165, 0, 0.4), inset 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+        .btn-mythic {
+            background: linear-gradient(135deg, #FF8008 0%, #FFC837 100%);
+            color: #3a0808;
+            border: 2px solid #FFF3B0;
+            box-shadow: 0 6px 0 #b34700, 0 10px 20px rgba(255, 107, 0, 0.5);
+            transition: all 0.15s ease;
+        }
+        .btn-mythic:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #b34700, 0 14px 25px rgba(255, 107, 0, 0.7);
+        }
+        .btn-mythic:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #b34700, 0 5px 10px rgba(255, 107, 0, 0.4);
+        }
+        .ctrl-btn {
+            background: linear-gradient(180deg, rgba(74, 14, 23, 0.9) 0%, rgba(43, 9, 18, 0.95) 100%);
+            border: 2px solid #FFD700;
+            color: #FFD700;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            transition: all 0.1s;
+        }
+        .ctrl-btn:active, .ctrl-btn.active {
+            background: linear-gradient(180deg, #FF8008 0%, #b34700 100%);
+            color: #fff;
+            transform: scale(0.95);
+        }
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .float-anim {
+            animation: floatSlow 3s ease-in-out infinite;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-between p-2 sm:p-4 overflow-hidden">
+
+    <!-- Top Header / HUD Bar outside Canvas -->
+    <header class="w-full max-w-5xl flex flex-wrap items-center justify-between gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-[#3b0d11]/90 via-[#59151d]/90 to-[#3b0d11]/90 ornate-border z-10 shrink-0">
+        <!-- Brand Title -->
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg border border-yellow-200">
+                <i class="fa-solid fa-om text-xl text-red-950"></i>
+            </div>
+            <div>
+                <h1 class="mythic-font text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-400 tracking-wider leading-tight">
+                    SANJEEVANI QUEST
+                </h1>
+                <p class="text-[11px] text-amber-200/80 hidden sm:block">Fly across the ocean to Dronagiri Mountain</p>
+            </div>
+        </div>
+
+        <!-- Live Stats -->
+        <div class="flex items-center gap-3 sm:gap-6">
+            <!-- Prana (Health) -->
+            <div class="flex flex-col items-center">
+                <span class="text-[10px] uppercase tracking-widest text-amber-300 font-semibold">Prana (Life)</span>
+                <div id="healthContainer" class="flex gap-1 mt-0.5 text-red-500 text-base sm:text-lg drop-shadow">
+                    <i class="fa-solid fa-heart"></i>
+                    <i class="fa-solid fa-heart"></i>
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+            </div>
+
+            <!-- Score -->
+            <div class="bg-black/40 px-3 py-1 rounded-xl border border-amber-500/40 text-center min-w-[85px]">
+                <span class="text-[10px] uppercase tracking-widest text-amber-300 block">Punya Score</span>
+                <span id="scoreDisplay" class="mythic-font text-lg sm:text-xl font-bold text-yellow-300">0</span>
+            </div>
+
+            <!-- High Score -->
+            <div class="bg-black/40 px-3 py-1 rounded-xl border border-amber-500/40 text-center min-w-[85px] hidden md:block">
+                <span class="text-[10px] uppercase tracking-widest text-amber-300 block">High Score</span>
+                <span id="highScoreDisplay" class="mythic-font text-lg sm:text-xl font-bold text-orange-400">0</span>
+            </div>
+
+            <!-- Sound & Pause Buttons -->
+            <div class="flex items-center gap-2">
+                <button id="soundToggleBtn" aria-label="Toggle game sound" aria-pressed="true" class="ctrl-btn w-9 h-9 rounded-xl flex items-center justify-center" title="Toggle Divine Sound">
+                    <i id="soundIcon" class="fa-solid fa-volume-high text-sm"></i>
+                </button>
+                <button id="pauseBtn" aria-label="Pause game" aria-pressed="false" class="ctrl-btn w-9 h-9 rounded-xl flex items-center justify-center" title="Pause Game">
+                    <i id="pauseIcon" class="fa-solid fa-pause text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Canvas Container -->
+    <main class="relative w-full max-w-5xl flex-1 my-2 rounded-2xl overflow-hidden ornate-border bg-black">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Active Power-up Status Overlay inside Canvas Top-Left -->
+        <div id="powerupHud" class="absolute top-3 left-3 flex flex-col gap-2 pointer-events-none z-10"></div>
+
+        <!-- Start Screen Overlay -->
+        <div id="startScreen" class="absolute inset-0 bg-gradient-to-b from-[#1a050a]/90 via-[#2d0912]/85 to-[#120206]/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-20">
+            <div class="max-w-lg w-full bg-[#2a0810]/90 ornate-border rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden">
+                <!-- Decorative Glow -->
+                <div class="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-40 bg-orange-500/20 blur-3xl pointer-events-none"></div>
+
+                <div class="inline-block px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 text-xs font-semibold tracking-widest uppercase mb-2">
+                    <i class="fa-solid fa-sun mr-1"></i> Jai Bajrangbali <i class="fa-solid fa-sun ml-1"></i>
+                </div>
+
+                <h2 class="mythic-font text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-400 to-orange-500 drop-shadow mb-2">
+                    THE SANJEEVANI QUEST
+                </h2>
+                <p class="text-amber-100/90 text-xs sm:text-sm mb-4 leading-relaxed">
+                    Lakshmana lies wounded on the battlefield of Lanka! Soar as <strong class="text-amber-300">Lord Hanuman</strong> across the turbulent ocean toward the Himalayas to gather the glowing <strong class="text-emerald-300">Sanjeevani Booti</strong> herbs.
+                </p>
+
+                <!-- Legend / Guide Grid -->
+                <div class="grid grid-cols-2 gap-2.5 text-left mb-5 bg-black/40 p-3 rounded-2xl border border-amber-500/30 text-xs">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-lg bg-emerald-900/70 border border-emerald-400 flex items-center justify-center text-emerald-300 shrink-0">
+                            <i class="fa-solid fa-leaf"></i>
+                        </span>
+                        <div>
+                            <div class="font-bold text-emerald-300">Sanjeevani Herb</div>
+                            <div class="text-[10px] text-amber-200/70">+50 Points & Healing</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-lg bg-pink-900/70 border border-pink-400 flex items-center justify-center text-pink-300 shrink-0">
+                            <i class="fa-solid fa-spa"></i>
+                        </span>
+                        <div>
+                            <div class="font-bold text-pink-300">Swarna Kamal</div>
+                            <div class="text-[10px] text-amber-200/70">Golden Lotus (+25 Pts)</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-lg bg-amber-900/70 border border-amber-400 flex items-center justify-center text-amber-300 shrink-0">
+                            <i class="fa-solid fa-hammer"></i>
+                        </span>
+                        <div>
+                            <div class="font-bold text-amber-300">Gada Smash</div>
+                            <div class="text-[10px] text-amber-200/70">Crush clouds & demons!</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-lg bg-cyan-900/70 border border-cyan-400 flex items-center justify-center text-cyan-300 shrink-0">
+                            <i class="fa-solid fa-wind"></i>
+                        </span>
+                        <div>
+                            <div class="font-bold text-cyan-300">Vayu Putra Boost</div>
+                            <div class="text-[10px] text-amber-200/70">Supersonic wind flight!</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls Info -->
+                <div class="text-[11px] text-amber-200/80 mb-5 bg-amber-950/40 py-2 px-3 rounded-xl border border-amber-500/20">
+                    <span class="font-semibold text-yellow-300"><i class="fa-solid fa-gamepad mr-1"></i> Controls:</span>
+                    Hold <kbd class="px-1.5 py-0.5 bg-black/60 rounded border border-amber-400/50 text-amber-200">SPACE</kbd> / <kbd class="px-1.5 py-0.5 bg-black/60 rounded border border-amber-400/50 text-amber-200">↑</kbd> <kbd class="px-1.5 py-0.5 bg-black/60 rounded border border-amber-400/50 text-amber-200">↓</kbd> Arrows, or Touch/Click screen & buttons below.
+                </div>
+
+                <button id="startBtn" class="btn-mythic mythic-font text-base sm:text-lg font-black px-8 py-3 rounded-full tracking-wider uppercase cursor-pointer">
+                    <i class="fa-solid fa-bolt mr-2"></i> Begin Sacred Flight
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Over Screen Overlay -->
+        <div id="gameOverScreen" class="hidden absolute inset-0 bg-gradient-to-b from-[#1a050a]/95 via-[#2d0912]/90 to-[#120206]/95 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center z-20">
+            <div class="max-w-md w-full bg-[#2a0810]/95 ornate-border rounded-3xl p-6 sm:p-8 shadow-2xl">
+                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center border-2 border-yellow-200 shadow-lg float-anim">
+                    <i class="fa-solid fa-mountain-sun text-2xl text-red-950"></i>
+                </div>
+
+                <h2 class="mythic-font text-2xl sm:text-3xl font-extrabold text-amber-400 mb-1">
+                    JOURNEY INTERRUPTED
+                </h2>
+                <p id="gameOverReason" class="text-xs sm:text-sm text-amber-200/80 mb-5">
+                    The storm over the ocean grew fierce, yet Hanuman's devotion never wavers!
+                </p>
+
+                <!-- Stats Summary -->
+                <div class="grid grid-cols-3 gap-2 mb-6 bg-black/50 p-3.5 rounded-2xl border border-amber-500/30">
+                    <div>
+                        <div class="text-[10px] uppercase text-amber-300/70">Final Score</div>
+                        <div id="finalScore" class="mythic-font text-xl font-bold text-yellow-300">0</div>
+                    </div>
+                    <div class="border-x border-amber-500/20">
+                        <div class="text-[10px] uppercase text-emerald-300/70">Sanjeevani</div>
+                        <div id="finalHerbs" class="mythic-font text-xl font-bold text-emerald-400">0</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] uppercase text-orange-300/70">Best Score</div>
+                        <div id="finalHighScore" class="mythic-font text-xl font-bold text-orange-400">0</div>
+                    </div>
+                </div>
+
+                <button id="restartBtn" class="btn-mythic mythic-font text-base sm:text-lg font-black px-8 py-3 rounded-full tracking-wider uppercase cursor-pointer w-full">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> Fly Again (Jai Hanuman!)
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Interactive Controls Row outside Canvas -->
+    <footer class="w-full max-w-5xl flex items-center justify-between gap-2 px-3 py-1.5 rounded-2xl bg-[#3b0d11]/90 ornate-border z-10 shrink-0">
+        <div class="flex items-center gap-2">
+            <button id="btnUp" class="ctrl-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2">
+                <i class="fa-solid fa-arrow-up"></i> <span>Ascend (Up)</span>
+            </button>
+            <button id="btnDown" class="ctrl-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2">
+                <i class="fa-solid fa-arrow-down"></i> <span>Dive (Down)</span>
+            </button>
+        </div>
+
+        <div class="hidden md:flex items-center gap-4 text-xs text-amber-200/80">
+            <span><i class="fa-solid fa-leaf text-emerald-400 mr-1"></i> Herbs Collected: <strong id="herbCountHud" class="text-emerald-300">0</strong></span>
+            <span><i class="fa-solid fa-skull text-red-400 mr-1"></i> Dodge Surasa & Storm Clouds</span>
+        </div>
+
+        <button id="btnBoost" class="ctrl-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 border-amber-400">
+            <i class="fa-solid fa-hands-praying text-amber-400"></i> <span>Chant "Jai Shri Ram"</span>
+        </button>
+    </footer>
+
+    <script>
+        /**
+         * HANUMAN JI: THE SANJEEVANI QUEST
+         * Complete HTML5 Canvas Side-Scrolling Mythological Runner/Flyer
+         */
+
+        // --- WEB AUDIO SYNTHESIZER (No External Audio Dependencies) ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playTone(freq, type, duration, vol = 0.12, slideFreq = null) {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    if (slideFreq) {
+                        osc.frequency.exponentialRampToValueAtTime(slideFreq, this.ctx.currentTime + duration);
+                    }
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            playHerb() {
+                // Divine chime arpeggio
+                this.playTone(587.33, 'sine', 0.18, 0.15);
+                setTimeout(() => this.playTone(880, 'sine', 0.25, 0.15), 70);
+                setTimeout(() => this.playTone(1174.66, 'triangle', 0.35, 0.12), 140);
+            }
+            playLotus() {
+                this.playTone(523.25, 'sine', 0.15, 0.12);
+                setTimeout(() => this.playTone(659.25, 'sine', 0.2, 0.12), 60);
+            }
+            playPowerup() {
+                // Shankh (Conch shell) inspired rising resonance
+                this.playTone(220, 'sawtooth', 0.5, 0.08, 440);
+                setTimeout(() => this.playTone(440, 'triangle', 0.45, 0.15, 660), 120);
+            }
+            playSmash() {
+                this.playTone(140, 'square', 0.22, 0.18, 45);
+            }
+            playHit() {
+                this.playTone(110, 'sawtooth', 0.35, 0.2, 38);
+            }
+            playChant() {
+                this.playTone(293.66, 'sine', 0.25, 0.1);
+                setTimeout(() => this.playTone(369.99, 'sine', 0.25, 0.1), 100);
+                setTimeout(() => this.playTone(440.00, 'sine', 0.4, 0.12), 200);
+            }
+        }
+
+        const sfx = new SoundEngine();
+
+        // --- CANVAS & DOM ELEMENTS ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const healthContainer = document.getElementById('healthContainer');
+        const herbCountHud = document.getElementById('herbCountHud');
+        const powerupHud = document.getElementById('powerupHud');
+
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalScore = document.getElementById('finalScore');
+        const finalHerbs = document.getElementById('finalHerbs');
+        const finalHighScore = document.getElementById('finalHighScore');
+        const gameOverReason = document.getElementById('gameOverReason');
+
+        // --- GAME STATE ---
+        let gameState = 'START'; // START, PLAYING, PAUSED, GAMEOVER
+        let score = 0;
+        let highScore = 0;
+        try { highScore = Math.max(0, Number.parseInt(localStorage.getItem('hanuman_sanjeevani_highscore') || '0', 10) || 0); } catch (_) { highScore = 0; }
+        let herbsCollected = 0;
+        let frameCount = 0;
+        let gameSpeed = 4.2;
+        let screenShake = 0;
+        let lightningFlash = 0;
+
+        highScoreDisplay.textContent = highScore;
+
+        // Input state
+        const keys = {
+            up: false,
+            down: false,
+            pointerActive: false,
+            pointerY: 0
+        };
+
+        // --- HANUMAN PLAYER OBJECT ---
+        const hanuman = {
+            x: 130,
+            y: 220,
+            vy: 0,
+            width: 76,
+            height: 46,
+            maxHealth: 3,
+            health: 3,
+            invulnerableTimer: 0,
+            gadaSmashTimer: 0,     // Invincibility + obstacle destruction
+            windBoostTimer: 0,     // Vayu Putra speed + magnet
+            gadaAngle: 0,
+            scarfWave: 0,
+            trail: [],
+
+            reset() {
+                this.x = Math.min(140, canvas.width * 0.18);
+                this.y = canvas.height * 0.42;
+                this.vy = 0;
+                this.health = this.maxHealth;
+                this.invulnerableTimer = 0;
+                this.gadaSmashTimer = 0;
+                this.windBoostTimer = 0;
+                this.trail = [];
+                updateHealthUI();
+            },
+
+            update() {
+                const accel = 0.58;
+                const maxVy = 7.5;
+
+                // Controls: Up / Space / Touch-Hold
+                if (keys.up && !keys.down) {
+                    this.vy -= accel;
+                } else if (keys.down && !keys.up) {
+                    this.vy += accel;
+                } else if (keys.pointerActive) {
+                    // Smoothly fly towards touch/mouse Y position or ascend on hold
+                    const diff = keys.pointerY - this.y;
+                    this.vy += Math.sign(diff) * Math.min(Math.abs(diff) * 0.04, accel * 1.2);
+                } else {
+                    // Gentle gravity pull when idle in flight
+                    this.vy += 0.22;
+                }
+
+                // Damping & Clamping
+                this.vy *= 0.92;
+                this.vy = Math.max(-maxVy, Math.min(maxVy, this.vy));
+                this.y += this.vy;
+
+                // Keep above ocean waves and below top sky limit
+                const minY = 45;
+                const maxY = canvas.height - 82;
+                if (this.y < minY) {
+                    this.y = minY;
+                    this.vy = 0;
+                }
+                if (this.y > maxY) {
+                    this.y = maxY;
+                    this.vy = -1.5;
+                }
+
+                // Timers
+                if (this.invulnerableTimer > 0) this.invulnerableTimer--;
+                if (this.gadaSmashTimer > 0) this.gadaSmashTimer--;
+                if (this.windBoostTimer > 0) this.windBoostTimer--;
+
+                this.scarfWave += 0.18;
+                this.gadaAngle += this.gadaSmashTimer > 0 ? 0.35 : 0.08;
+
+                // Aura trail particles
+                if (frameCount % 2 === 0) {
+                    this.trail.push({
+                        x: this.x - 25,
+                        y: this.y + (Math.random() - 0.5) * 14,
+                        r: this.windBoostTimer > 0 ? 9 : 6,
+                        alpha: 0.75,
+                        color: this.windBoostTimer > 0 ? '#67e8f9' : (this.gadaSmashTimer > 0 ? '#fde047' : '#fb923c')
+                    });
+                }
+                for (let i = this.trail.length - 1; i >= 0; i--) {
+                    this.trail[i].x -= gameSpeed * 1.1;
+                    this.trail[i].alpha -= 0.045;
+                    this.trail[i].r *= 0.95;
+                    if (this.trail[i].alpha <= 0) this.trail.splice(i, 1);
+                }
+            },
+
+            draw() {
+                // Draw flight aura trail
+                for (const t of this.trail) {
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, t.alpha);
+                    ctx.fillStyle = t.color;
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Blink when recovering from damage
+                if (this.invulnerableTimer > 0 && Math.floor(frameCount / 4) % 2 === 0) {
+                    ctx.globalAlpha = 0.45;
+                }
+
+                // Slight tilt with vertical velocity
+                const tilt = Math.max(-0.28, Math.min(0.28, this.vy * 0.035));
+                ctx.rotate(tilt);
+
+                // 1. Power-up Protective Shields
+                if (this.gadaSmashTimer > 0) {
+                    ctx.save();
+                    const pulse = 52 + Math.sin(frameCount * 0.25) * 6;
+                    const grad = ctx.createRadialGradient(0, 0, 15, 0, 0, pulse);
+                    grad.addColorStop(0, 'rgba(255, 215, 0, 0.05)');
+                    grad.addColorStop(0.7, 'rgba(255, 165, 0, 0.35)');
+                    grad.addColorStop(1, 'rgba(255, 215, 0, 0.85)');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, pulse, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                if (this.windBoostTimer > 0) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(103, 232, 249, 0.8)';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(6, 0, 48, -Math.PI * 0.45, Math.PI * 0.45);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // 2. Divine Halo (Prabhamandala) behind Hanuman Ji's head
+                ctx.save();
+                const haloGrad = ctx.createRadialGradient(18, -8, 2, 18, -8, 22);
+                haloGrad.addColorStop(0, 'rgba(255, 250, 190, 0.95)');
+                haloGrad.addColorStop(0.6, 'rgba(255, 180, 0, 0.45)');
+                haloGrad.addColorStop(1, 'rgba(255, 120, 0, 0)');
+                ctx.fillStyle = haloGrad;
+                ctx.beginPath();
+                ctx.arc(18, -8, 22, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // 3. Flowing Vanara Tail (curved and dynamic)
+                ctx.save();
+                ctx.strokeStyle = '#9a5b32';
+                ctx.lineWidth = 5;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(-18, 4);
+                const tailWave = Math.sin(this.scarfWave) * 10;
+                ctx.bezierCurveTo(-42, -16 + tailWave, -55, 14 - tailWave, -68, -8 + tailWave * 0.6);
+                ctx.stroke();
+                // Golden tail bell/tip
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(-68, -8 + tailWave * 0.6, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // 4. Flowing Saffron Angavastram (Scarf)
+                ctx.save();
+                ctx.strokeStyle = '#FF5500';
+                ctx.lineWidth = 6;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(4, -4);
+                ctx.quadraticCurveTo(-24, -14 + Math.cos(this.scarfWave) * 8, -48, -6 + Math.sin(this.scarfWave) * 10);
+                ctx.stroke();
+                ctx.restore();
+
+                // 5. Legs & Red Dhoti in superhero flying posture
+                ctx.fillStyle = '#d97736'; // Warm golden-tan skin
+                // Back leg
+                ctx.beginPath();
+                ctx.ellipse(-22, 10, 14, 5.5, 0.15, 0, Math.PI * 2);
+                ctx.fill();
+                // Crimson & Gold Dhoti
+                ctx.fillStyle = '#dc2626';
+                ctx.beginPath();
+                ctx.ellipse(-8, 6, 13, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // 6. Muscular Torso & Janeu (Sacred Thread)
+                ctx.fillStyle = '#e08244';
+                ctx.beginPath();
+                ctx.ellipse(4, 2, 15, 10, -0.1, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Sacred golden chest necklace & Janeu
+                ctx.strokeStyle = '#FFF3B0';
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.moveTo(10, -6);
+                ctx.lineTo(-4, 9);
+                ctx.stroke();
+
+                // 7. Head & Noble Face
+                ctx.fillStyle = '#e08244';
+                ctx.beginPath();
+                ctx.arc(18, -6, 10, 0, Math.PI * 2);
+                ctx.fill();
+                // Jaw/Muzzle contour
+                ctx.beginPath();
+                ctx.arc(24, -4, 6.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Eye (Focused & Radiant)
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(22, -8, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#3a0808';
+                ctx.beginPath();
+                ctx.arc(23, -8, 1.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Saffron Tilak on forehead
+                ctx.strokeStyle = '#FF3300';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(25, -12);
+                ctx.lineTo(27, -9);
+                ctx.stroke();
+
+                // 8. Ornate Golden Mukut (Crown)
+                ctx.fillStyle = '#FFD700';
+                ctx.strokeStyle = '#B45309';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(10, -12);
+                ctx.lineTo(14, -24);
+                ctx.lineTo(19, -18);
+                ctx.lineTo(23, -26);
+                ctx.lineTo(26, -13);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Ruby gem in Crown
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(19, -15, 2.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Kundal (Golden Earring)
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(14, -3, 3, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // 9. Outstretched Front Arm & Kaumodaki/Gada (Golden Mace)
+                ctx.fillStyle = '#e08244';
+                ctx.beginPath();
+                ctx.ellipse(24, 4, 12, 4.5, -0.15, 0, Math.PI * 2);
+                ctx.fill();
+                // Golden Bajuband/Bracelet
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(28, 1, 3, 6);
+
+                // Golden Gada (Spins when Gada Smash is active!)
+                ctx.save();
+                ctx.translate(36, 2);
+                if (this.gadaSmashTimer > 0) {
+                    ctx.rotate(this.gadaAngle);
+                } else {
+                    ctx.rotate(0.45);
+                }
+                // Handle
+                ctx.fillStyle = '#B45309';
+                ctx.fillRect(-2, -16, 4, 22);
+                // Ornate Spherical Mace Head
+                const gadaGrad = ctx.createRadialGradient(-2, -20, 2, 0, -20, 11);
+                gadaGrad.addColorStop(0, '#FFFBEB');
+                gadaGrad.addColorStop(0.4, '#FFD700');
+                gadaGrad.addColorStop(1, '#B45309');
+                ctx.fillStyle = gadaGrad;
+                ctx.beginPath();
+                ctx.arc(0, -20, 10, 0, Math.PI * 2);
+                ctx.fill();
+                // Mace Crown tip
+                ctx.beginPath();
+                ctx.moveTo(-4, -29);
+                ctx.lineTo(0, -35);
+                ctx.lineTo(4, -29);
+                ctx.fill();
+                ctx.restore();
+
+                ctx.restore();
+            }
+        };
+
+        // --- PARALLAX BACKGROUND & ENVIRONMENT ---
+        const stars = [];
+        const mountainsFar = [];
+        const mountainsNear = [];
+        let waveOffset = 0;
+
+        function initEnvironment() {
+            stars.length = 0;
+            for (let i = 0; i < 45; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * (canvas.height * 0.55),
+                    r: Math.random() * 1.8 + 0.5,
+                    twinkle: Math.random() * Math.PI * 2
+                });
+            }
+
+            mountainsFar.length = 0;
+            let mx = 0;
+            while (mx < canvas.width + 400) {
+                const w = 160 + Math.random() * 140;
+                const h = 90 + Math.random() * 95;
+                mountainsFar.push({ x: mx, w, h });
+                mx += w * 0.65;
+            }
+
+            mountainsNear.length = 0;
+            mx = 0;
+            while (mx < canvas.width + 400) {
+                const w = 120 + Math.random() * 110;
+                const h = 55 + Math.random() * 65;
+                mountainsNear.push({ x: mx, w, h, hasHerbGlow: Math.random() > 0.6 });
+                mx += w * 0.7;
+            }
+        }
+
+        function drawBackground() {
+            // 1. Saffron / Twilight Mythological Sky Gradient
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGrad.addColorStop(0, '#1e0521');    // Deep cosmic indigo-maroon top
+            skyGrad.addColorStop(0.35, '#6b1126'); // Rich crimson twilight
+            skyGrad.addColorStop(0.7, '#d9480f');  // Radiant saffron
+            skyGrad.addColorStop(0.9, '#f59f00');  // Golden horizon
+            skyGrad.addColorStop(1, '#184e77');    // Ocean base
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Lightning flash effect
+            if (lightningFlash > 0) {
+                ctx.fillStyle = `rgba(255, 250, 220, ${lightningFlash * 0.35})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                lightningFlash -= 0.08;
+            }
+
+            // 2. Twinkling Stars & Ashrams in the sky
+            for (const s of stars) {
+                s.x -= gameSpeed * 0.08;
+                if (s.x < 0) s.x = canvas.width;
+                const alpha = 0.4 + Math.sin(frameCount * 0.05 + s.twinkle) * 0.35;
+                ctx.fillStyle = `rgba(255, 243, 176, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 3. Glowing Rising/Setting Sun (Surya Dev Mandala)
+            const sunX = canvas.width * 0.75;
+            const sunY = canvas.height * 0.54;
+            const sunGrad = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, 130);
+            sunGrad.addColorStop(0, 'rgba(255, 252, 210, 0.95)');
+            sunGrad.addColorStop(0.35, 'rgba(255, 195, 0, 0.65)');
+            sunGrad.addColorStop(0.7, 'rgba(255, 87, 34, 0.25)');
+            sunGrad.addColorStop(1, 'rgba(255, 87, 34, 0)');
+            ctx.fillStyle = sunGrad;
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, 130, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 4. Far Himalayan Snow Peaks (Dronagiri Range)
+            const oceanTop = canvas.height - 54;
+            for (let i = 0; i < mountainsFar.length; i++) {
+                const m = mountainsFar[i];
+                m.x -= gameSpeed * 0.22;
+
+                // Draw Mountain Peak
+                ctx.fillStyle = '#4a153b';
+                ctx.beginPath();
+                ctx.moveTo(m.x, oceanTop);
+                ctx.lineTo(m.x + m.w * 0.5, oceanTop - m.h);
+                ctx.lineTo(m.x + m.w, oceanTop);
+                ctx.closePath();
+                ctx.fill();
+
+                // Golden-white Snow Cap
+                ctx.fillStyle = 'rgba(255, 235, 200, 0.35)';
+                ctx.beginPath();
+                ctx.moveTo(m.x + m.w * 0.5, oceanTop - m.h);
+                ctx.lineTo(m.x + m.w * 0.36, oceanTop - m.h * 0.72);
+                ctx.lineTo(m.x + m.w * 0.5, oceanTop - m.h * 0.78);
+                ctx.lineTo(m.x + m.w * 0.64, oceanTop - m.h * 0.72);
+                ctx.closePath();
+                ctx.fill();
+            }
+            // Recycle far mountains
+            if (mountainsFar.length && mountainsFar[0].x + mountainsFar[0].w < -50) {
+                const first = mountainsFar.shift();
+                const last = mountainsFar[mountainsFar.length - 1];
+                first.x = last.x + last.w * 0.65;
+                mountainsFar.push(first);
+            }
+
+            // 5. Near Foothills with glowing Sanjeevani aura
+            for (let i = 0; i < mountainsNear.length; i++) {
+                const m = mountainsNear[i];
+                m.x -= gameSpeed * 0.48;
+
+                ctx.fillStyle = '#2d0b28';
+                ctx.beginPath();
+                ctx.moveTo(m.x, oceanTop);
+                ctx.lineTo(m.x + m.w * 0.5, oceanTop - m.h);
+                ctx.lineTo(m.x + m.w, oceanTop);
+                ctx.closePath();
+                ctx.fill();
+            }
+            if (mountainsNear.length && mountainsNear[0].x + mountainsNear[0].w < -50) {
+                const first = mountainsNear.shift();
+                const last = mountainsNear[mountainsNear.length - 1];
+                first.x = last.x + last.w * 0.7;
+                mountainsNear.push(first);
+            }
+        }
+
+        function drawOceanForeground() {
+            waveOffset += gameSpeed * 0.04;
+            const baseH = canvas.height - 48;
+
+            // Back wave layer
+            ctx.fillStyle = '#0b3954';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            for (let x = 0; x <= canvas.width + 20; x += 20) {
+                const y = baseH + Math.sin(x * 0.025 + waveOffset) * 7;
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+
+            // Front shimmering Indian Ocean wave layer
+            const seaGrad = ctx.createLinearGradient(0, baseH, 0, canvas.height);
+            seaGrad.addColorStop(0, '#126782');
+            seaGrad.addColorStop(0.3, '#023047');
+            seaGrad.addColorStop(1, '#011627');
+            ctx.fillStyle = seaGrad;
+
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            for (let x = 0; x <= canvas.width + 20; x += 20) {
+                const y = (baseH + 10) + Math.cos(x * 0.03 + waveOffset * 1.3) * 8;
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+
+            // Golden sunset reflection crest on waves
+            ctx.strokeStyle = 'rgba(255, 200, 87, 0.55)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let x = 0; x <= canvas.width + 20; x += 20) {
+                const y = (baseH + 10) + Math.cos(x * 0.03 + waveOffset * 1.3) * 8;
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+
+        // --- COLLECTIBLES, OBSTACLES & PARTICLES ---
+        const collectibles = [];
+        const obstacles = [];
+        const particles = [];
+        const floatingTexts = [];
+
+        function spawnFloatingText(text, x, y, color = '#FFD700') {
+            floatingTexts.push({ text, x, y, color, alpha: 1, vy: -1.4 });
+        }
+
+        function spawnBurst(x, y, color, count = 14) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1.5 + Math.random() * 4.5;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    r: 2.5 + Math.random() * 3.5,
+                    color,
+                    alpha: 1
+                });
+            }
+        }
+
+        function spawnCollectible() {
+            const rand = Math.random();
+            let type = 'LOTUS'; // Swarna Kamal (+25)
+            if (rand > 0.88) {
+                type = Math.random() > 0.5 ? 'GADA' : 'WIND'; // Power-ups
+            } else if (rand > 0.45) {
+                type = 'SANJEEVANI'; // Glowing Herb (+50 & Heal)
+            }
+
+            const y = 65 + Math.random() * (canvas.height - 165);
+            collectibles.push({
+                type,
+                x: canvas.width + 50,
+                y,
+                baseY: y,
+                r: type === 'SANJEEVANI' ? 20 : 18,
+                phase: Math.random() * Math.PI * 2
+            });
+        }
+
+        function spawnObstacle() {
+            const rand = Math.random();
+            if (rand < 0.45) {
+                // Dark Storm Cloud with Lightning Bolt
+                obstacles.push({
+                    type: 'CLOUD',
+                    x: canvas.width + 70,
+                    y: 55 + Math.random() * (canvas.height * 0.48),
+                    r: 30,
+                    strikeTimer: Math.floor(Math.random() * 80)
+                });
+            } else if (rand < 0.78) {
+                // Surasa / Simhika Sea Demon rising from the Ocean Waves
+                const maxRise = canvas.height - 95 - Math.random() * 65;
+                obstacles.push({
+                    type: 'DEMON',
+                    x: canvas.width + 70,
+                    y: canvas.height - 45,
+                    targetY: maxRise,
+                    r: 32,
+                    jawAngle: 0
+                });
+            } else {
+                // Mayavi Rakshasa Fireball / Rahu Shadow Orb flying horizontally
+                obstacles.push({
+                    type: 'ASTRA',
+                    x: canvas.width + 70,
+                    y: 80 + Math.random() * (canvas.height - 180),
+                    r: 22,
+                    speedMult: 1.35
+                });
+            }
+        }
+
+        function updateAndDrawCollectibles() {
+            for (let i = collectibles.length - 1; i >= 0; i--) {
+                const c = collectibles[i];
+                c.phase += 0.08;
+                c.y = c.baseY + Math.sin(c.phase) * 10;
+
+                // Wind Boost magnet effect pulls herbs & lotuses toward Hanuman Ji
+                if (hanuman.windBoostTimer > 0) {
+                    const dx = hanuman.x - c.x;
+                    const dy = hanuman.y - c.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < 240) {
+                        c.x += (dx / dist) * 7;
+                        c.y += (dy / dist) * 7;
+                    }
+                }
+
+                c.x -= gameSpeed;
+
+                // Draw Collectible
+                ctx.save();
+                ctx.translate(c.x, c.y);
+
+                if (c.type === 'SANJEEVANI') {
+                    // Radiant Emerald-Gold Aura
+                    const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 28);
+                    glow.addColorStop(0, 'rgba(110, 231, 183, 0.95)');
+                    glow.addColorStop(0.5, 'rgba(16, 185, 129, 0.45)');
+                    glow.addColorStop(1, 'rgba(16, 185, 129, 0)');
+                    ctx.fillStyle = glow;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 28, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Sacred Glowing Leaves
+                    ctx.fillStyle = '#34d399';
+                    ctx.strokeStyle = '#ecfdf5';
+                    ctx.lineWidth = 1.5;
+                    for (let angle of [-0.5, 0, 0.5]) {
+                        ctx.save();
+                        ctx.rotate(angle);
+                        ctx.beginPath();
+                        ctx.ellipse(0, -4, 5, 12, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                    // Golden Sparkle Core
+                    ctx.fillStyle = '#fef08a';
+                    ctx.beginPath();
+                    ctx.arc(0, -6, 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                } else if (c.type === 'LOTUS') {
+                    // Golden Swarna Kamal (Lotus)
+                    const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 22);
+                    glow.addColorStop(0, 'rgba(251, 207, 232, 0.8)');
+                    glow.addColorStop(1, 'rgba(244, 114, 182, 0)');
+                    ctx.fillStyle = glow;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 22, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#f472b6';
+                    ctx.strokeStyle = '#fde047';
+                    ctx.lineWidth = 1.2;
+                    for (let a of [-0.7, -0.35, 0, 0.35, 0.7]) {
+                        ctx.save();
+                        ctx.rotate(a);
+                        ctx.beginPath();
+                        ctx.ellipse(0, -5, 4.5, 10, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                } else if (c.type === 'GADA') {
+                    // Gada Smash Power-up Orb
+                    ctx.fillStyle = 'rgba(250, 204, 21, 0.3)';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 24, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#facc15';
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#fde047';
+                    ctx.beginPath();
+                    ctx.arc(0, -4, 7, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillRect(-2, 2, 4, 10);
+                } else if (c.type === 'WIND') {
+                    // Vayu Putra Wind Boost Orb
+                    ctx.fillStyle = 'rgba(34, 211, 238, 0.28)';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 24, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#67e8f9';
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+
+                    // Swirl icon
+                    ctx.strokeStyle = '#ecfeff';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 9, 0, Math.PI * 1.4);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+
+                // Check Collision with Hanuman Ji
+                const dist = Math.hypot(hanuman.x - c.x, hanuman.y - c.y);
+                if (dist < c.r + 28) {
+                    if (c.type === 'SANJEEVANI') {
+                        score += 50;
+                        herbsCollected++;
+                        herbCountHud.textContent = herbsCollected;
+                        if (hanuman.health < hanuman.maxHealth) {
+                            hanuman.health++;
+                            updateHealthUI();
+                            spawnFloatingText('SANJEEVANI +50 & PRANA!', c.x, c.y, '#34d399');
+                        } else {
+                            spawnFloatingText('SANJEEVANI +50!', c.x, c.y, '#34d399');
+                        }
+                        sfx.playHerb();
+                        spawnBurst(c.x, c.y, '#34d399', 18);
+                    } else if (c.type === 'LOTUS') {
+                        score += 25;
+                        sfx.playLotus();
+                        spawnFloatingText('SWARNA KAMAL +25', c.x, c.y, '#f472b6');
+                        spawnBurst(c.x, c.y, '#f472b6', 12);
+                    } else if (c.type === 'GADA') {
+                        hanuman.gadaSmashTimer = 360; // 6 seconds
+                        score += 40;
+                        sfx.playPowerup();
+                        spawnFloatingText('BAJRANG GADA SMASH!', c.x, c.y, '#fde047');
+                        spawnBurst(c.x, c.y, '#fde047', 22);
+                    } else if (c.type === 'WIND') {
+                        hanuman.windBoostTimer = 300; // 5 seconds
+                        score += 40;
+                        sfx.playPowerup();
+                        spawnFloatingText('VAYU PUTRA SPEED!', c.x, c.y, '#67e8f9');
+                        spawnBurst(c.x, c.y, '#67e8f9', 22);
+                    }
+                    collectibles.splice(i, 1);
+                    continue;
+                }
+
+                if (c.x < -60) collectibles.splice(i, 1);
+            }
+        }
+
+        function updateAndDrawObstacles() {
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const o = obstacles[i];
+                const speedMult = o.speedMult || 1;
+                o.x -= gameSpeed * speedMult;
+
+                if (o.type === 'DEMON') {
+                    // Rise out of the sea waves as it gets closer
+                    if (o.y > o.targetY) {
+                        o.y -= 2.2;
+                    }
+                    o.jawAngle = Math.sin(frameCount * 0.15) * 0.25;
+                } else if (o.type === 'CLOUD') {
+                    o.strikeTimer++;
+                    if (o.strikeTimer % 110 === 0 && o.x < canvas.width && o.x > 60) {
+                        lightningFlash = 0.6;
+                    }
+                }
+
+                // Draw Obstacle
+                ctx.save();
+                ctx.translate(o.x, o.y);
+
+                if (o.type === 'CLOUD') {
+                    // Dark Thunder Cloud
+                    ctx.fillStyle = '#1e1b2e';
+                    ctx.beginPath();
+                    ctx.arc(-16, 4, 20, 0, Math.PI * 2);
+                    ctx.arc(16, 4, 20, 0, Math.PI * 2);
+                    ctx.arc(0, -10, 24, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#6d28d9';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Angry glowing storm eyes
+                    ctx.fillStyle = '#facc15';
+                    ctx.beginPath();
+                    ctx.arc(-8, -4, 3, 0, Math.PI * 2);
+                    ctx.arc(8, -4, 3, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Periodic Lightning Bolt underneath
+                    const boltActive = (o.strikeTimer % 110) > 75;
+                    if (boltActive) {
+                        ctx.strokeStyle = '#fef08a';
+                        ctx.lineWidth = 3.5;
+                        ctx.beginPath();
+                        ctx.moveTo(0, 14);
+                        ctx.lineTo(-10, 32);
+                        ctx.lineTo(4, 34);
+                        ctx.lineTo(-6, 56);
+                        ctx.stroke();
+                    }
+
+                } else if (o.type === 'DEMON') {
+                    // Sea Demoness (Surasa / Simhika) rising from ocean
+                    // Scaled Serpent Neck
+                    ctx.fillStyle = '#064e3b';
+                    ctx.fillRect(-16, 10, 32, 120);
+
+                    // Fierce Demon Head
+                    ctx.fillStyle = '#047857';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 30, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Horns
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.beginPath();
+                    ctx.moveTo(-14, -22);
+                    ctx.lineTo(-26, -42);
+                    ctx.lineTo(-4, -28);
+                    ctx.moveTo(14, -22);
+                    ctx.lineTo(26, -42);
+                    ctx.lineTo(4, -28);
+                    ctx.fill();
+
+                    // Glowing Red Eyes
+                    ctx.fillStyle = '#ef4444';
+                    ctx.beginPath();
+                    ctx.arc(-10, -8, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#fef08a';
+                    ctx.beginPath();
+                    ctx.arc(-11, -8, 2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Fanged Mouth
+                    ctx.fillStyle = '#7f1d1d';
+                    ctx.beginPath();
+                    ctx.arc(-10, 10, 14, 0, Math.PI);
+                    ctx.fill();
+                    // Sharp Fangs
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.moveTo(-18, 10);
+                    ctx.lineTo(-14, 18);
+                    ctx.lineTo(-10, 10);
+                    ctx.moveTo(-6, 10);
+                    ctx.lineTo(-2, 18);
+                    ctx.lineTo(2, 10);
+                    ctx.fill();
+
+                } else if (o.type === 'ASTRA') {
+                    // Dark Mayavi Shadow Fireball
+                    const orbGrad = ctx.createRadialGradient(0, 0, 4, 0, 0, 24);
+                    orbGrad.addColorStop(0, '#fca5a5');
+                    orbGrad.addColorStop(0.5, '#dc2626');
+                    orbGrad.addColorStop(1, 'rgba(127, 29, 29, 0)');
+                    ctx.fillStyle = orbGrad;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 24, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#450a0a';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 11, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+
+                // Collision Check
+                let hitDist = Math.hypot(hanuman.x - o.x, hanuman.y - o.y);
+                let hitRadius = o.r + 22;
+
+                // Extra lightning hitbox below cloud when bolt is active
+                if (o.type === 'CLOUD' && (o.strikeTimer % 110) > 75) {
+                    const boltDist = Math.hypot(hanuman.x - o.x, hanuman.y - (o.y + 38));
+                    if (boltDist < 28) hitDist = 0;
+                }
+
+                if (hitDist < hitRadius) {
+                    if (hanuman.gadaSmashTimer > 0 || hanuman.windBoostTimer > 0) {
+                        // Destroy obstacle with Gada Smash or Wind Boost!
+                        score += 35;
+                        sfx.playSmash();
+                        screenShake = 8;
+                        spawnFloatingText('SMASHED +35!', o.x, o.y, '#fde047');
+                        spawnBurst(o.x, o.y, '#fb923c', 20);
+                        obstacles.splice(i, 1);
+                        continue;
+                    } else if (hanuman.invulnerableTimer <= 0) {
+                        // Take Damage
+                        hanuman.health--;
+                        hanuman.invulnerableTimer = 85;
+                        screenShake = 14;
+                        sfx.playHit();
+                        updateHealthUI();
+                        spawnFloatingText('OUCH!', hanuman.x, hanuman.y - 20, '#ef4444');
+                        spawnBurst(hanuman.x, hanuman.y, '#ef4444', 16);
+
+                        if (hanuman.health <= 0) {
+                            triggerGameOver(o.type);
+                            return;
+                        }
+                    }
+                }
+
+                if (o.x < -80) obstacles.splice(i, 1);
+            }
+        }
+
+        function updateAndDrawParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.03;
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                const ft = floatingTexts[i];
+                ft.y += ft.vy;
+                ft.alpha -= 0.022;
+                if (ft.alpha <= 0) {
+                    floatingTexts.splice(i, 1);
+                    continue;
+                }
+                ctx.save();
+                ctx.globalAlpha = ft.alpha;
+                ctx.font = 'bold 15px "Poppins", sans-serif';
+                ctx.fillStyle = ft.color;
+                ctx.shadowColor = '#000';
+                ctx.shadowBlur = 6;
+                ctx.textAlign = 'center';
+                ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore();
+            }
+        }
+
+        // --- UI UPDATES ---
+        function updateHealthUI() {
+            healthContainer.innerHTML = '';
+            for (let i = 0; i < hanuman.maxHealth; i++) {
+                const icon = document.createElement('i');
+                if (i < hanuman.health) {
+                    icon.className = 'fa-solid fa-heart text-red-500 drop-shadow';
+                } else {
+                    icon.className = 'fa-regular fa-heart text-red-900/60';
+                }
+                healthContainer.appendChild(icon);
+            }
+        }
+
+        function updatePowerupHUD() {
+            let html = '';
+            if (hanuman.gadaSmashTimer > 0) {
+                const secs = Math.ceil(hanuman.gadaSmashTimer / 60);
+                html += `
+                    <div class="bg-amber-950/90 border border-yellow-400 px-3 py-1 rounded-xl flex items-center gap-2 text-xs text-yellow-300 shadow-lg">
+                        <i class="fa-solid fa-hammer animate-bounce"></i>
+                        <span>Gada Smash: <strong>${secs}s</strong></span>
+                    </div>
+                `;
+            }
+            if (hanuman.windBoostTimer > 0) {
+                const secs = Math.ceil(hanuman.windBoostTimer / 60);
+                html += `
+                    <div class="bg-cyan-950/90 border border-cyan-400 px-3 py-1 rounded-xl flex items-center gap-2 text-xs text-cyan-300 shadow-lg">
+                        <i class="fa-solid fa-wind animate-pulse"></i>
+                        <span>Vayu Putra Speed: <strong>${secs}s</strong></span>
+                    </div>
+                `;
+            }
+            powerupHud.innerHTML = html;
+        }
+
+        // --- GAME FLOW FUNCTIONS ---
+        function startGame() {
+            sfx.init();
+            sfx.playChant();
+            score = 0;
+            herbsCollected = 0;
+            frameCount = 0;
+            gameSpeed = 4.2;
+            collectibles.length = 0;
+            obstacles.length = 0;
+            particles.length = 0;
+            floatingTexts.length = 0;
+
+            herbCountHud.textContent = '0';
+            scoreDisplay.textContent = '0';
+
+            hanuman.reset();
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            gameState = 'PLAYING';
+        }
+
+        function triggerGameOver(obstacleType) {
+            gameState = 'GAMEOVER';
+            if (score > highScore) {
+                highScore = Math.floor(score);
+                try { localStorage.setItem('hanuman_sanjeevani_highscore', String(highScore)); } catch (_) { /* Play remains available when storage is blocked. */ }
+                highScoreDisplay.textContent = highScore;
+            }
+
+            if (obstacleType === 'DEMON') {
+                gameOverReason.textContent = 'Surasa, mother of Nagas, blocked your path across the ocean! Rise with renewed devotion!';
+            } else if (obstacleType === 'CLOUD') {
+                gameOverReason.textContent = 'Fierce thunderbolts struck across the sky! Call upon Vayu Dev and soar again!';
+            } else {
+                gameOverReason.textContent = 'Mayavi Rakshasa magic intercepted your flight! Chant Jai Shri Ram and fly once more!';
+            }
+
+            finalScore.textContent = Math.floor(score);
+            finalHerbs.textContent = herbsCollected;
+            finalHighScore.textContent = highScore;
+            gameOverScreen.classList.remove('hidden');
+        }
+
+        // --- MAIN ANIMATION LOOP ---
+        function gameLoop() {
+            ctx.save();
+
+            // Apply Screen Shake if active
+            if (screenShake > 0) {
+                const dx = (Math.random() - 0.5) * screenShake;
+                const dy = (Math.random() - 0.5) * screenShake;
+                ctx.translate(dx, dy);
+                screenShake *= 0.85;
+                if (screenShake < 0.5) screenShake = 0;
+            }
+
+            drawBackground();
+
+            if (gameState === 'PLAYING') {
+                frameCount++;
+
+                // Speed progression + Vayu Putra Wind Boost
+                const baseProgression = 4.2 + Math.min(3.8, frameCount / 1800);
+                gameSpeed = hanuman.windBoostTimer > 0 ? baseProgression * 1.65 : baseProgression;
+
+                // Distance score increment
+                if (frameCount % 10 === 0) {
+                    score += hanuman.windBoostTimer > 0 ? 2 : 1;
+                    scoreDisplay.textContent = Math.floor(score);
+                    if (score > highScore) {
+                        highScore = Math.floor(score);
+                        highScoreDisplay.textContent = highScore;
+                    }
+                }
+
+                // Spawners
+                if (frameCount % 55 === 0) spawnCollectible();
+                const obstacleInterval = Math.max(52, Math.floor(95 - frameCount / 150));
+                if (frameCount % obstacleInterval === 0) spawnObstacle();
+
+                hanuman.update();
+                updateAndDrawCollectibles();
+                updateAndDrawObstacles();
+                hanuman.draw();
+                updateAndDrawParticles();
+                updatePowerupHUD();
+
+            } else {
+                // Idle flight preview on Start / Pause / GameOver screen
+                frameCount++;
+                hanuman.y = canvas.height * 0.42 + Math.sin(frameCount * 0.05) * 14;
+                hanuman.scarfWave += 0.12;
+                hanuman.draw();
+                updateAndDrawParticles();
+            }
+
+            drawOceanForeground();
+
+            // Pause Banner on Canvas
+            if (gameState === 'PAUSED') {
+                ctx.fillStyle = 'rgba(18, 3, 9, 0.65)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.font = 'bold 32px "Cinzel Decorative", cursive';
+                ctx.fillStyle = '#FFD700';
+                ctx.textAlign = 'center';
+                ctx.fillText('MEDITATION PAUSE', canvas.width / 2, canvas.height / 2 - 10);
+                ctx.font = '14px "Poppins", sans-serif';
+                ctx.fillStyle = '#fde68a';
+                ctx.fillText('Press P or tap the Pause button to resume flight', canvas.width / 2, canvas.height / 2 + 22);
+            }
+
+            ctx.restore();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- RESPONSIVE CANVAS RESIZING ---
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            initEnvironment();
+            if (hanuman.y > canvas.height - 85) {
+                hanuman.y = canvas.height * 0.45;
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- INPUT LISTENERS (Keyboard, Mouse, Touch, UI Buttons) ---
+        window.addEventListener('keydown', (e) => {
+            if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) {
+                e.preventDefault();
+                keys.up = true;
+            }
+            if (['ArrowDown', 'KeyS'].includes(e.code)) {
+                e.preventDefault();
+                keys.down = true;
+            }
+            if (e.code === 'KeyP' && (gameState === 'PLAYING' || gameState === 'PAUSED')) {
+                togglePause();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) {
+                keys.up = false;
+            }
+            if (['ArrowDown', 'KeyS'].includes(e.code)) {
+                keys.down = false;
+            }
+        });
+
+        // Direct Canvas Touch / Mouse Flight Control
+        function handlePointerPos(clientY) {
+            const rect = canvas.getBoundingClientRect();
+            keys.pointerY = clientY - rect.top;
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            keys.pointerActive = true;
+            handlePointerPos(e.clientY);
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (keys.pointerActive) handlePointerPos(e.clientY);
+        });
+        window.addEventListener('mouseup', () => {
+            keys.pointerActive = false;
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) {
+                keys.pointerActive = true;
+                handlePointerPos(e.touches[0].clientY);
+            }
+        }, { passive: true });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                handlePointerPos(e.touches[0].clientY);
+            }
+        }, { passive: true });
+
+        canvas.addEventListener('touchend', () => {
+            keys.pointerActive = false;
+        });
+
+        // Bottom Control Bar Buttons
+        const btnUp = document.getElementById('btnUp');
+        const btnDown = document.getElementById('btnDown');
+        const btnBoost = document.getElementById('btnBoost');
+
+        const bindHoldButton = (btn, keyName) => {
+            const start = (e) => { e.preventDefault(); keys[keyName] = true; btn.classList.add('active'); };
+            const end = (e) => { e.preventDefault(); keys[keyName] = false; btn.classList.remove('active'); };
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', end);
+            btn.addEventListener('mouseleave', end);
+            btn.addEventListener('touchstart', start, { passive: false });
+            btn.addEventListener('touchend', end, { passive: false });
+        };
+
+        bindHoldButton(btnUp, 'up');
+        bindHoldButton(btnDown, 'down');
+
+        // "Jai Shri Ram" Devotional Chant Button (Grants celebratory aura burst + small bonus)
+        btnBoost.addEventListener('click', () => {
+            if (gameState !== 'PLAYING') return;
+            sfx.init();
+            sfx.playChant();
+            spawnFloatingText('JAI SHRI RAM!', hanuman.x + 20, hanuman.y - 28, '#FFD700');
+            spawnBurst(hanuman.x, hanuman.y, '#FFD700', 15);
+        });
+
+        // Start, Restart, Pause & Sound Buttons
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('restartBtn').addEventListener('click', startGame);
+
+        function togglePause() {
+            const pauseIcon = document.getElementById('pauseIcon');
+            if (gameState === 'PLAYING') {
+                gameState = 'PAUSED';
+                pauseIcon.className = 'fa-solid fa-play text-sm';
+            } else if (gameState === 'PAUSED') {
+                gameState = 'PLAYING';
+                pauseIcon.className = 'fa-solid fa-pause text-sm';
+            }
+        }
+
+        document.getElementById('pauseBtn').addEventListener('click', togglePause);
+
+        document.getElementById('soundToggleBtn').addEventListener('click', () => {
+            sfx.init();
+            sfx.enabled = !sfx.enabled;
+            const soundIcon = document.getElementById('soundIcon');
+            soundIcon.className = sfx.enabled ? 'fa-solid fa-volume-high text-sm' : 'fa-solid fa-volume-xmark text-sm text-red-400';
+        });
+
+        // Start on Window Load
+        window.onload = function () {
+            resizeCanvas();
+            hanuman.reset();
+            gameLoop();
+        };
+    </script>
+</body>
+</html>
