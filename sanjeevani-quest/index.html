@@ -6,6 +6,11 @@
     <title>Hanuman Ji: The Sanjeevani Quest — Divine Flight</title>
     <meta name="description" content="A mythic arcade flight adventure. Guide Hanuman Ji across the ocean, collect Sanjeevani, and reach Dronagiri. Play free in your browser." />
     <meta name="theme-color" content="#210811" />
+    <meta property="og:title" content="Hanuman Ji: The Sanjeevani Quest" />
+    <meta property="og:description" content="A mythic arcade flight adventure. Collect Sanjeevani, master divine power-ups, and fly to Dronagiri." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Hanuman Ji: The Sanjeevani Quest" />
+    <meta property="og:description" content="Soar across the ocean, gather sacred herbs, and chase your high score." />
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,6 +21,7 @@
             --deep-maroon: #4A0E17;
         }
         body {
+            min-height: 100dvh;
             margin: 0;
             padding: 0;
             background: radial-gradient(circle at center, #2b0912 0%, #120309 100%);
@@ -26,7 +32,6 @@
             touch-action: none;
         }
         :focus-visible { outline: 3px solid #fff3b0; outline-offset: 3px; }
-        @media (prefers-reduced-motion: reduce) { .float-anim { animation: none; } }
         .mythic-font {
             font-family: 'Cinzel Decorative', cursive;
         }
@@ -69,6 +74,15 @@
         .float-anim {
             animation: floatSlow 3s ease-in-out infinite;
         }
+        @media (max-height: 620px) {
+            body { padding-top: 4px !important; padding-bottom: 4px !important; }
+            header { padding-top: 4px !important; padding-bottom: 4px !important; }
+            footer { padding-top: 4px !important; padding-bottom: 4px !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .float-anim { animation: none; }
+            *, *::before, *::after { scroll-behavior: auto !important; }
+        }
         canvas {
             display: block;
             width: 100%;
@@ -89,7 +103,7 @@
                 <h1 class="mythic-font text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-400 tracking-wider leading-tight">
                     SANJEEVANI QUEST
                 </h1>
-                <p class="text-[11px] text-amber-200/80 hidden sm:block">Fly across the ocean to Dronagiri Mountain</p>
+                <p class="text-[11px] text-amber-200/80 hidden sm:block">A divine arcade flight • Reach Dronagiri Mountain</p>
             </div>
         </div>
 
@@ -119,7 +133,7 @@
 
             <!-- Sound & Pause Buttons -->
             <div class="flex items-center gap-2">
-                <button id="soundToggleBtn" aria-label="Toggle game sound" aria-pressed="true" class="ctrl-btn w-9 h-9 rounded-xl flex items-center justify-center" title="Toggle Divine Sound">
+                <button id="soundToggleBtn" aria-label="Toggle game sound" aria-pressed="false" class="ctrl-btn w-9 h-9 rounded-xl flex items-center justify-center" title="Toggle Divine Sound">
                     <i id="soundIcon" class="fa-solid fa-volume-high text-sm"></i>
                 </button>
                 <button id="pauseBtn" aria-label="Pause game" aria-pressed="false" class="ctrl-btn w-9 h-9 rounded-xl flex items-center justify-center" title="Pause Game">
@@ -131,10 +145,18 @@
 
     <!-- Main Game Canvas Container -->
     <main class="relative w-full max-w-5xl flex-1 my-2 rounded-2xl overflow-hidden ornate-border bg-black">
-        <canvas id="gameCanvas"></canvas>
+        <canvas id="gameCanvas" role="img" aria-label="Interactive Sanjeevani Quest game. Use arrow keys, space, or touch to fly Hanuman Ji." tabindex="0"></canvas>
 
         <!-- Active Power-up Status Overlay inside Canvas Top-Left -->
         <div id="powerupHud" class="absolute top-3 left-3 flex flex-col gap-2 pointer-events-none z-10"></div>
+
+        <!-- Live quest progression HUD -->
+        <section id="questHud" class="absolute top-3 right-3 z-10 pointer-events-none w-44 sm:w-56 rounded-xl border border-amber-300/40 bg-[#18050dcc] px-3 py-2 shadow-xl" aria-live="polite">
+            <div class="flex items-center justify-between gap-2"><span id="questChapter" class="text-[10px] sm:text-xs uppercase tracking-widest text-amber-300 font-bold">Chapter I</span><span id="questPercent" class="text-[10px] text-amber-100">0%</span></div>
+            <div id="questTitle" class="text-xs sm:text-sm font-bold text-yellow-100 mt-0.5">Ocean of Courage</div>
+            <div class="h-1.5 rounded-full bg-black/70 overflow-hidden mt-2"><div id="questProgress" class="h-full rounded-full bg-gradient-to-r from-emerald-400 via-yellow-300 to-orange-400" style="width:0%"></div></div>
+            <div id="questHint" class="text-[9px] sm:text-[10px] text-amber-100/70 mt-1">Fly onward and gather sacred herbs</div>
+        </section>
 
         <!-- Start Screen Overlay -->
         <div id="startScreen" class="absolute inset-0 bg-gradient-to-b from-[#1a050a]/90 via-[#2d0912]/85 to-[#120206]/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-20">
@@ -196,7 +218,7 @@
                 <!-- Controls Info -->
                 <div class="text-[11px] text-amber-200/80 mb-5 bg-amber-950/40 py-2 px-3 rounded-xl border border-amber-500/20">
                     <span class="font-semibold text-yellow-300"><i class="fa-solid fa-gamepad mr-1"></i> Controls:</span>
-                    Hold <kbd class="px-1.5 py-0.5 bg-black/60 rounded border border-amber-400/50 text-amber-200">SPACE</kbd> / <kbd class="px-1.5 py-0.5 bg-black/60 rounded border border-amber-400/50 text-amber-200">↑</kbd> <kbd class="px-1.5 py-0.5 bg-black/60 rounded border border-amber-400/50 text-amber-200">↓</kbd> Arrows, or Touch/Click screen & buttons below.
+                    Hold <kbd class="px-1.5 py-0.5 bg-black/60 rounded border border-amber-400/50 text-amber-200">SPACE</kbd> / <kbd class="px-1.5 py-0.5 bg-black/60 rounded border border-amber-400/50 text-amber-200">↑</kbd> or <kbd class="px-1.5 py-0.5 bg-black/60 rounded border border-amber-400/50 text-amber-200">↓</kbd>. On mobile, drag on the flight area or use the flight buttons. Collect herbs, dodge threats, and beat your best score.
                 </div>
 
                 <button id="startBtn" class="btn-mythic mythic-font text-base sm:text-lg font-black px-8 py-3 rounded-full tracking-wider uppercase cursor-pointer">
@@ -245,10 +267,10 @@
     <!-- Bottom Interactive Controls Row outside Canvas -->
     <footer class="w-full max-w-5xl flex items-center justify-between gap-2 px-3 py-1.5 rounded-2xl bg-[#3b0d11]/90 ornate-border z-10 shrink-0">
         <div class="flex items-center gap-2">
-            <button id="btnUp" class="ctrl-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2">
+            <button id="btnUp" aria-label="Hold to ascend" class="ctrl-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2">
                 <i class="fa-solid fa-arrow-up"></i> <span>Ascend (Up)</span>
             </button>
-            <button id="btnDown" class="ctrl-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2">
+            <button id="btnDown" aria-label="Hold to dive" class="ctrl-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2">
                 <i class="fa-solid fa-arrow-down"></i> <span>Dive (Down)</span>
             </button>
         </div>
@@ -258,7 +280,7 @@
             <span><i class="fa-solid fa-skull text-red-400 mr-1"></i> Dodge Surasa & Storm Clouds</span>
         </div>
 
-        <button id="btnBoost" class="ctrl-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 border-amber-400">
+        <button id="btnBoost" aria-label="Play Jai Shri Ram chant and create a divine particle burst" class="ctrl-btn px-4 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 border-amber-400">
             <i class="fa-solid fa-hands-praying text-amber-400"></i> <span>Chant "Jai Shri Ram"</span>
         </button>
     </footer>
@@ -359,6 +381,14 @@
         let gameSpeed = 4.2;
         let screenShake = 0;
         let lightningFlash = 0;
+        let questChapter = 0;
+        let chapterToastTimer = 0;
+        const questChapters = [
+            { name: 'Ocean of Courage', hint: 'Survive the crossing and collect sacred herbs', goal: 900, reward: 100 },
+            { name: 'Storm Realm', hint: 'Master the winds and evade the thunder', goal: 1800, reward: 150 },
+            { name: 'Himalayan Ascent', hint: 'The Dronagiri peaks are drawing near', goal: 2700, reward: 200 },
+            { name: 'Sanjeevani Summit', hint: 'Complete the sacred flight of devotion', goal: 3600, reward: 300 }
+        ];
 
         highScoreDisplay.textContent = highScore;
 
@@ -1322,6 +1352,45 @@
             powerupHud.innerHTML = html;
         }
 
+        // --- QUEST PROGRESSION ---
+        function updateQuestHUD(reset = false) {
+            const chapter = questChapters[Math.min(questChapter, questChapters.length - 1)];
+            const start = questChapter === 0 ? 0 : questChapters[questChapter - 1].goal;
+            const span = Math.max(1, chapter.goal - start);
+            const progress = Math.max(0, Math.min(100, ((frameCount - start) / span) * 100));
+            const chapterEl = document.getElementById('questChapter');
+            const titleEl = document.getElementById('questTitle');
+            const hintEl = document.getElementById('questHint');
+            const progressEl = document.getElementById('questProgress');
+            const percentEl = document.getElementById('questPercent');
+            if (chapterEl) chapterEl.textContent = `Chapter ${['I','II','III','IV'][Math.min(questChapter, 3)]}`;
+            if (titleEl) titleEl.textContent = chapter.name;
+            if (hintEl) hintEl.textContent = chapter.hint;
+            if (progressEl) progressEl.style.width = `${progress}%`;
+            if (percentEl) percentEl.textContent = `${Math.floor(progress)}%`;
+            if (reset) {
+                const hud = document.getElementById('questHud');
+                if (hud) hud.style.borderColor = 'rgba(252,211,77,.4)';
+            }
+        }
+
+        function advanceQuestChapter() {
+            if (questChapter >= questChapters.length - 1) return;
+            questChapter++;
+            const chapter = questChapters[questChapter];
+            score += chapter.reward;
+            if (hanuman.health < hanuman.maxHealth) hanuman.health++;
+            updateHealthUI();
+            updateQuestHUD();
+            scoreDisplay.textContent = Math.floor(score);
+            spawnFloatingText(`CHAPTER COMPLETE +${chapter.reward}`, canvas.width * .5, canvas.height * .34, '#fde68a');
+            spawnFloatingText(chapter.name.toUpperCase(), canvas.width * .5, canvas.height * .42, '#34d399');
+            spawnBurst(hanuman.x + 30, hanuman.y, '#facc15', 30);
+            screenShake = 7;
+            chapterToastTimer = 180;
+            sfx.playPowerup();
+        }
+
         // --- GAME FLOW FUNCTIONS ---
         function startGame() {
             sfx.init();
@@ -1329,6 +1398,8 @@
             score = 0;
             herbsCollected = 0;
             frameCount = 0;
+            questChapter = 0;
+            chapterToastTimer = 0;
             gameSpeed = 4.2;
             collectibles.length = 0;
             obstacles.length = 0;
@@ -1337,6 +1408,7 @@
 
             herbCountHud.textContent = '0';
             scoreDisplay.textContent = '0';
+            updateQuestHUD(true);
 
             hanuman.reset();
             startScreen.classList.add('hidden');
@@ -1383,6 +1455,10 @@
 
             if (gameState === 'PLAYING') {
                 frameCount++;
+                const nextChapter = questChapters[questChapter];
+                if (nextChapter && frameCount >= nextChapter.goal) advanceQuestChapter();
+                updateQuestHUD();
+                if (chapterToastTimer > 0) chapterToastTimer--;
 
                 // Speed progression + Vayu Putra Wind Boost
                 const baseProgression = 4.2 + Math.min(3.8, frameCount / 1800);
@@ -1392,10 +1468,7 @@
                 if (frameCount % 10 === 0) {
                     score += hanuman.windBoostTimer > 0 ? 2 : 1;
                     scoreDisplay.textContent = Math.floor(score);
-                    if (score > highScore) {
-                        highScore = Math.floor(score);
-                        highScoreDisplay.textContent = highScore;
-                    }
+                    highScoreDisplay.textContent = highScore;
                 }
 
                 // Spawners
@@ -1420,6 +1493,25 @@
             }
 
             drawOceanForeground();
+
+            // Brief celebration when a story chapter is completed.
+            if (gameState === 'PLAYING' && chapterToastTimer > 0) {
+                const alpha = Math.min(1, chapterToastTimer / 35);
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = 'rgba(25, 5, 12, 0.72)';
+                ctx.fillRect(canvas.width * .14, canvas.height * .20, canvas.width * .72, 58);
+                ctx.strokeStyle = '#facc15'; ctx.lineWidth = 1.5;
+                ctx.strokeRect(canvas.width * .14, canvas.height * .20, canvas.width * .72, 58);
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#fde68a';
+                ctx.font = 'bold 15px "Cinzel Decorative", cursive';
+                ctx.fillText('SACRED MILESTONE', canvas.width / 2, canvas.height * .20 + 23);
+                ctx.fillStyle = '#d1fae5';
+                ctx.font = '12px "Poppins", sans-serif';
+                ctx.fillText(`+${questChapters[questChapter].reward} Punya • Prana restored`, canvas.width / 2, canvas.height * .20 + 43);
+                ctx.restore();
+            }
 
             // Pause Banner on Canvas
             if (gameState === 'PAUSED') {
@@ -1450,6 +1542,9 @@
         }
 
         window.addEventListener('resize', resizeCanvas);
+        if ('ResizeObserver' in window) {
+            new ResizeObserver(() => resizeCanvas()).observe(canvas.parentElement);
+        }
 
         // --- INPUT LISTENERS (Keyboard, Mouse, Touch, UI Buttons) ---
         window.addEventListener('keydown', (e) => {
@@ -1461,7 +1556,7 @@
                 e.preventDefault();
                 keys.down = true;
             }
-            if (e.code === 'KeyP' && (gameState === 'PLAYING' || gameState === 'PAUSED')) {
+            if ((e.code === 'KeyP' || e.code === 'Escape') && (gameState === 'PLAYING' || gameState === 'PAUSED')) {
                 togglePause();
             }
         });
@@ -1475,39 +1570,23 @@
             }
         });
 
-        // Direct Canvas Touch / Mouse Flight Control
+        // Pointer events provide consistent mouse, touch, and stylus flight controls.
         function handlePointerPos(clientY) {
             const rect = canvas.getBoundingClientRect();
             keys.pointerY = clientY - rect.top;
         }
 
-        canvas.addEventListener('mousedown', (e) => {
+        canvas.addEventListener('pointerdown', (e) => {
+            if (gameState !== 'PLAYING') return;
             keys.pointerActive = true;
             handlePointerPos(e.clientY);
+            try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
         });
-        window.addEventListener('mousemove', (e) => {
+        canvas.addEventListener('pointermove', (e) => {
             if (keys.pointerActive) handlePointerPos(e.clientY);
         });
-        window.addEventListener('mouseup', () => {
-            keys.pointerActive = false;
-        });
-
-        canvas.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 0) {
-                keys.pointerActive = true;
-                handlePointerPos(e.touches[0].clientY);
-            }
-        }, { passive: true });
-
-        canvas.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 0) {
-                handlePointerPos(e.touches[0].clientY);
-            }
-        }, { passive: true });
-
-        canvas.addEventListener('touchend', () => {
-            keys.pointerActive = false;
-        });
+        canvas.addEventListener('pointerup', () => { keys.pointerActive = false; });
+        canvas.addEventListener('pointercancel', () => { keys.pointerActive = false; });
 
         // Bottom Control Bar Buttons
         const btnUp = document.getElementById('btnUp');
@@ -1522,6 +1601,8 @@
             btn.addEventListener('mouseleave', end);
             btn.addEventListener('touchstart', start, { passive: false });
             btn.addEventListener('touchend', end, { passive: false });
+            btn.addEventListener('touchcancel', end, { passive: false });
+            btn.addEventListener('blur', end);
         };
 
         bindHoldButton(btnUp, 'up');
@@ -1541,6 +1622,7 @@
         document.getElementById('restartBtn').addEventListener('click', startGame);
 
         function togglePause() {
+            if (gameState !== 'PLAYING' && gameState !== 'PAUSED') return;
             const pauseIcon = document.getElementById('pauseIcon');
             if (gameState === 'PLAYING') {
                 gameState = 'PAUSED';
@@ -1549,7 +1631,15 @@
                 gameState = 'PLAYING';
                 pauseIcon.className = 'fa-solid fa-pause text-sm';
             }
+            document.getElementById('pauseBtn').setAttribute('aria-label', gameState === 'PAUSED' ? 'Resume game' : 'Pause game');
+            document.getElementById('pauseBtn').setAttribute('aria-pressed', gameState === 'PAUSED' ? 'true' : 'false');
+            if (gameState === 'PAUSED') { keys.up = false; keys.down = false; keys.pointerActive = false; btnUp.classList.remove('active'); btnDown.classList.remove('active'); }
         }
+
+        // Avoid continuing a run invisibly when the player switches apps or tabs.
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && gameState === 'PLAYING') togglePause();
+        });
 
         document.getElementById('pauseBtn').addEventListener('click', togglePause);
 
@@ -1558,6 +1648,7 @@
             sfx.enabled = !sfx.enabled;
             const soundIcon = document.getElementById('soundIcon');
             soundIcon.className = sfx.enabled ? 'fa-solid fa-volume-high text-sm' : 'fa-solid fa-volume-xmark text-sm text-red-400';
+            document.getElementById('soundToggleBtn').setAttribute('aria-pressed', sfx.enabled ? 'true' : 'false');
         });
 
         // Start on Window Load
