@@ -9,6 +9,8 @@
     <meta property="og:title" content="Hanuman Ji: The Sanjeevani Quest" />
     <meta property="og:description" content="A mythic arcade flight adventure. Collect Sanjeevani, master divine power-ups, and fly to Dronagiri." />
     <meta property="og:type" content="website" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <meta property="og:title" content="Hanuman Ji: The Sanjeevani Quest" />
     <meta property="og:description" content="Soar across the ocean, gather sacred herbs, and chase your high score." />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1650,6 +1652,11 @@
             soundIcon.className = sfx.enabled ? 'fa-solid fa-volume-high text-sm' : 'fa-solid fa-volume-xmark text-sm text-red-400';
             document.getElementById('soundToggleBtn').setAttribute('aria-pressed', sfx.enabled ? 'true' : 'false');
         });
+
+        // Register the offline shell when served from HTTPS or localhost.
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+        }
 
         // Start on Window Load
         window.onload = function () {
