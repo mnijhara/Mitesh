@@ -146,5 +146,49 @@ let touchId=null,lastTouch=null;rendererTouchSetup();
 function rendererTouchSetup(){stage.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'&&!e.target.closest('button')){touchId=e.pointerId;lastTouch={x:e.clientX,y:e.clientY};stage.setPointerCapture?.(e.pointerId)}});stage.addEventListener('pointermove',e=>{if(e.pointerId===touchId&&lastTouch){const dx=e.clientX-lastTouch.x,dy=e.clientY-lastTouch.y;hero.x=THREE.MathUtils.clamp(hero.x+dx/innerWidth*12,-8,8);hero.z=THREE.MathUtils.clamp(hero.z+dy/innerHeight*12,-1,11);lastTouch={x:e.clientX,y:e.clientY}}});stage.addEventListener('pointerup',()=>{touchId=null;lastTouch=null});stage.addEventListener('pointercancel',()=>{touchId=null;lastTouch=null})}
 window.addEventListener('resize',resize);window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false});window.addEventListener('error',e=>{console.error('LAL HIT runtime error:',e.error||e.message);if(!$('overlay').classList.contains('hidden')){const p=$('overlay').querySelector('p');if(p)p.textContent='Startup error: '+(e.message||'unknown error')+'. Try reloading in Chrome with WebGL enabled.'}});window.addEventListener('unhandledrejection',e=>{console.error('LAL HIT promise error:',e.reason);toast('Startup error: reload the game and try again')});try{if(THREE){init()}else{throw new Error('Three.js did not load')}}catch(err){console.error('LAL HIT initialization failed:',err);bootFallback3D();}
 })();
+
+</script>
+<script>
+/* Emergency input bridge: remains available even if the remote Three.js module fails to load. */
+(function(){
+  var overlay=document.getElementById('overlay'), active=false, canvas, ctx, raf=0, px=.5, py=.72, score=0, bugs=[], shots=[], keys={};
+  function startFallback(){
+    if(active)return; active=true;
+    overlay.classList.add('hidden');
+    document.getElementById('status').textContent='MISSION ACTIVE · SAFE MODE';
+    canvas=document.createElement('canvas');canvas.id='safeModeCanvas';
+    canvas.style.cssText='position:fixed;inset:0;width:100%;height:100%;z-index:4;touch-action:none';
+    document.getElementById('stage').appendChild(canvas);ctx=canvas.getContext('2d');
+    function size(){canvas.width=innerWidth*devicePixelRatio;canvas.height=innerHeight*devicePixelRatio;canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
+    size();addEventListener('resize',size);
+    for(var i=0;i<7;i++)bugs.push({x:.1+Math.random()*.8,y:Math.random()*.5,r:12+Math.random()*9});
+    canvas.addEventListener('pointermove',function(e){if(e.buttons||e.pointerType==='touch'){px=e.clientX/innerWidth;py=e.clientY/innerHeight}});
+    canvas.addEventListener('pointerdown',function(e){px=e.clientX/innerWidth;py=e.clientY/innerHeight;shoot()});
+    function shoot(){shots.push({x:px,y:py,life:1})}
+    addEventListener('keydown',function(e){keys[e.code]=true;if(e.code==='Space'){e.preventDefault();shoot()}});
+    addEventListener('keyup',function(e){keys[e.code]=false});
+    function frame(){
+      if(!active)return;var w=innerWidth,h=innerHeight;
+      if(keys.ArrowLeft||keys.KeyA)px-=.009;if(keys.ArrowRight||keys.KeyD)px+=.009;
+      if(keys.ArrowUp||keys.KeyW)py-=.009;if(keys.ArrowDown||keys.KeyS)py+=.009;
+      px=Math.max(.03,Math.min(.97,px));py=Math.max(.18,Math.min(.94,py));
+      var g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#142843');g.addColorStop(1,'#050916');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+      ctx.fillStyle='#22344b';for(var i=0;i<7;i++){ctx.fillRect(i*w/7,h*.2,w/10,h*(.18+(i%3)*.07))}
+      ctx.strokeStyle='#ffe08a77';ctx.setLineDash([14,18]);ctx.beginPath();ctx.moveTo(w/2,h*.22);ctx.lineTo(w/2,h);ctx.stroke();ctx.setLineDash([]);
+      bugs.forEach(function(b){b.y+=.0018;if(b.y>.98){b.y=.02;b.x=.1+Math.random()*.8}ctx.fillStyle='#b56c3b';ctx.beginPath();ctx.ellipse(b.x*w,b.y*h,b.r*1.3,b.r,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffe08a';ctx.fillRect(b.x*w-4,b.y*h-3,3,3);ctx.fillRect(b.x*w+3,b.y*h-3,3,3)});
+      shots.forEach(function(p){p.y-=.018;p.life-=.02;ctx.fillStyle='#ffe08a';ctx.shadowColor='#ff6a35';ctx.shadowBlur=15;ctx.fillRect(p.x*w-3,p.y*h-10,6,18);ctx.shadowBlur=0;bugs.forEach(function(b){if(Math.hypot(p.x-b.x,(p.y-b.y)*h/w)<.035){b.y=0;b.x=.1+Math.random()*.8;p.life=0;score+=100}})});
+      shots=shots.filter(function(p){return p.life>0&&p.y>0});
+      ctx.fillStyle='#071326dd';ctx.fillRect(14,14,190,52);ctx.fillStyle='#5cf5ff';ctx.font='bold 13px system-ui';ctx.fillText('LAL HIT · SAFE MODE',26,34);ctx.fillStyle='#fff';ctx.fillText('SCORE '+String(score).padStart(6,'0'),26,53);
+      ctx.shadowColor='#5cf5ff';ctx.shadowBlur=20;ctx.fillStyle='#5cf5ff';ctx.fillRect(px*w-15,py*h-16,30,32);ctx.shadowBlur=0;ctx.fillStyle='#ff4f9a';ctx.fillRect(px*w-9,py*h+8,18,12);
+      ctx.fillStyle='#d8e9ff';ctx.font='12px system-ui';ctx.fillText('WASD / ARROWS MOVE · SPACE / TAP FIRE',14,h-18);
+      raf=requestAnimationFrame(frame);
+    } frame();
+  }
+  document.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest&&e.target.closest('button');
+    if(!b||b.id!=='solo')return;
+    setTimeout(function(){if(!overlay.classList.contains('hidden')&&!active){overlay.querySelectorAll('p').forEach(function(p){p.textContent='3D engine did not respond. Starting the built-in safe mode…'});startFallback()}},180);
+  },true);
+})();
 </script>
 </body></html>
