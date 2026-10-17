@@ -18,7 +18,17 @@
 <div id="overlay" class="overlay title-screen"><div class="menu-brand"><div class="menu-kicker">DELHI UPRISING · ZONE 01</div><h2>LAL<span>HIT</span></h2><div class="menu-subtitle">DELHI ROACH EXTERMINATION</div><div class="location-pill">✦ RAJIV CHOWK · NEW DELHI</div><p class="menu-copy">The city is crawling. Suit up, clear the streets and take back the heart of Delhi.</p><div class="menu-actions"><button class="btn primary" id="solo">▶ START SOLO MISSION</button><button class="btn" id="guide">✦ CONTROLS & ABILITIES</button></div><div class="menu-features"><span>3D ACTION</span><span>ROACH WAVES</span><span>MEGA BOSS</span></div><div class="menu-foot">RAJIV CHOWK — ZONE 1: CLEANUP BEGINS</div></div><div class="vermin-teaser" aria-hidden="true"><div class="vermin-eye"></div><div class="vermin-label">WARNING · VERMIN INFESTATION DETECTED</div></div><div class="menu-top-right"><span>STORY</span><span>MISSIONS</span><span>SETTINGS</span></div></div>
 <script type="module">
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';
+let THREE;
+try{
+ THREE=await import('https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js');
+}catch(primaryCdnError){
+ try{
+  THREE=await import('https://unpkg.com/three@0.164.1/build/three.module.js');
+ }catch(backupCdnError){
+  console.error('Both 3D engine CDNs failed:',primaryCdnError,backupCdnError);
+  throw backupCdnError;
+ }
+}
 function bootFallback3D(){
  const overlay=document.getElementById('overlay');
  const stage=document.getElementById('stage');
