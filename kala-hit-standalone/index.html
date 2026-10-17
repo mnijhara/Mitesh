@@ -60,11 +60,11 @@ function drawHero(){const x=W*.5+(player.x*.035*W),y=H*(H>W? .735:.77),s=clamp(H
  ctx.fillStyle='#253b54';ctx.beginPath();ctx.moveTo(-22,-35);ctx.lineTo(22,-35);ctx.lineTo(25,-78);ctx.lineTo(-25,-78);ctx.closePath();ctx.fill();ctx.fillStyle='#9c3349';ctx.beginPath();ctx.moveTo(-19,-78);ctx.lineTo(15,-80);ctx.lineTo(32,-39);ctx.lineTo(15,-47);ctx.lineTo(0,-68);ctx.closePath();ctx.fill();
  let jacket=ctx.createLinearGradient(-24,-88,24,-36);jacket.addColorStop(0,'#4c6b83');jacket.addColorStop(.55,'#1d2e45');jacket.addColorStop(1,'#0a1524');ctx.fillStyle=jacket;ctx.beginPath();ctx.moveTo(-20,-80);ctx.lineTo(-29,-63);ctx.lineTo(-20,-37);ctx.lineTo(20,-37);ctx.lineTo(29,-63);ctx.lineTo(20,-80);ctx.closePath();ctx.fill();ctx.strokeStyle='#8befff';ctx.lineWidth=1.5;line(-12,-72,12,-72,'#72f7ff',2); /* arms */
  ctx.strokeStyle='#ba8c6c';ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(-23,-73);ctx.lineTo(-35,-50);ctx.lineTo(-18,-43);ctx.stroke();ctx.beginPath();ctx.moveTo(23,-73);ctx.lineTo(34,-57);ctx.lineTo(20,-48);ctx.stroke();
- // head and scarf
+ /* head and scarf */
  ctx.fillStyle='#bd8c6b';ctx.beginPath();ctx.arc(0,-93,13,0,7);ctx.fill();ctx.fillStyle='#101725';ctx.beginPath();ctx.arc(0,-98,14,Math.PI,Math.PI*2);ctx.fill();ctx.fillStyle='#070c16';rounded(-12,-95,24,6,2,'#101a29');ctx.fillStyle='#6ff7ff';ctx.fillRect(-9,-94,7,2);ctx.fillRect(3,-94,7,2);ctx.fillStyle='#ff4e61';ctx.beginPath();ctx.moveTo(-9,-82);ctx.lineTo(9,-82);ctx.lineTo(23,-40);ctx.lineTo(9,-47);ctx.closePath();ctx.fill();
  ctx.restore()}
 function drawGun(){const x=W*.5+(player.x*.035*W),y=H*(H>W? .735:.77),s=clamp(H*.0011,.65,1.18);ctx.save();ctx.translate(x,y-55*s);ctx.rotate(aimAngle);ctx.scale(s,s);
- // Signature LAL HIT energy weapon: unmistakable LH receiver, glowing core, red heat rails and cyan muzzle.
+ /* Signature LAL HIT energy weapon: unmistakable LH receiver, glowing core, red heat rails and cyan muzzle. */
  ctx.shadowColor='#5cf5ff';ctx.shadowBlur=12;ctx.fillStyle='#0a1726';rounded(2,-8,49,18,5,'#111f32','#6ff7ff');ctx.shadowBlur=0;
  ctx.fillStyle='#ff4e61';ctx.beginPath();ctx.moveTo(8,-8);ctx.lineTo(22,-8);ctx.lineTo(31,8);ctx.lineTo(17,8);ctx.closePath();ctx.fill();
  ctx.fillStyle='#6ff7ff';rounded(21,-5,18,12,3,'#173d51','#8dfaff');ctx.fillStyle='#07101d';ctx.font='1000 8px system-ui';ctx.textAlign='center';ctx.fillText('LH',30,4);
@@ -91,7 +91,7 @@ function draw(){ctx.save();if(shake>0){ctx.translate(rand(-shake,shake),rand(-sh
  for(const obj of objects){if(obj.type==='enemy')drawRoach(obj.o);else drawPerson(obj.o.x,obj.o.z,clamp(10/(obj.o.z+13),.55,1.8),obj.o.shirt)}
  for(const shot of shots){const p=project(shot.x,0,shot.z),yy=roadY(shot.z)-p.s*1.3;const hs=clamp(H*.0011,.65,1.18),hx=W*.5+(shot.originX*.035*W),hy=H*(H>W? .735:.77)-55*hs,mx=hx+Math.cos(shot.angle)*55*hs,my=hy+Math.sin(shot.angle)*55*hs;ctx.save();ctx.lineCap='round';ctx.strokeStyle='#ff7b35';ctx.lineWidth=7;ctx.globalAlpha=.28;ctx.shadowColor='#ff7b35';ctx.shadowBlur=18;ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(p.x,yy);ctx.stroke();ctx.globalAlpha=1;ctx.strokeStyle='#ffe18a';ctx.lineWidth=2.6;ctx.shadowBlur=10;ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(p.x,yy);ctx.stroke();ctx.fillStyle='#fff7d4';ctx.beginPath();ctx.ellipse(p.x,yy,Math.max(2,p.s*.12),Math.max(5,p.s*.32),0,0,7);ctx.fill();ctx.restore()}
  for(const p of particles){const q=project(p.x,p.y,p.z);ctx.globalAlpha=clamp(p.life*2,0,1);ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=10;ctx.beginPath();ctx.arc(q.x,q.y-q.s*p.y,Math.max(1,q.s*.09),0,7);ctx.fill();ctx.shadowBlur=0;ctx.globalAlpha=1}
- drawHero();drawGun(); // weapon rotates independently; hero stays upright
+ drawHero();drawGun(); /* weapon rotates independently; hero stays upright */
  const v=ctx.createRadialGradient(W*.5,H*.5,H*.1,W*.5,H*.5,Math.max(W,H)*.75);v.addColorStop(.45,'#02071100');v.addColorStop(1,'#020711a8');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
  if(!playing){ctx.fillStyle='#eaf8ff99';ctx.font='900 10px system-ui';ctx.textAlign='center';ctx.fillText('RAJIV CHOWK · ZONE 01',W*.5,H*.91)}
  ctx.restore()}
