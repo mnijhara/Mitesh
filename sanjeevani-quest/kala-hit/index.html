@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#171024">
+<meta name="description" content="KALA HIT: Cockroach Andolan — a ridiculous Delhi-themed cartoon arcade game.">
+<title>KALA HIT: Cockroach Andolan</title>
+<style>
+:root{color-scheme:dark;--gold:#ffd166;--pink:#ff4d8d;--mint:#7cf7c4}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#100c1d;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}body{display:grid;place-items:center;padding:12px;background:radial-gradient(ellipse at top,#38204c 0,#100c1d 62%);overflow-x:hidden}.shell{width:min(100%,980px)}header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px}.brand{font-weight:1000;letter-spacing:.03em;font-size:clamp(18px,4vw,30px);line-height:1}.brand span{color:var(--gold)}.tag{font-size:11px;color:#d5c7e8;text-align:right}.stage{position:relative;border:2px solid #6f4b83;border-radius:20px;overflow:hidden;box-shadow:0 20px 70px #0008;background:#21152f}canvas{display:block;width:100%;height:auto;aspect-ratio:9/10;touch-action:none;cursor:crosshair}.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0}.stat{background:#251a35;border:1px solid #513c66;border-radius:12px;padding:8px 10px;min-width:0}.stat small{display:block;color:#c9b6dc;font-size:10px;text-transform:uppercase;letter-spacing:.08em}.stat b{font-size:clamp(14px,3vw,20px);color:var(--gold)}.controls{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0}.btn{border:0;border-radius:999px;padding:11px 17px;font-weight:900;color:#21152f;background:var(--gold);cursor:pointer;box-shadow:0 4px 0 #ad7625;touch-action:manipulation}.btn.secondary{background:#e7d9f5;box-shadow:0 4px 0 #8c6ea4}.btn.pink{background:#ff75a6;box-shadow:0 4px 0 #aa3d69}.btn:active{transform:translateY(2px);box-shadow:none}.help{text-align:center;color:#c7b7d5;font-size:12px;line-height:1.5;margin:8px 5px 4px}.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px;background:linear-gradient(135deg,#1a1025ed,#341b4de8);backdrop-filter:blur(5px)}.panel{max-width:520px}.panel h1{font-size:clamp(30px,7vw,60px);line-height:.95;margin:0 0 12px;text-shadow:0 5px 0 #7e315f}.panel h1 em{font-style:normal;color:var(--gold)}.panel p{color:#f0e5f8;line-height:1.5}.panel .eyebrow{font-weight:900;color:#ff9fcb;letter-spacing:.15em;font-size:12px}.panel .btn{margin:5px}.hidden{display:none!important}.meter{height:8px;background:#473251;border-radius:20px;overflow:hidden;margin-top:6px}.meter i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7cf7c4,#ffd166,#ff4d8d);transition:width .1s}@media(min-width:700px){canvas{aspect-ratio:16/10}.hud{gap:10px}.stat{padding:10px 14px}}@media(max-width:420px){body{padding:7px}.stage{border-radius:14px}.hud{grid-template-columns:repeat(2,1fr)}.tag{max-width:115px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header><div class="brand">🪳 KALA <span>HIT!</span><div style="font-size:11px;letter-spacing:.17em;color:#d8c4e8;margin-top:5px">COCKROACH ANDOLAN</div></div><div class="tag">DELHI'S MOST ABSURD<br>ARCADE PROTEST 😂</div></header>
+<div class="hud">
+<div class="stat"><small>Score</small><b id="score">0000</b></div><div class="stat"><small>Location</small><b id="place">Rajiv Chowk</b></div><div class="stat"><small>Andolan meter</small><b id="protest">0%</b><div class="meter"><i id="meter"></i></div></div><div class="stat"><small>Spray power</small><b id="spray">100%</b></div>
+</div>
+<div class="stage"><canvas id="game" width="900" height="1000" aria-label="KALA HIT arcade game"></canvas>
+<div class="overlay" id="overlay"><div class="panel"><div class="eyebrow">DELHI • ANDOLAN ALERT</div><h1> KALA <em>HIT!</em><br><span style="font-size:.56em">COCKROACH ANDOLAN</span></h1><p>Rajiv Chowk is crawling with protestors! Then Janpath. Then Jantar Mantar. Use your cartoon spray to scatter the crumb-demanding crowd. No roaches were harmed in this extremely silly simulation.</p><p><b>Controls:</b> Tap/click to spray. Hold to keep spraying. Catch golden crumbs for bonus points!</p><button class="btn" id="start">START THE ANDOLAN BUSTING →</button><p style="font-size:11px">Fictional cartoon satire • Made for fun</p></div></div>
+</div>
+<div class="controls"><button class="btn" id="sprayBtn">💨 SPRAY!</button><button class="btn secondary" id="pauseBtn">⏸ PAUSE</button><button class="btn secondary" id="soundBtn">🔊 SOUND ON</button><button class="btn pink" id="restartBtn">↻ RESTART</button></div>
+<div class="help">Tap or click cockroaches to spray a comic cloud • Hold SPRAY to sweep an area • Collect golden crumbs • Clear all 3 Delhi levels!</div>
+</div>
+<script>
+(()=>{'use strict';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id);
+const W=900,H=1000,places=['Rajiv Chowk','Janpath','Jantar Mantar'],slogans=['MORE BISCUIT CRUMBS!','ROACH RIGHTS ZINDABAD!','HUM BHI DELHIWAALE!','NO MORE JHADOO!','LET US EAT IN PEACE!'];
+let state='menu',level=0,score=0,protest=0,spray=100,roaches=[],crumbs=[],particles=[],floaters=[],frame=0,spawn=0,hold=false,pointer={x:450,y:600},sound=true,audio=null,last=0,boss=false;
+function beep(f=420,d=.06,type='sine'){if(!sound)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=f;g.gain.value=.035;o.connect(g);g.connect(audio.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);o.stop(audio.currentTime+d)}catch(e){}}
+function reset(){level=0;score=0;protest=0;spray=100;roaches=[];crumbs=[];particles=[];floaters=[];frame=0;spawn=0;boss=false;state='playing';$('overlay').classList.add('hidden');for(let i=0;i<5;i++)spawnRoach(true);updateHud()}
+function spawnRoach(initial=false){let big=level===2&&Math.random()<.13;roaches.push({x:80+Math.random()*740,y:initial?160+Math.random()*650:120, vx:(Math.random()-.5)*(1.2+level*.45),vy:.35+Math.random()*.75+level*.2,r:big?36:19+Math.random()*8,big,hp:big?3:1,phase:Math.random()*8,sign:slogans[Math.floor(Math.random()*slogans.length)],leader:big||Math.random()<.12,wiggle:Math.random()*10})}
+function burst(x,y,color,n=10){for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*8,vy:(Math.random()-.5)*8,life:20+Math.random()*20,color,r:2+Math.random()*5})}
+function textPop(x,y,t,color='#ffd166'){floaters.push({x,y,t,color,life:55})}
+function rounded(x,y,w,h,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function background(){let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,['#26133c','#302042','#35203b'][level]);g.addColorStop(1,'#100f24');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ // skyline / station
+ ctx.fillStyle='#ffffff0a';for(let i=0;i<12;i++){let x=i*82;ctx.fillRect(x,150+(i%3)*30,58,330)}
+ if(level===0){rounded(50,90,800,95,18,'#243c63');ctx.fillStyle='#fff';ctx.font='bold 42px system-ui';ctx.textAlign='center';ctx.fillText('RAJIV CHOWK  •  METRO ANDOLAN',450,150);ctx.fillStyle='#ffcf61';ctx.fillRect(0,540,W,18);ctx.fillStyle='#5e4a6b';ctx.fillRect(0,560,W,440);for(let x=45;x<900;x+=180){ctx.fillStyle='#7d658e';ctx.fillRect(x,190,22,370);ctx.fillStyle='#c0a4d0';ctx.fillRect(x+6,190,5,370)}ctx.fillStyle='#dfd0eb';ctx.font='bold 22px system-ui';ctx.fillText('MIND THE ROACH GAP',450,625)}
+ else if(level===1){ctx.fillStyle='#6b3455';ctx.fillRect(0,250,W,750);for(let x=0;x<W;x+=150){rounded(x+8,300,130,160,10,['#d46a55','#edbd54','#579e8d'][Math.floor(x/150)%3]);ctx.fillStyle='#fff4d6';ctx.fillRect(x+22,330,102,40);ctx.fillStyle='#41294a';ctx.font='bold 17px system-ui';ctx.textAlign='center';ctx.fillText(['CHAI ☕','JALEBI','DELHI BAZAAR'][Math.floor(x/150)%3],x+73,357)}ctx.fillStyle='#ffdc88';ctx.fillRect(0,600,W,12);ctx.fillStyle='#c3a4cb';ctx.font='bold 36px system-ui';ctx.textAlign='center';ctx.fillText('JANPATH • GREAT ROAD MARCH',450,160)}
+ else{ctx.fillStyle='#4d355d';ctx.fillRect(70,220,760,210);ctx.strokeStyle='#a78db8';ctx.lineWidth=10;ctx.strokeRect(90,240,720,170);ctx.fillStyle='#f4d6a1';ctx.font='bold 40px system-ui';ctx.textAlign='center';ctx.fillText('JANTAR MANTAR',450,320);ctx.font='22px system-ui';ctx.fillText('THE FINAL ANDOLAN',450,365);ctx.fillStyle='#654f76';ctx.fillRect(0,600,W,400);for(let x=70;x<900;x+=150){ctx.fillStyle='#a78ab5';ctx.fillRect(x,480,18,150)}}
+ // decorative crumbs
+ ctx.fillStyle='#ffd166';for(let i=0;i<18;i++){let x=(i*131+frame*.25)%W,y=200+(i*79)%650;ctx.globalAlpha=.22;ctx.beginPath();ctx.arc(x,y,3+(i%3),0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
+}
+function roachDraw(r){let bob=Math.sin(frame*.12+r.phase)*4;ctx.save();ctx.translate(r.x,r.y+bob);ctx.rotate(Math.sin(frame*.07+r.phase)*.12);let s=r.r/25;ctx.scale(s,s);
+ // tiny protest legs
+ ctx.strokeStyle='#b87935';ctx.lineWidth=3;for(let i=0;i<3;i++){let yy=-4+i*8;ctx.beginPath();ctx.moveTo(-8,yy);ctx.lineTo(-22,yy-7+Math.sin(frame*.2+i)*3);ctx.moveTo(8,yy);ctx.lineTo(22,yy-7+Math.cos(frame*.2+i)*3);ctx.stroke()}
+ ctx.fillStyle=r.big?'#a65b25':'#bd7737';ctx.beginPath();ctx.ellipse(0,4,19,15,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#71351e';ctx.beginPath();ctx.ellipse(0,7,13,11,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#e8a253';ctx.lineWidth=2;for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(i*6,-3);ctx.lineTo(i*7,16);ctx.stroke()}
+ ctx.fillStyle='#d18a45';ctx.beginPath();ctx.ellipse(0,-12,14,12,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-6,-14,5,0,Math.PI*2);ctx.arc(6,-14,5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#25152c';ctx.beginPath();ctx.arc(-5,-13,2.5,0,Math.PI*2);ctx.arc(7,-13,2.5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#e8a253';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-5,-21);ctx.quadraticCurveTo(-17,-35,-13,-39);ctx.moveTo(5,-21);ctx.quadraticCurveTo(17,-35,13,-39);ctx.stroke();
+ if(r.leader){rounded(-36,-69,72,24,6,'#fff0a8');ctx.fillStyle='#392242';ctx.font='bold 9px system-ui';ctx.textAlign='center';ctx.fillText(r.big?'ANDOLAN BOSS':'LEADER',0,-53);ctx.fillStyle='#f7e4ff';ctx.fillRect(18,-46,3,24);rounded(19,-48,52,25,4,'#ff83a8');ctx.fillStyle='#4b1b3b';ctx.font='bold 7px system-ui';ctx.fillText('CRUMBS!',45,-33)}
+ else if(Math.random()>.96){rounded(-35,-52,70,20,4,'#fff0a8');ctx.fillStyle='#392242';ctx.font='bold 8px system-ui';ctx.textAlign='center';ctx.fillText('CRUMBS PLS',0,-39)}
+ ctx.restore()}
+function draw(){background();roaches.forEach(roachDraw);
+ crumbs.forEach(c=>{ctx.save();ctx.translate(c.x,c.y);ctx.rotate(frame*.05);ctx.fillStyle='#ffd166';ctx.beginPath();ctx.moveTo(0,-13);ctx.lineTo(12,0);ctx.lineTo(0,13);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.strokeStyle='#fff3bd';ctx.lineWidth=3;ctx.stroke();ctx.restore()});
+ particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life/35);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()});ctx.globalAlpha=1;
+ floaters.forEach(f=>{ctx.globalAlpha=Math.min(1,f.life/20);ctx.fillStyle=f.color;ctx.font='bold 25px system-ui';ctx.textAlign='center';ctx.fillText(f.t,f.x,f.y);ctx.globalAlpha=1});
+ // player and spray can
+ ctx.save();ctx.translate(pointer.x,pointer.y);ctx.fillStyle='#f2c9a5';ctx.beginPath();ctx.arc(0,15,22,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e9a36b';ctx.fillRect(-22,35,44,45);ctx.fillStyle='#ffcf61';ctx.fillRect(-20,38,40,9);ctx.save();ctx.rotate(-.35);rounded(10,-5,46,23,6,'#6ef0c0');rounded(20,-11,20,10,3,'#d4fff0');ctx.fillStyle='#234a47';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText('K-HIT',33,10);ctx.restore();ctx.restore();
+ if(state==='playing'){ctx.strokeStyle='#7cf7c4aa';ctx.lineWidth=3;ctx.beginPath();ctx.arc(pointer.x,pointer.y,hold?85:24,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#7cf7c4';ctx.beginPath();ctx.arc(pointer.x,pointer.y,4,0,Math.PI*2);ctx.fill()}
+ if(level===2&&boss){ctx.fillStyle='#ffdf70';ctx.font='bold 22px system-ui';ctx.textAlign='center';ctx.fillText('ANDOLAN BOSS: NEGOTIATE WITH SPRAY!',450,70)}
+}
+function sprayAt(x,y){if(state!=='playing'||spray<2)return;spray=Math.max(0,spray-1.5);burst(x,y,'#8cf7d0',3);let hit=false;roaches.forEach((r,i)=>{let d=Math.hypot(r.x-x,r.y-y);if(d<80+r.r){r.hp--;burst(r.x,r.y,'#a8ffe5',8);if(r.hp<=0){score+=r.big?100:25;protest=Math.max(0,protest-(r.big?10:3));textPop(r.x,r.y-30,['SCATTER!','ANDOLAN GAYA!','CRUMB CONTROL!','OYE HOYE!'][Math.floor(Math.random()*4)]);r.dead=true;hit=true;beep(r.big?240:520,.07,'triangle')}}});roaches=roaches.filter(r=>!r.dead);if(hit&&Math.random()<.4)crumbs.push({x:80+Math.random()*740,y:120+Math.random()*650,life:500});if(Math.random()<.15)beep(300+Math.random()*300,.03);updateHud()}
+function update(dt){if(state!=='playing')return;frame++;spawn+=dt;let interval=Math.max(26,76-level*16);if(spawn>interval){spawn=0;if(roaches.length<16+level*4)spawnRoach()}
+ if(hold&&frame%3===0)sprayAt(pointer.x,pointer.y);spray=Math.min(100,spray+.075);
+ roaches.forEach(r=>{r.phase+=.04;r.x+=r.vx+Math.sin(frame*.03+r.wiggle)*.65;r.y+=r.vy;if(r.x<25||r.x>875)r.vx*=-1;if(r.y>900){r.y=100;protest=Math.min(100,protest+(r.big?8:3));r.x=50+Math.random()*800;textPop(r.x,850,'PROTEST GROWS!','#ff75a6');beep(150,.1,'square')}});
+ crumbs.forEach(c=>{c.life--;if(Math.hypot(c.x-pointer.x,c.y-pointer.y)<42){c.got=true;score+=75;spray=Math.min(100,spray+18);textPop(c.x,c.y,'CRUMB BONUS +75');beep(760,.1)} });crumbs=crumbs.filter(c=>!c.got&&c.life>0);
+ particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vx*=.97;p.vy*=.97;p.life--});particles=particles.filter(p=>p.life>0);
+ floaters.forEach(f=>{f.y-=.65;f.life--});floaters=floaters.filter(f=>f.life>0);
+ if(level===2&&frame>1100&&!boss){boss=true;spawnRoach();let r=roaches[roaches.length-1];r.big=true;r.leader=true;r.r=43;r.hp=4;r.y=230;textPop(450,180,'THE BOSS HAS ARRIVED!','#ff75a6')}
+ if(protest>=100){state='over';showOverlay('ANDOLAN OUT OF CONTROL!','The cockroaches demanded a snack break. Delhi needs you to try again!','TRY AGAIN ↻')}
+ if(score>=[250,650,1150][level]){if(level<2){level++;protest=Math.max(0,protest-15);roaches=[];for(let i=0;i<5+level;i++)spawnRoach(true);textPop(450,500,'LEVEL CLEARED!','#7cf7c4');beep(650,.18);beep(850,.2);updateHud()}else{state='won';score+=250;showOverlay('DELHI IS SAVED! 🎉','The Roach Peace Treaty is signed. A designated crumb zone has been established. You are the Andolan Champion!','PLAY AGAIN ↻')}}
+ if(spray<2&&frame%40===0)textPop(450,800,'SPRAY RECHARGING…','#7cf7c4');updateHud()}
+function updateHud(){$('score').textContent=String(score).padStart(4,'0');$('place').textContent=places[level];$('protest').textContent=Math.round(protest)+'%';$('meter').style.width=protest+'%';$('spray').textContent=Math.round(spray)+'%'}
+function showOverlay(title,msg,button){$('overlay').classList.remove('hidden');$('overlay').innerHTML='<div class="panel"><div class="eyebrow">KALA HIT • COCKROACH ANDOLAN</div><h1>'+title+'</h1><p>'+msg+'</p><p style="color:#ffd166;font-weight:900;font-size:24px">SCORE: '+score+'</p><button class="btn" id="again">'+button+'</button><p style="font-size:11px">Fictional cartoon satire • All roaches are imaginary pixels</p></div>';$('again').onclick=reset}
+function pos(e){const r=canvas.getBoundingClientRect();pointer.x=(e.clientX-r.left)*W/r.width;pointer.y=(e.clientY-r.top)*H/r.height}
+canvas.addEventListener('pointermove',pos);canvas.addEventListener('pointerdown',e=>{pos(e);hold=true;canvas.setPointerCapture?.(e.pointerId);sprayAt(pointer.x,pointer.y)});canvas.addEventListener('pointerup',()=>hold=false);canvas.addEventListener('pointercancel',()=>hold=false);canvas.addEventListener('contextmenu',e=>e.preventDefault());
+$('start').onclick=reset;$('sprayBtn').addEventListener('pointerdown',e=>{e.preventDefault();hold=true;sprayAt(pointer.x,pointer.y)});$('sprayBtn').addEventListener('pointerup',()=>hold=false);$('sprayBtn').addEventListener('pointerleave',()=>hold=false);
+$('pauseBtn').onclick=()=>{if(state==='playing'){state='paused';$('pauseBtn').textContent='▶ RESUME';textPop(450,480,'PAUSED','#ffd166')}else if(state==='paused'){state='playing';$('pauseBtn').textContent='⏸ PAUSE'}};
+$('soundBtn').onclick=()=>{sound=!sound;$('soundBtn').textContent=sound?'🔊 SOUND ON':'🔇 SOUND OFF';if(sound)beep(500,.06)};
+$('restartBtn').onclick=()=>{if(state==='menu')reset();else reset()};
+window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();hold=true}if(e.code==='Escape')$('pauseBtn').click();if(e.code==='KeyR')reset()});window.addEventListener('keyup',e=>{if(e.code==='Space')hold=false});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing'){state='paused';$('pauseBtn').textContent='▶ RESUME'}});
+function loop(t){let dt=Math.min(2,(t-last)/16.67||1);last=t;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+})();
+</script>
+</body></html>
