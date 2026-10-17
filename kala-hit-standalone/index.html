@@ -14,7 +14,7 @@ const $=id=>document.getElementById(id);const keys={};let playing=false,paused=f
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a);
 function resize(){dpr=Math.min(devicePixelRatio||1,1.65);W=innerWidth;H=innerHeight;canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1900)}
-function project(x,y,z){const horizon=H*(H>W?.31:.34),depth=clamp((z+32)/42,.04,1.2),scale=(H*.62)/Math.max(4,z+35);return{x:W*.5+x*scale,y:horizon+(H-horizon)*depth,s:scale}}
+function project(x,y,z){const horizon=H*(H>W?.31:.34),depth=clamp((z+32)/42,.04,1.2),scale=(H*.28)/Math.max(4,z+35);return{x:W*.5+x*scale,y:horizon+(H-horizon)*depth,s:scale}}
 function roadY(z){const horizon=H*(H>W?.31:.34);return horizon+(H-horizon)*clamp((z+32)/42,0,1.2)}
 function rounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}}
 function line(x1,y1,x2,y2,color,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke()}
