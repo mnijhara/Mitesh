@@ -22,6 +22,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
 function bootFallback3D(){
  const overlay=document.getElementById('overlay');
  const stage=document.getElementById('stage');
+ // A deliberate full-screen fallback, never leave the normal HUD layered over it.
+ document.body.classList.add('safe-mode-active');
+ const fallbackStyle=document.createElement('style');fallbackStyle.textContent='.safe-mode-active .topbar,.safe-mode-active .bottom,.safe-mode-active .mobile,.safe-mode-active .vignette{display:none!important}.safe-mode-active #safeModeCanvas{z-index:8!important;touch-action:none!important}';document.head.appendChild(fallbackStyle);
  overlay.innerHTML='<div class="modal"><div class="eyebrow">LAL HIT · BROWSER MODE</div><h2>SOLO <span>MISSION</span></h2><p>The optional 3D engine could not start on this browser. Start a lightweight built-in action mode instead. It works without WebGL or external graphics libraries.</p><div class="features"><span>KEYBOARD / TOUCH</span><span>ENEMY WAVES</span><span>FIRE ATTACK</span></div><div class="modal-actions"><button class="btn primary" id="fallbackStart">START SOLO MISSION →</button><a class="btn" href="/" style="text-decoration:none">MAIN GAME</a></div><p id="fallbackError" style="font-size:10px;color:#ffd2e5"></p></div>';
  const canvas=document.createElement('canvas');canvas.id='fallbackCanvas';canvas.style.cssText='position:fixed;inset:0;width:100%;height:100%;z-index:1;touch-action:none';stage.appendChild(canvas);
  const ctx=canvas.getContext('2d');let W=0,H=0,dpr=1,active=false,px=.5,py=.72,score=0,hp=100,shots=[],bugs=[],sparks=[],last=0,spawn=0,keys={},holding=false;
