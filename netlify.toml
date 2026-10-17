@@ -1,4 +1,4 @@
 [build]
-  base = "sanjeevani-quest"
-  command = "echo \"Static HTML games — no build step required\""
+  base = "kala-hit-standalone"
+  command = "echo \"Static HTML game — no build step required\""
   publish = "."
