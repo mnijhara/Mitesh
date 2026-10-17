@@ -1,4 +1,4 @@
 [build]
   base = "."
-  command = "npm install && npm run build"
+  command = "echo \"Static HTML game — no build step required\""
   publish = "sanjeevani-quest"
