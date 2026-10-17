@@ -14,8 +14,8 @@ const $=id=>document.getElementById(id);const keys={};let playing=false,paused=f
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a);
 function resize(){dpr=Math.min(devicePixelRatio||1,1.65);W=innerWidth;H=innerHeight;canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1900)}
-function project(x,y,z){const horizon=H*(H>W?.31:.34),depth=clamp((z+7)/42,.04,1.5),scale=(H*.92)/(z+12);return{x:W*.5+x*scale,y:horizon+(H*.73/Math.max(.15,z+12)),s:scale}}
-function roadY(z){return H*(H>W?.34:.35)+H*.73/Math.max(.15,z+12)}
+function project(x,y,z){const horizon=H*(H>W?.31:.34),depth=clamp((z+32)/42,.04,1.2),scale=(H*.62)/Math.max(4,z+35);return{x:W*.5+x*scale,y:horizon+(H-horizon)*depth,s:scale}}
+function roadY(z){const horizon=H*(H>W?.31:.34);return horizon+(H-horizon)*clamp((z+32)/42,0,1.2)}
 function rounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}}
 function line(x1,y1,x2,y2,color,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke()}
 function drawBuilding(x,z,w,h,kind){const p=project(x,0,z),s=p.s,base=roadY(z),ww=w*s,hh=h*s;let grad=ctx.createLinearGradient(p.x-ww/2,base-hh,p.x+ww/2,base);grad.addColorStop(0,kind?'#7c766d':'#26374a');grad.addColorStop(.5,kind?'#c2b39a':'#4b5867');grad.addColorStop(1,kind?'#554d4a':'#111f31');ctx.fillStyle=grad;ctx.fillRect(p.x-ww/2,base-hh,ww,hh);ctx.fillStyle='#0b1728';ctx.fillRect(p.x-ww/2-2,base-hh,ww+4,Math.max(3,3*s));for(let wy=base-hh+9*s;wy<base-5*s;wy+=16*s){for(let wx=p.x-ww/2+7*s;wx<p.x+ww/2-3*s;wx+=13*s){ctx.fillStyle=((Math.floor(wx/(13*s))+Math.floor(wy/(16*s)))%4===0)?'#f9cf86':'#294a62';ctx.globalAlpha=.7;ctx.fillRect(wx,wy,Math.max(1,3*s),Math.max(1,5*s));ctx.globalAlpha=1}}if(kind){ctx.fillStyle='#e1d3b9';ctx.fillRect(p.x-ww/2,base-hh,ww,Math.max(2,2*s));for(let cx=p.x-ww/2+4*s;cx<p.x+ww/2;cx+=12*s){ctx.fillStyle='#e5d7bd';ctx.fillRect(cx,base-hh,Math.max(2,2.2*s),hh)}}}
@@ -90,7 +90,7 @@ function draw(){ctx.save();if(shake>0){ctx.translate(rand(-shake,shake),rand(-sh
  if(!playing){ctx.fillStyle='#eaf8ff99';ctx.font='900 10px system-ui';ctx.textAlign='center';ctx.fillText('RAJIV CHOWK · ZONE 01',W*.5,H*.91)}
  ctx.restore()}
 function frame(now){if(!playing)return;const dt=Math.min(.035,(now-last)/1000||.016);last=now;update(dt);draw();if(playing)requestAnimationFrame(frame)}
-function startMission(){if(playing){paused=false;$('overlay').classList.add('hide');last=performance.now();requestAnimationFrame(frame);return}resetGame()}
+let menuPreview=true;function startMission(){menuPreview=false;if(playing){paused=false;$('overlay').classList.add('hide');last=performance.now();requestAnimationFrame(frame);return}resetGame()}
 $('startBtn').addEventListener('click',startMission);$('controlsBtn').addEventListener('click',()=>{toast('MOVE: WASD / ARROWS · FIRE: SPACE / J · DASH: SHIFT / K · TOUCH: DRAG + FIRE');});
 $('pauseBtn').addEventListener('click',()=>{if(!playing)return;paused=!paused;$('pauseBtn').textContent=paused?'▶ RESUME':'Ⅱ PAUSE';if(!paused){last=performance.now();requestAnimationFrame(frame)}else toast('MISSION PAUSED')});
 $('soundBtn').addEventListener('click',()=>{sound=!sound;$('soundBtn').textContent=sound?'♫ SOUND ON':'♫ SOUND OFF';if(sound)beep(660,.1)});
@@ -98,6 +98,6 @@ $('fullBtn').addEventListener('click',async()=>{try{if(!document.fullscreenEleme
 $('fireBtn').addEventListener('pointerdown',e=>{e.preventDefault();fireHeld=true;fire()});['pointerup','pointercancel','pointerleave'].forEach(n=>$('fireBtn').addEventListener(n,()=>fireHeld=false));$('dashBtn').addEventListener('pointerdown',e=>{e.preventDefault();dash()});
 addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.code==='Escape'&&playing){paused=!paused;if(!paused){last=performance.now();requestAnimationFrame(frame)}}});addEventListener('keyup',e=>keys[e.code]=false);
 canvas.addEventListener('pointerdown',e=>{touch.id=e.pointerId;touch.x=e.clientX;touch.y=e.clientY;canvas.setPointerCapture?.(e.pointerId);if(e.clientX>W*.56&&e.clientY>H*.4)fire()});canvas.addEventListener('pointermove',e=>{if(touch.id===e.pointerId){touch.x=e.clientX;touch.y=e.clientY}});['pointerup','pointercancel'].forEach(n=>canvas.addEventListener(n,e=>{if(touch.id===e.pointerId)touch.id=null}));
-function drawMenuPreview(){drawCity();for(let i=0;i<4;i++)drawRoach({x:(i-1.5)*3,z:-6-i*5,scale:1.25+i*.1,hp:2,maxHp:2,phase:i});drawHero();requestAnimationFrame(drawMenuPreview)}drawMenuPreview();
+function drawMenuPreview(){if(!menuPreview)return;drawCity();for(let i=0;i<4;i++)drawRoach({x:(i-1.5)*3,z:-6-i*5,scale:1.25+i*.1,hp:2,maxHp:2,phase:i});drawHero();requestAnimationFrame(drawMenuPreview)}drawMenuPreview();
 })();
 </script></body></html>
