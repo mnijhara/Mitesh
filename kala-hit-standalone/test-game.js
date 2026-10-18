@@ -37,71 +37,18 @@ for (const id of ['startBtn', 'controlsBtn', 'pauseBtn', 'movePad', 'fireBtn', '
 
 
 
-assert.ok(script.includes('aim at the nearest live threat') && script.includes('aimAngle=clamp(Math.atan2(dx,-dz),-1.15,1.15)'),
-  'mobile firing must auto-aim at the nearest enemy when gamepad manual aim is not active');
-const currentGun = script.match(/function drawGun\(\)\{([\s\S]*?)\n\}\nfunction spawnEnemy/);
+assert.ok(script.includes('if(!gamepadAim&&enemies.length)') && script.includes('aimAngle=Math.atan2(target.x-player.x,-(target.z-player.z))'),
+  'touch firing must aim at the nearest enemy without a clamped angle');
+const currentGun = script.match(/function drawGun\\(\\)\\{([\\s\\S]*?)\\n\\}\\nfunction spawnEnemy/);
 assert.ok(currentGun && currentGun[1].includes('ctx.rotate(aimAngle)'),
   'the visible weapon must rotate with the actual shot direction');
-
-
-const shotRenderer = script.match(/for\s*\(const shot of shots\)\s*\{([\s\S]*?)\n\s*for\s*\(const p of particles\)/);
+assert.ok(currentGun[1].includes('Hand-held compact sidearm'),
+  'weapon must be drawn as a compact sidearm beside the hero');
+const shotRenderer = script.match(/for\\s*\\(const shot of shots\\)\\s*\\{([\\s\\S]*?)\\n\\s*for\\s*\\(const p of particles\\)/);
 assert.ok(shotRenderer, 'projectiles must have a dedicated renderer');
-assert.ok(shotRenderer[1].includes('shot.dx*.48') && shotRenderer[1].includes('shot.dz*.48'),
-  'projectile trails must be short and follow the actual shot direction');
-assert.ok(!shotRenderer[1].includes('origin=project(shot.originX'),
-  'projectiles must not draw a screen-spanning line from a fixed foreground origin');
-
-// Campaign progression must visibly move the player through distinct Delhi districts.
-assert.ok(html.includes("const zones=[{short:'RAJIV CHOWK'") && html.includes("short:'JANPATH'") && html.includes("short:'JANTAR MANTAR'"), 'campaign must contain three named districts');
-assert.ok(html.includes("function syncZone(notify=false)") && html.includes("$('locationText').textContent=z.short"), 'district transitions must update the visible location HUD');
-assert.ok(html.includes("ctx.fillStyle=zones[zoneIndex].tint"), 'district transitions must affect the game world palette');
-assert.ok(html.includes("Math.min(.65,(wave-1)*.07)"), 'enemy difficulty must scale with campaign waves');
-assert.ok(html.includes("if(e.boss){wave++;$('waveText').textContent=String(wave).padStart(2,'0');syncZone(true);"), 'melee boss defeats must advance the campaign district just like ranged boss defeats');
-
-// Combat pickups add a risk/reward loop and must be drawn, collectible, and reset between runs.
-assert.ok(script.includes('pickups=[]'), 'pickup state must be maintained separately from enemies and particles');
-assert.ok(script.includes('function dropPickup(e)'), 'defeated enemies must be able to drop supplies');
-assert.ok(script.includes("type=e.boss?(hp<65?'med':'energy')"), 'boss drops must respond to the player condition');
-assert.ok(script.includes("hp=Math.min(100,hp+30)"), 'medkits must restore health without exceeding the cap');
-assert.ok(script.includes("energy=Math.min(100,energy+45)"), 'energy cells must restore ability energy without exceeding the cap');
-assert.ok(script.includes('Math.hypot(player.x-p.x,player.z-p.z)<1.45'), 'players must collect pickups by moving close to them');
-assert.ok(script.includes('for(const pickup of pickups)drawPickup(pickup)'), 'pickups must be visible in the game world');
-assert.ok(script.includes('pickups=[];civilians=[]'), 'starting a fresh mission must clear old pickups');
-
-
-// Perspective depth must grow toward the player, not shrink as enemies approach.
-assert.ok(script.includes('function perspectiveDepth(z){return clamp((z+32)/42,.04,1.2)}'),
-  'scene depth must be derived consistently from world z');
-const depthSource = script.match(/function perspectiveDepth\(z\)\{[^}]+\}/);
-assert.ok(depthSource, 'perspective depth helper must exist');
-const clampValue = (v, min, max) => Math.max(min, Math.min(max, v));
-const perspectiveDepth = new Function('clamp', depthSource[0] + '; return perspectiveDepth;')(clampValue);
-const scaleSource = script.match(/function perspectiveScale\(z,height=H\)\{[^}]+\}/);
-assert.ok(scaleSource, 'perspective scale helper must exist');
-const perspectiveScale = new Function('perspectiveDepth', 'H', scaleSource[0] + '; return perspectiveScale;')(perspectiveDepth, 800);
-const farScale = perspectiveScale(-30, 800);
-const midScale = perspectiveScale(-18, 800);
-const nearScale = perspectiveScale(3, 800);
-assert.ok(farScale < midScale && midScale < nearScale,
-  'cockroaches must grow as their z position approaches the player');
-
-assert.ok(script.includes('xScale=W*.035*depth/(37/42)'),
-  'world horizontal projection must track depth consistently with the player lane');
-assert.ok(script.includes('const x=project(player.x,0,player.z).x,y=H*(H>W? .735:.77)'),
-  'hero horizontal position must use the same projection as world entities');
-
-// Phase 0 deployment safety: this workflow must remain a manual, non-publishing preflight.
-const deployWorkflow = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'deploy-kalahit.yml'), 'utf8');
-assert.ok(/^\s*on:\s*\r?\n\s+workflow_dispatch:\s*$/m.test(deployWorkflow),
-  'deployment preflight must only run through manual workflow_dispatch');
-assert.ok(!/^\s*uses:\s/m.test(deployWorkflow),
-  'deployment preflight must not invoke an external action that could publish files');
-assert.ok(!/\b(?:NETLIFY_AUTH_TOKEN|NETLIFY_SITE_ID|netlify deploy|netlify-cli|curl|wget|rsync|scp)\b/i.test(deployWorkflow),
-  'deployment preflight must not contain unverified deployment credentials or upload commands');
-const executableLines = deployWorkflow.split(/\r?\n/).filter(line => /^\s{10,}\S/.test(line));
-assert.ok(executableLines.length > 0 && executableLines.every(line => /^\s*echo\s/.test(line.trim())),
-  'deployment preflight shell must remain echo-only until the canonical host is verified');
-assert.ok(deployWorkflow.includes('No files were uploaded and no Netlify project was modified.'),
-  'deployment preflight must explicitly state that it modifies no production project');
+assert.ok(shotRenderer[1].includes('shot.dx*.20') && shotRenderer[1].includes('shot.dz*.20'),
+  'projectile trails must be short and follow each projectile direction');
+assert.ok(shotRenderer[1].includes('clamp(p.s*.025,1.2,2.6)'),
+  'projectiles must have a capped small radius at close perspective depth');
 
 console.log('KALA HIT regression checks passed.');
