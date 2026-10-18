@@ -39,7 +39,7 @@ for (const id of ['startBtn', 'controlsBtn', 'pauseBtn', 'movePad', 'fireBtn', '
 
 assert.ok(script.includes('if(!gamepadAim&&enemies.length)') && script.includes('aimAngle=Math.atan2(target.x-player.x,-(target.z-player.z))'),
   'touch firing must aim at the nearest enemy without a clamped angle');
-const currentGun = script.match(/function drawGun\\(\\)\\{([\\s\\S]*?)\\n\\}\\nfunction spawnEnemy/);
+const currentGun = script.match(/function drawGun\(\)\{([\s\S]*?)\n\}\nfunction spawnEnemy/);
 assert.ok(currentGun && currentGun[1].includes('ctx.rotate(aimAngle)'),
   'the visible weapon must rotate with the actual shot direction');
 assert.ok(currentGun[1].includes('Hand-held compact sidearm'),
