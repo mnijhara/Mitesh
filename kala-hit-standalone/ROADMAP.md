@@ -154,3 +154,12 @@ Confirm the hosting provider and deployment path for `lalhit.fun` (the live Canv
 - Live browser smoke test after the merge: Start Solo Mission closed the menu; Pause toggled to Resume and back; no JavaScript errors were reported.
 - The deployment workflow is now preflight-only and does not publish to Netlify. Live parity is verified, but the exact hosting synchronization mechanism remains unverified; do not restore Netlify deployment until the canonical host/site identity is confirmed.
 - Remaining validation: mobile touch controls on a real device and physical gamepad pause/resume. Static tests cannot replace those hardware tests.
+
+
+### Mobile touch-control layout pass — 2026-10-18
+
+- Replaced the mobile control row's width-dependent flex layout with viewport-anchored positions for MOVE, AIM, MELEE, FIRE, and DASH. Added a compact layout rule for screens at or below 380px wide to preserve touch targets and avoid horizontal compression.
+- Extended `test-game.js` to assert the anchored mobile layout and compact-screen rule.
+- GitHub Actions regression/build run passed on commit `b4208806dc158a2e6a0adc2bf36aefc8ccce97cf`: https://github.com/mnijhara/Mitesh/actions/runs/39130169154
+- Still outstanding: verify actual touch hitboxes and overlap on a physical phone and landscape orientation. Static CSS assertions do not replace device testing.
+- Production parity after this specific mobile-layout commit has not yet been independently hash-verified. Do not claim the mobile layout is fully released until checked.
