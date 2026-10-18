@@ -44,7 +44,7 @@ assert.ok(currentGun && currentGun[1].includes('ctx.rotate(aimAngle)'),
   'the visible weapon must rotate with the actual shot direction');
 assert.ok(currentGun[1].includes('Hand-held compact sidearm'),
   'weapon must be drawn as a compact sidearm beside the hero');
-const shotRenderer = script.match(/for\\s*\\(const shot of shots\\)\\s*\\{([\\s\\S]*?)\\n\\s*for\\s*\\(const p of particles\\)/);
+const shotRenderer = script.match(/for\s*\(const shot of shots\)\s*\{([\s\S]*?)\n\s*for\s*\(const p of particles\)/);
 assert.ok(shotRenderer, 'projectiles must have a dedicated renderer');
 assert.ok(shotRenderer[1].includes('shot.dx*.20') && shotRenderer[1].includes('shot.dz*.20'),
   'projectile trails must be short and follow each projectile direction');
