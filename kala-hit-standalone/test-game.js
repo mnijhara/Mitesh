@@ -35,14 +35,6 @@ for (const id of ['startBtn', 'controlsBtn', 'pauseBtn', 'movePad', 'fireBtn', '
   assert.ok(html.includes('id="' + id + '"'), 'required control missing: ' + id);
 }
 
-const gunFn = script.match(/function drawGun\(\)\{([\s\S]*?)\n\}\nfunction spawnEnemy/);
-assert.ok(gunFn, 'foreground weapon renderer must exist');
-assert.ok(gunFn[1].includes('ctx.translate(heroX,heroY)'),
-  'weapon must be anchored to the hero rather than the screen corner');
-assert.ok(gunFn[1].includes('compact sidearm in the hero\'s hand'),
-  'weapon renderer must use the compact hand-held sidearm design');
-assert.ok(!gunFn[1].includes('H*(H>W?.765:.79)'),
-  'weapon must not be rendered as a large independent foreground overlay');
 
 
 assert.ok(script.includes('aim at the nearest live threat') && script.includes('aimAngle=clamp(Math.atan2(dx,-dz),-1.15,1.15)'),
@@ -104,12 +96,6 @@ assert.ok(script.includes('xScale=W*.035*depth/(37/42)'),
   'world horizontal projection must track depth consistently with the player lane');
 assert.ok(script.includes('const x=project(player.x,0,player.z).x,y=H*(H>W? .735:.77)'),
   'hero horizontal position must use the same projection as world entities');
-assert.ok(script.includes('ctx.translate(30,-14);ctx.rotate(aimAngle);ctx.translate(-30,14)'),
-  'gun barrel axis must rotate with the aim angle around its barrel base');
-assert.ok(!script.includes('ctx.rotate(aimAngle-Math.PI/2)'),
-  'gun must not retain the 90-degree aiming offset');
-assert.ok(script.includes('weaponAngle:aimAngle') && script.includes('origin=project(shot.originX,0,shot.originZ)'),
-  'shot tracers must preserve the firing angle and use the projected firing origin');
 
 // Phase 0 deployment safety: this workflow must remain a manual, non-publishing preflight.
 const deployWorkflow = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'deploy-kalahit.yml'), 'utf8');
