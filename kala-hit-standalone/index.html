@@ -68,19 +68,18 @@ function drawHero(){const x=project(player.x,0,player.z).x,y=H*(H>W? .735:.77),s
  ctx.fillStyle='#bd8c6b';ctx.beginPath();ctx.arc(0,-93,13,0,7);ctx.fill();ctx.fillStyle='#101725';ctx.beginPath();ctx.arc(0,-98,14,Math.PI,Math.PI*2);ctx.fill();ctx.fillStyle='#070c16';rounded(-12,-95,24,6,2,'#101a29');ctx.fillStyle='#6ff7ff';ctx.fillRect(-9,-94,7,2);ctx.fillRect(3,-94,7,2);ctx.fillStyle='#ff4e61';ctx.beginPath();ctx.moveTo(-9,-82);ctx.lineTo(9,-82);ctx.lineTo(23,-40);ctx.lineTo(9,-47);ctx.closePath();ctx.fill();
  ctx.restore()}
 function drawGun(){
- /* Compact sidearm attached to the hero's right hand. Barrel points up at zero angle,
-    matching the game's forward shot direction (-z). */
- const mobile=H>W,scale=clamp(H*.00065,mobile?.5:.6,mobile?.72:.82);
- const heroX=project(player.x,0,player.z).x,heroY=H*(mobile?.735:.77);
- ctx.save();ctx.translate(heroX+17*scale,heroY-48*scale);ctx.scale(scale,scale);ctx.rotate(aimAngle);
+ /* Hand-held compact sidearm; no independent screen-space weapon overlay. */
+ const mobile=H>W,scale=clamp(H*.00058,mobile?.48:.58,mobile?.68:.78);
+ const hero=project(player.x,0,player.z),x=hero.x+14*scale,y=H*(mobile?.735:.77);
+ ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.rotate(aimAngle);
  ctx.shadowColor='#000';ctx.shadowBlur=2;
- rounded(-4,-17,8,19,2,'#17283b','#91a9b9');
- rounded(-2,-27,4,12,1,'#26394a','#9bb5c7');
- rounded(-2,-31,4,4,1,'#101c2b','#6ff7ff');
- rounded(-3,-10,6,5,1,'#39dbea','#a3ffff');
- rounded(-3,2,6,11,2,'#172638','#607b8d');
+ rounded(-3,-15,6,17,2,'#17283b','#91a9b9');
+ rounded(-1.5,-26,3,12,1,'#26394a','#9bb5c7');
+ rounded(-1.5,-30,3,4,1,'#101c2b','#6ff7ff');
+ rounded(-2,-9,4,4,1,'#39dbea','#a3ffff');
+ rounded(-3,1,6,9,2,'#172638','#607b8d');
  ctx.shadowBlur=0;
- if(muzzleFlash>0){const f=clamp(muzzleFlash/.095,0,1);ctx.save();ctx.globalAlpha=f;ctx.shadowColor='#6ff7ff';ctx.shadowBlur=5;ctx.fillStyle='#fff6c7';ctx.beginPath();ctx.ellipse(0,-34,1.5+f,2+f,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+ if(muzzleFlash>0){const f=clamp(muzzleFlash/.075,0,1);ctx.save();ctx.globalAlpha=f;ctx.shadowColor='#6ff7ff';ctx.shadowBlur=4;ctx.fillStyle='#fff6c7';ctx.beginPath();ctx.arc(0,-32,1+f,0,Math.PI*2);ctx.fill();ctx.restore()}
  ctx.restore();
 }
 function spawnEnemy(boss=false){const e={x:rand(-7,7),z:rand(-31,-18),scale:boss?rand(1.45,1.7):rand(.9,1.15),hp:boss?12:2,maxHp:boss?12:2,speed:(boss?rand(1.1,1.45):rand(1.7,2.5))*(1+Math.min(.65,(wave-1)*.07)),phase:rand(0,7),boss,attack:0,flash:0,strafe:rand(-1,1)};enemies.push(e)}
@@ -89,7 +88,28 @@ function drawPickup(p){const q=project(p.x,0,p.z),y=roadY(p.z),s=clamp(q.s,.45,2
 function spawnCivilian(){const c={x:rand(-6,6),z:rand(-8,-1),shirt:['#b46d43','#537b91','#8b668c','#8c8853'][Math.floor(Math.random()*4)],rescued:false};civilians.push(c)}
 let frameRunning=false;function ensureFrame(){if(frameRunning)return;frameRunning=true;requestAnimationFrame(frame)}
 function resetGame(){playing=true;paused=false;score=0;hp=100;energy=100;kills=0;rescued=0;wave=1;zoneIndex=0;elapsed=0;spawnTimer=0;shake=0;player={x:0,z:5,aimX:0,aimZ:-1};enemies=[];shots=[];particles=[];pickups=[];civilians=[];for(let i=0;i<5;i++)spawnEnemy();for(let i=0;i<4;i++)spawnCivilian();$('overlay').classList.add('hide');$('score').textContent='000000';$('waveText').textContent='01';$('bossPanel').style.display='none';$('bossBar').style.width='100%';$('healthBar').style.width='100%';$('energyBar').style.width='100%';syncZone(false);toast('MISSION LIVE · '+zones[zoneIndex].short);last=performance.now();ensureFrame()}
-function fire(){if(!playing||paused)return;/* On touch, aim at the nearest live threat instead of inheriting movement direction. */if(!gamepadAim&&enemies.length){const target=enemies.reduce((best,e)=>{const d=Math.hypot(e.x-player.x,e.z-player.z);return !best||d<best.d?{e,d}:best},null);if(target){const dx=target.e.x-player.x,dz=target.e.z-player.z;aimAngle=clamp(Math.atan2(dx,-dz),-1.15,1.15)}}fireKick=Math.min(7,fireKick+4.8);muzzleFlash=.095;const mode=weaponMode,cost=mode===1?5:mode===2?3:1.2;if(energy<cost)return;energy=Math.max(0,energy-cost);const mx=player.x+Math.sin(aimAngle)*.9,mz=player.z-.35-Math.cos(aimAngle)*.9;const pellets=mode===1?5:1,spread=mode===1?.22:mode===2?.025:0,speed=mode===2?22:18,damage=mode===2?2:1;for(let i=0;i<pellets;i++){const angle=aimAngle+(pellets===1?rand(-spread,spread):((i-(pellets-1)/2)*spread));shots.push({x:mx,y:1.5,z:mz,dx:Math.sin(angle),dz:-Math.cos(angle),life:mode===2?1.35:1.1,speed,damage,originX:player.x,originZ:player.z,angle,weaponAngle:aimAngle})}for(let i=0;i<(mode===1?8:4);i++)particles.push({x:mx+rand(-.12,.12),z:mz-.15,y:1.4,vy:rand(-.3,.5),life:.25,color:mode===2?'#6ff7ff':'#ffd27a'});if(sound)beep((mode===2?190:mode===1?260:360)+Math.random()*150,.045)}
+function fire(){
+ if(!playing||paused||energy< (weaponMode===1?5:weaponMode===2?3:1.2))return;
+ /* Touch controls have no right-stick, so use a real target vector in world space. */
+ if(!gamepadAim&&enemies.length){
+   let target=null,best=Infinity;
+   for(const e of enemies){const dx=e.x-player.x,dz=e.z-player.z,d=dx*dx+dz*dz;
+     if(d<best){best=d;target=e}}
+   if(target)aimAngle=Math.atan2(target.x-player.x,-(target.z-player.z));
+ }
+ const mode=weaponMode,cost=mode===1?5:mode===2?3:1.2;
+ energy=Math.max(0,energy-cost);fireKick=Math.min(4,fireKick+2.4);muzzleFlash=.075;
+ const angle=aimAngle,dx=Math.sin(angle),dz=-Math.cos(angle);
+ const mx=player.x+dx*.72,mz=player.z-.25+dz*.72;
+ const pellets=mode===1?5:1,spread=mode===1?.16:mode===2?.012:0;
+ const speed=mode===2?24:20,damage=mode===2?2:1;
+ for(let i=0;i<pellets;i++){
+   const a=angle+(pellets===1?rand(-spread,spread):(i-(pellets-1)/2)*spread);
+   const sx=Math.sin(a),sz=-Math.cos(a);
+   shots.push({x:mx,y:1.1,z:mz,dx:sx,dz:sz,life:mode===2?1.2:.95,speed,damage,angle:a,originX:mx,originZ:mz});
+ }
+ if(sound)beep((mode===2?190:mode===1?260:360)+Math.random()*100,.045);
+}
 function melee(){if(!playing||paused||energy<8||meleeClock>0)return;energy-=8;meleeClock=.32;combo=comboClock>0?(combo%3)+1:1;comboClock=.85;const range=combo===3?3.4:2.45;const reachAngle=aimAngle;let hitCount=0;for(const e of [...enemies]){const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz);const angle=Math.atan2(dx,-dz);let diff=Math.atan2(Math.sin(angle-reachAngle),Math.cos(angle-reachAngle));if(d<range&&Math.abs(diff)<(combo===3 ? 0.95 : 0.72)){e.hp-=combo===3?2:1;e.z+=dz/(d||1)*.7;e.x+=dx/(d||1)*.45;hitCount++;shake=combo===3?7:3;for(let i=0;i<14;i++)particles.push({x:e.x+rand(-.55,.55),z:e.z+rand(-.4,.4),y:rand(.25,1.8),vy:rand(.2,1.7),life:.42,color:combo===3?'#6ff7ff':['#ffd27a','#ff5d47'][i%2]});if(e.hp<=0){enemies.splice(enemies.indexOf(e),1);score+=e.boss?2500:200;kills++;dropPickup(e);if(e.boss){wave++;$('waveText').textContent=String(wave).padStart(2,'0');syncZone(true);toast('BOSS DEFEATED · WAVE '+String(wave).padStart(2,'0'))}else{toast('MELEE TAKEDOWN · '+(combo===3?'FINISHER':'COMBO '+combo));if(kills===8||((kills-8)>0&&(kills-8)%12===0)){spawnEnemy(true);toast('MEGA ROACH INCOMING · PREPARE')}}}}}if(hitCount===0)toast('MELEE '+combo+' · WHIFF');else if(hitCount>0&&combo<3)toast('COMBO '+combo+' · HIT');if(sound)beep(combo===3?180:260,.09)}
 function dash(){if(!playing||paused||energy<20)return;energy-=20;player.z-=1.3;shake=5;for(let i=0;i<12;i++)particles.push({x:player.x+rand(-.5,.5),z:player.z+rand(-.4,.8),y:rand(.1,1.8),vy:rand(.1,1),life:.45,color:'#6ff7ff'});toast('DASH · BREAK THROUGH')}
 function beep(freq,dur){try{const AC=window.AudioContext||window.webkitAudioContext;if(!beep.ctx)beep.ctx=new AC();const a=beep.ctx;if(a.state==='suspended')a.resume();const o=a.createOscillator(),g=a.createGain();o.type='sawtooth';o.frequency.value=freq;g.gain.setValueAtTime(.035,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+dur);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+dur)}catch(e){}}
@@ -110,13 +130,15 @@ function draw(){ctx.save();if(shake>0){ctx.translate(rand(-shake,shake),rand(-sh
  for(const obj of objects){if(obj.type==='enemy')drawRoach(obj.o);else drawPerson(obj.o.x,obj.o.z,clamp(10/(obj.o.z+13),.55,1.8),obj.o.shirt)}
  for(const pickup of pickups)drawPickup(pickup);
  for(const shot of shots){
-   const p=project(shot.x,0,shot.z),yy=roadY(shot.z)-p.s*.75;
-   const tail=project(shot.x-shot.dx*.48,0,shot.z-shot.dz*.48);
-   ctx.save();ctx.lineCap='round';ctx.strokeStyle='#ff9b45';ctx.lineWidth=clamp(p.s*.09,1.5,3.2);
-   ctx.globalAlpha=.72;ctx.shadowColor='#ff9b45';ctx.shadowBlur=5;
-   ctx.beginPath();ctx.moveTo(tail.x,roadY(shot.z-shot.dz*.48)-tail.s*.75);ctx.lineTo(p.x,yy);ctx.stroke();
-   ctx.globalAlpha=1;ctx.fillStyle='#fff4c5';ctx.shadowColor='#fff0a6';ctx.shadowBlur=5;
-   ctx.beginPath();ctx.arc(p.x,yy,clamp(p.s*.065,1.5,3.5),0,Math.PI*2);ctx.fill();ctx.restore();
+   const p=project(shot.x,0,shot.z),yy=roadY(shot.z)-p.s*.30;
+   const tail=project(shot.x-shot.dx*.20,0,shot.z-shot.dz*.20);
+   const ty=roadY(shot.z-shot.dz*.20)-tail.s*.30;
+   const radius=clamp(p.s*.025,1.2,2.6);
+   ctx.save();ctx.lineCap='round';ctx.strokeStyle='#ff9b45';ctx.lineWidth=clamp(radius*.8,1,2);
+   ctx.globalAlpha=.65;ctx.shadowColor='#ff9b45';ctx.shadowBlur=2;
+   ctx.beginPath();ctx.moveTo(tail.x,ty);ctx.lineTo(p.x,yy);ctx.stroke();
+   ctx.globalAlpha=1;ctx.fillStyle='#fff4c5';ctx.shadowColor='#fff0a6';ctx.shadowBlur=2;
+   ctx.beginPath();ctx.arc(p.x,yy,radius,0,Math.PI*2);ctx.fill();ctx.restore();
  }
  for(const p of particles){const q=project(p.x,p.y,p.z);ctx.globalAlpha=clamp(p.life*2,0,1);ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=10;ctx.beginPath();ctx.arc(q.x,q.y-q.s*p.y,Math.max(1,q.s*.09),0,7);ctx.fill();ctx.shadowBlur=0;ctx.globalAlpha=1}
  drawHero();drawGun(); /* weapon rotates independently; hero stays upright */
