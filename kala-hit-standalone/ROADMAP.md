@@ -125,3 +125,12 @@ Confirm the hosting provider and deployment path for `lalhit.fun` (the live Canv
 - These tests cover JavaScript parse validity, guarded animation scheduling, removal of duplicate Start/Controls handlers, controller input while paused, controller pause toggle, Escape/HUD synchronization, and required touch/desktop controls.
 - Limitation: static regression tests do not replace interactive browser testing on touch devices or with a physical gamepad. No production deployment performed.
 - Current review: https://github.com/mnijhara/Mitesh/pull/8
+
+
+### Live UI inspection and follow-up — 2026-10-18
+
+- Inspected `https://lalhit.fun/` in a browser session: Start Solo Mission closed the menu and displayed the Rajiv Chowk mission HUD; Pause changed to Resume and back; no JavaScript errors were reported in that interaction.
+- Found a visible UI defect during the inspection: the desktop help panel repeated `WASD / ARROWS · MOVE` twice. Corrected the second line to `MOUSE / RIGHT STICK · AIM` on the review branch.
+- Added a regression assertion to prevent the duplicated movement hint from returning.
+- Re-ran the Node regression suite against the branch source: PASS (exit code 0). Ran the static build command: PASS (exit code 0).
+- Live site remains unchanged; fixes are still in PR #8 pending review/merge and the publishing path remains unverified.
