@@ -34,8 +34,6 @@ assert.ok(html.includes('@media(max-width:380px){.mobile-controls .move-pad{left
 for (const id of ['startBtn', 'controlsBtn', 'pauseBtn', 'movePad', 'fireBtn', 'meleeBtn', 'dashBtn', 'aimBtn']) {
   assert.ok(html.includes('id="' + id + '"'), 'required control missing: ' + id);
 }
-console.log('KALA HIT regression checks passed.');
-
 // Campaign progression must visibly move the player through distinct Delhi districts.
 assert.ok(html.includes("const zones=[{short:'RAJIV CHOWK'") && html.includes("short:'JANPATH'") && html.includes("short:'JANTAR MANTAR'"), 'campaign must contain three named districts');
 assert.ok(html.includes("function syncZone(notify=false)") && html.includes("$('locationText').textContent=z.short"), 'district transitions must update the visible location HUD');
@@ -52,3 +50,20 @@ assert.ok(script.includes("energy=Math.min(100,energy+45)"), 'energy cells must 
 assert.ok(script.includes('Math.hypot(player.x-p.x,player.z-p.z)<1.45'), 'players must collect pickups by moving close to them');
 assert.ok(script.includes('for(const pickup of pickups)drawPickup(pickup)'), 'pickups must be visible in the game world');
 assert.ok(script.includes('pickups=[];civilians=[]'), 'starting a fresh mission must clear old pickups');
+
+
+// Phase 0 deployment safety: this workflow must remain a manual, non-publishing preflight.
+const deployWorkflow = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'deploy-kalahit.yml'), 'utf8');
+assert.ok(/^\s*on:\s*\r?\n\s+workflow_dispatch:\s*$/m.test(deployWorkflow),
+  'deployment preflight must only run through manual workflow_dispatch');
+assert.ok(!/^\s*uses:\s/m.test(deployWorkflow),
+  'deployment preflight must not invoke an external action that could publish files');
+assert.ok(!/\b(?:NETLIFY_AUTH_TOKEN|NETLIFY_SITE_ID|netlify deploy|netlify-cli|curl|wget|rsync|scp)\b/i.test(deployWorkflow),
+  'deployment preflight must not contain unverified deployment credentials or upload commands');
+const executableLines = deployWorkflow.split(/\r?\n/).filter(line => /^\s{10,}\S/.test(line));
+assert.ok(executableLines.length > 0 && executableLines.every(line => /^\s*echo\s/.test(line.trim())),
+  'deployment preflight shell must remain echo-only until the canonical host is verified');
+assert.ok(deployWorkflow.includes('No files were uploaded and no Netlify project was modified.'),
+  'deployment preflight must explicitly state that it modifies no production project');
+
+console.log('KALA HIT regression checks passed.');
