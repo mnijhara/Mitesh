@@ -76,3 +76,20 @@ Priority: browser-compatible references and mechanics first; avoid pasting whole
 3. Re-fetch the latest file SHA before each GitHub update.
 4. Run syntax checks after code edits and smoke-test the live site after publish.
 5. Mark a task done only when evidence supports it. GitHub commit alone is not proof of deployment.
+
+
+## Live investigation log — 2026-10-18
+
+### Phase 0 task: distinguish the production targets (investigated; unresolved)
+
+- GitHub source of the standalone canvas game: `kala-hit-standalone/index.html`, blob SHA `03404fc8ba014071f37e4391c9f1545fcb30a42f`.
+- `https://lalhit.fun/` responds HTTP 200 and renders the Rajiv Chowk Canvas game shell (HUD, mission overlay, mobile controls). The HTML scrape does not include the JavaScript bundle, so it cannot prove which gameplay revision is running.
+- Authenticated Netlify project `kalahit` exists (site ID `0ece2f8e-0750-453b-90a3-02f35cf99dc8`), with published deploy `6ad3753a789153523a1127e8`, state `ready`, production URL `https://kalahit.netlify.app`, branch `main`, commit `5d7234b87f93c71b2ae64591ab919449b1569bb7`.
+- That Netlify deploy commit is older than the current standalone game source and its diff is for a different, top-down ROACH RIOT game. Do not overwrite either version without confirming the intended canonical product URL.
+- A second Netlify project `kala-hit-delhi` exists (site ID `b61825b9-cf6e-4340-9dec-f2229650ecb2`); its current deploy was not yet inspected.
+- Site-level environment-variable listing for the `kalahit` project returned no variables. The GitHub Actions workflow references `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID` secrets; previous run reported those credentials were not provided. Do not report a successful CI deployment.
+- Important distinction: `lalhit.fun` and `kalahit.netlify.app` are not yet proven to be the same deployment. Phase 0 remains open until the canonical URL is established, the correct site is linked to the intended source, and a fresh production deploy is verified.
+
+### Next task
+
+Inspect the second Netlify project and the repository's deployment history/settings; determine which project/domain should serve the current Canvas game. Then make the smallest safe deployment-path correction. Do not overwrite the live ROACH RIOT version until the intended target is unambiguous.
