@@ -24,6 +24,8 @@ assert.ok(script.includes('if(pausePressed&&!gamepadPrev.pause){paused=!paused;'
 assert.ok(script.includes("if(e.code==='Escape'&&playing){paused=!paused;") &&
   script.includes("$('pauseBtn').textContent=paused?'▶ RESUME':'Ⅱ PAUSE'"),
   'keyboard pause must keep the HUD in sync');
+assert.ok(html.includes('WASD / ARROWS · MOVE<br>MOUSE / RIGHT STICK · AIM'), 'desktop help must show movement and aim once each');
+assert.ok(!html.includes('WASD / ARROWS · MOVE<br>WASD / ARROWS · MOVE'), 'desktop help must not duplicate the movement hint');
 for (const id of ['startBtn', 'controlsBtn', 'pauseBtn', 'movePad', 'fireBtn', 'meleeBtn', 'dashBtn', 'aimBtn']) {
   assert.ok(html.includes('id="' + id + '"'), 'required control missing: ' + id);
 }
