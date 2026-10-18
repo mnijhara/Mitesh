@@ -178,3 +178,11 @@ Confirm the hosting provider and deployment path for `lalhit.fun` (the live Canv
 - A fresh HTTP 200 production scrape now contains the new pause-key guards and the mobile control layout markers: anchored 124px joystick, 142px controls layer, and the compact-screen media query at 380px. This supersedes the earlier scrape that showed the previous mobile CSS.
 - The edge transforms/minifies CSS during delivery, so this is a feature-marker spot-check rather than a byte-for-byte hash comparison. Physical phone touch testing, landscape overlap checks, and controller hardware testing remain outstanding.
 - Deployment mechanism is still not proven; do not infer that Hostinger auto-deployment is configured solely from the live markers.
+
+
+### Phase 0 host identification — 2026-10-18
+
+- Fresh public DNS lookups show Hostinger nameservers, Hostinger CDN A/AAAA records for the apex, and a Hostinger CDN CNAME for `www`. This agrees with the previously observed `Server: hcdn` response header and confirms Hostinger-managed DNS/CDN at the public edge.
+- A fresh production scrape returned HTTP 200 and contained the current mobile control markers plus Escape/P key-repeat guards. This is a feature-marker check only; the CDN transforms HTML/CSS, so it is not a byte-for-byte source comparison.
+- The DNS/CDN edge does not identify the origin document root or the exact hPanel website/Git deployment configuration. The connected Hostinger integration is mail-only; no website publishing control is available here. Phase 0 remains open and no gameplay files changed.
+- Keep the Netlify projects, `sanjeevani-quest/`, and the Hanuman game untouched. Next task: inspect the authenticated Hostinger website entry and its publishing settings before documenting a safe deployment path. Until then, do not guess or deploy to Netlify.
