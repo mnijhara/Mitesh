@@ -574,6 +574,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
     <div class="barrow"><span class="bar-label">VITALS</span><div class="bar"><i id="healthBar"></i></div></div>
     <div class="barrow"><span class="bar-label">CHAI</span><div class="bar"><i id="energyBar"></i></div></div>
     <div class="barrow" id="chronoRow"><span class="bar-label">4D TIME</span><div class="bar"><i id="chronoBar" style="background:linear-gradient(90deg,var(--c-cyan),#b08aff);width:100%"></i></div></div>
+    <div class="barrow" id="superRow"><span class="bar-label">ULTIMATE</span><div class="bar"><i id="superBar" style="background:linear-gradient(90deg,#ff4757,#ffd27a);width:0%"></i></div></div>
     <div class="barrow" id="dashRow" style="display:none"><span class="bar-label">DASH</span><div class="bar"><i id="dashBar"></i></div></div>
   </div>
 
@@ -587,7 +588,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   </div>
 
   <!-- Desktop keybinds -->
-  <div class="help">WASD / ARROWS · MOVE<br>MOUSE / RIGHT STICK · AIM<br>SPACE / J / F · FIRE · 1/2/3 OR Q · WEAPON · E/X · MELEE<br>SHIFT / K · DASH · C · 4D CHRONO · V · 3D CAM · P / ESC · PAUSE · R · RESTART</div>
+  <div class="help">WASD / ARROWS · MOVE<br>MOUSE / RIGHT STICK · AIM<br>SPACE / J / F · FIRE · 1/2/3 OR Q · WEAPON · E/X · MELEE<br>SHIFT / K · DASH · U · OVERDRIVE · C · 4D CHRONO · V · 3D CAM · P / ESC · PAUSE · R · RESTART</div>
 
   <!-- Objective panel -->
   <div class="mission">
@@ -597,6 +598,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
 
   <!-- Action bar — bottom right -->
   <div class="actions">
+    <button id="superBtn" style="border-color:rgba(255,71,87,.8);color:#ff4757;display:none;background:rgba(255,71,87,.2)">⚡ OVERDRIVE (U)</button>
     <button id="chronoBtn" style="border-color:rgba(77,245,255,.5);color:var(--c-cyan)">⏱ 4D CHRONO</button>
     <button id="photoBtn" style="border-color:rgba(255,204,85,.5);color:var(--c-gold)">📷 3D CAM</button>
     <button id="armoryBtn">⚔ ARMORY</button>
@@ -612,6 +614,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
     <button id="meleeBtn" class="melee-control">MELEE</button>
     <button id="fireBtn" class="fire-control">FIRE</button>
     <button id="dashBtn" class="dash-control">DASH</button>
+    <button id="superTouchBtn" class="super-control" style="position:absolute;right:182px;bottom:42px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#ff4757,#ffd27a);border:2px solid #fff;color:#fff;font-family:var(--font-display);font-size:10px;font-weight:900;display:none;pointer-events:auto;z-index:9">⚡ ULT</button>
   </div>
 </div>
 
@@ -660,8 +663,9 @@ let camRoll=0,camYaw=0,camPitch=0,camOffsetX=0,camOffsetY=0;
 let photoMode=false,photoYaw=0,photoPitch=0,photoZoom=1.0;
 let rupees=parseInt(localStorage.getItem('lalhit_rupees')||'0',10);
 let upgrades=JSON.parse(localStorage.getItem('lalhit_upgrades')||'{"damage":0,"energy":0,"chrono":0,"health":0}');
-
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a);
+let superMeter=0,superActive=false,bossStompWaves=[];
+const cyberRain=Array.from({length:55},()=>({x:rand(-14,14),y:rand(1,10),z:rand(-34,10),speed:rand(18,28)}));
 
 /* Dynamic Resolution & Framerate Tracking */
 let frameTimes=[];
@@ -971,6 +975,58 @@ function togglePhotoMode(){
   }
 }
 
+function speakAnnouncer(text){
+  try{
+    if('speechSynthesis' in window&&sound){
+      window.speechSynthesis.cancel();
+      const u=new SpeechSynthesisUtterance(text);
+      u.pitch=1.35;
+      u.rate=1.3;
+      u.volume=0.85;
+      window.speechSynthesis.speak(u);
+    }
+  }catch(e){}
+}
+
+function triggerOverdrive(){
+  if(!playing||paused||photoMode||superMeter<100)return;
+  superMeter=0;
+  superActive=true;
+  hitStop=0.18;
+  shake=18;
+  bossDeathFlash=0.9;
+  rumble(350,1.0,1.0);
+  toast('⚡ DELHI OVERDRIVE · BRAHMASTRA UNLEASHED!');
+  speakAnnouncer('DELHI OVERDRIVE!');
+  playTone(880,0.35,'sawtooth',0.28);
+  playTone(180,0.7,'sine',0.35);
+
+  const count=28;
+  for(let i=0;i<count;i++){
+    const ang=(Math.PI*2/count)*i;
+    shots.push({
+      x:player.x,y:1.1,z:player.z,
+      dx:Math.sin(ang),dz:-Math.cos(ang),
+      life:1.6,speed:26,damage:4,
+      angle:ang,originX:player.x,originZ:player.z,
+      isSuper:true
+    });
+  }
+  hazards=[];
+  for(let i=0;i<40;i++){
+    particles.push({
+      x:player.x+rand(-1.5,1.5),z:player.z+rand(-1.5,1.5),
+      y:rand(.3,2.5),vy:rand(1,4),life:rand(.6,1.2),
+      color:['#ffd27a','#ff4757','#6ff7ff','#ffffff'][i%4]
+    });
+  }
+  const sb=$('superBar'),sbtn=$('superBtn'),stb=$('superTouchBtn');
+  if(sb)sb.style.width='0%';
+  if(sbtn)sbtn.style.display='none';
+  if(stb)stb.style.display='none';
+  setTimeout(()=>{superActive=false;},1200);
+}
+
 function openArmory(){
   const ov=$('overlay'),mm=$('menuModal'),am=$('armoryModal');
   if(!ov||!am)return;
@@ -1083,6 +1139,19 @@ function drawBuilding(x,z,w,h,kind){
     for(let cx=p.x-ww/2+4*s;cx<p.x+ww/2;cx+=12*s){
       ctx.fillStyle='#e5d7bd';
       ctx.fillRect(cx,base-hh,Math.max(2,2.2*s),hh);
+    }
+    if(s>10){
+      const signs=['PALIKA BAZAAR','KEVENTERS 1925','WENGER\'S','ODEON 1939'];
+      const signText=signs[Math.abs(Math.floor(x*2.7))%signs.length];
+      const signColor=['#ff4757','#ffd27a','#6ff7ff','#ff7675'][Math.abs(Math.floor(x*2.7))%4];
+      ctx.save();
+      ctx.font='bold '+Math.max(7,Math.round(s*0.13))+'px system-ui';
+      ctx.fillStyle=signColor;
+      ctx.shadowColor=signColor;
+      ctx.shadowBlur=7;
+      ctx.textAlign='center';
+      ctx.fillText(signText,p.x,base-hh+6*s);
+      ctx.restore();
     }
   }
 }
@@ -1676,6 +1745,7 @@ function resetGame(){
   civilians=[];
   popups=[];
   hazards=[];
+  superMeter=0;superActive=false;bossStompWaves=[];
   for(let i=0;i<5;i++)spawnEnemy();
   for(let i=0;i<4;i++)spawnCivilian();
 
@@ -1688,6 +1758,10 @@ function resetGame(){
   $('healthBar').style.width='100%';
   $('energyBar').style.width='100%';
   const cb=$('chronoBar');if(cb)cb.style.width='100%';
+  const sb=$('superBar'),sbtn=$('superBtn'),stb=$('superTouchBtn');
+  if(sb)sb.style.width='0%';
+  if(sbtn)sbtn.style.display='none';
+  if(stb)stb.style.display='none';
   $('bountyText').textContent='₹'+rupees;
   syncZone(false);
   toast('MISSION LIVE · '+zones[zoneIndex].short);
@@ -1806,6 +1880,11 @@ function melee(){
 
       for(let i=0;i<14;i++)particles.push({x:e.x+rand(-.55,.55),z:e.z+rand(-.4,.4),y:rand(.25,1.8),vy:rand(.2,1.7),life:.42,color:combo===3?'#6ff7ff':['#ffd27a','#ff4757'][i%2]});
       addPopup(e.x,1.4,e.z,combo===3?'CRITICAL!':'+COMBO x'+combo,combo===3?'#6ff7ff':'#ffd27a');
+      superMeter=Math.min(100,superMeter+(combo===3?20:10));
+      const sb=$('superBar'),sbtn=$('superBtn'),stb=$('superTouchBtn');
+      if(sb)sb.style.width=superMeter+'%';
+      if(sbtn)sbtn.style.display=superMeter>=100?'inline-block':'none';
+      if(stb)stb.style.display=superMeter>=100?'block':'none';
 
       if(e.hp<=0){
         enemies.splice(enemies.indexOf(e),1);
@@ -1817,6 +1896,10 @@ function melee(){
         localStorage.setItem('lalhit_rupees',String(rupees));
         $('bountyText').textContent='₹'+rupees;
         addPopup(e.x,2.0,e.z,e.boss?'+₹250':'+₹35','#ffdf80');
+        superMeter=Math.min(100,superMeter+(e.boss?40:16));
+        if(sb)sb.style.width=superMeter+'%';
+        if(sbtn)sbtn.style.display=superMeter>=100?'inline-block':'none';
+        if(stb)stb.style.display=superMeter>=100?'block':'none';
         kills++;
         dropPickup(e);
         if(killStreak===3){showStreakPopup('TRIPLE KILL! x2','#ffd27a');$('streakMetric').style.display='';$('streakText').textContent='x2';}
@@ -1887,8 +1970,10 @@ function readGamepad(){
   }
   gamepadFire=!!(p.buttons?.[7]?.pressed||p.buttons?.[5]?.pressed);
   const meleePressed=!!p.buttons?.[0]?.pressed,dashPressed=!!p.buttons?.[1]?.pressed,pausePressed=!!p.buttons?.[9]?.pressed;
+  const superPressed=!!(p.buttons?.[4]?.pressed&&p.buttons?.[5]?.pressed);
   if(meleePressed&&!gamepadPrev.melee)melee();
   if(dashPressed&&!gamepadPrev.dash)dash();
+  if(superPressed)triggerOverdrive();
   if(pausePressed&&!gamepadPrev.pause){paused=!paused;
     $('pauseBtn').textContent=paused?'▶ RESUME':'Ⅱ PAUSE';
     if(!paused){last=performance.now();ensureFrame()}else toast('MISSION PAUSED');
@@ -1989,6 +2074,29 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
     e.x=clamp(e.x+Math.sin(elapsed*1.7+e.phase)*simDt*(e.boss?.25:.55)*(e.strafe||1),-8,8);
     e.z+=e.speed*simDt*.38;
 
+    /* Mega Roach Phase 2 Enrage & Ground Slam Stomp */
+    if(e.boss){
+      if(!e.enraged&&e.hp<=e.maxHp*0.5){
+        e.enraged=true;
+        e.stompTimer=1.8;
+        toast('MEGA ROACH ENRAGED · PHASE 2!');
+        speakAnnouncer('BOSS ENRAGED!');
+        shake=12;
+        rumble(300,1.0,1.0);
+      }
+      if(e.enraged){
+        e.stompTimer=(e.stompTimer||3.5)-simDt;
+        if(e.stompTimer<=0){
+          e.stompTimer=4.2;
+          bossStompWaves.push({x:e.x,z:e.z,radius:0.5,maxRadius:22,speed:8.2});
+          shake=9;
+          playTone(65,0.35,'sawtooth',0.24);
+          rumble(160,0.85,0.9);
+          toast('GROUND SLAM! DASH TO EVADE');
+        }
+      }
+    }
+
     /* Spitter acid attack */
     if(e.type==='spitter'){
       e.spitTimer-=simDt;
@@ -2027,6 +2135,20 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
     }
   }
 
+  /* Boss Stomp Ground Shockwaves */
+  for(const w of [...bossStompWaves]){
+    w.radius+=simDt*w.speed;
+    const d=Math.hypot(player.x-w.x,player.z-w.z);
+    if(Math.abs(w.radius-d)<1.2&&dashCooldown<2.4){
+      hp-=dt*36;
+      shake=5;
+      rumble(80,0.6,0.8);
+      toast('SHOCKWAVE DAMAGE!');
+      if(hp<=0)gameOver();
+    }
+    if(w.radius>=w.maxRadius)bossStompWaves.splice(bossStompWaves.indexOf(w),1);
+  }
+
   for(const s of [...shots]){
     s.x+=s.dx*dt*(s.speed||18);
     s.z+=s.dz*dt*(s.speed||18);
@@ -2039,6 +2161,11 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
         shake=2;
         soundImpact(s.damage>1);
         rumble(40,0.3,0.4);
+        superMeter=Math.min(100,superMeter+(e.boss?6:3));
+        const sb=$('superBar'),sbtn=$('superBtn'),stb=$('superTouchBtn');
+        if(sb)sb.style.width=superMeter+'%';
+        if(sbtn)sbtn.style.display=superMeter>=100?'inline-block':'none';
+        if(stb)stb.style.display=superMeter>=100?'block':'none';
         for(let i=0;i<8;i++)particles.push({x:e.x+rand(-.6,.6),z:e.z+rand(-.4,.4),y:rand(.2,1.6),vy:rand(.2,1.6),life:.5,color:['#ffd27a','#ff4757','#aeefff'][i%3]});
         addPopup(e.x,1.3,e.z,'-'+Math.round((s.damage||1)*15),'#ffd27a');
 
@@ -2052,11 +2179,15 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
           localStorage.setItem('lalhit_rupees',String(rupees));
           $('bountyText').textContent='₹'+rupees;
           addPopup(e.x,2.0,e.z,e.boss?'+₹250':'+₹35','#ffdf80');
+          superMeter=Math.min(100,superMeter+(e.boss?40:16));
+          if(sb)sb.style.width=superMeter+'%';
+          if(sbtn)sbtn.style.display=superMeter>=100?'inline-block':'none';
+          if(stb)stb.style.display=superMeter>=100?'block':'none';
           kills++;
           dropPickup(e);
-          if(killStreak===3){showStreakPopup('TRIPLE KILL! x2','#ffd27a');$('streakMetric').style.display='';$('streakText').textContent='x2';}
-          else if(killStreak===5){showStreakPopup('PENTA KILL! x3','#6ff7ff');$('streakText').textContent='x3';}
-          else if(killStreak===7){showStreakPopup('MASSACRE! x5','#ff4757');$('streakText').textContent='x5';}
+          if(killStreak===3){showStreakPopup('TRIPLE KILL! x2','#ffd27a');$('streakMetric').style.display='';$('streakText').textContent='x2';speakAnnouncer('TRIPLE KILL!');}
+          else if(killStreak===5){showStreakPopup('PENTA KILL! x3','#6ff7ff');$('streakText').textContent='x3';speakAnnouncer('PENTA KILL!');}
+          else if(killStreak===7){showStreakPopup('MASSACRE! x5','#ff4757');$('streakText').textContent='x5';speakAnnouncer('MASSACRE!');}
           if(scoreMultiplier>1&&killStreak>=3)addPopup(e.x,1.6,e.z,'x'+scoreMultiplier,'#6ff7ff');
           if(e.boss){
             wave++;
@@ -2069,6 +2200,7 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
             toast('BOSS DEFEATED · WAVE '+String(wave).padStart(2,'0'));
             addPopup(player.x,1.8,player.z,'BOSS DESTROYED!','#ffd27a');
             showStreakPopup('BOSS DOWN!','#ffd27a');
+            speakAnnouncer('BOSS DOWN!');
             if(wave>=4&&rescued>=4)missionVictory();
             for(let n=0;n<Math.min(4+wave,8);n++)spawnEnemy(false);
           }else{
@@ -2192,6 +2324,20 @@ function draw(){
     ctx.shadowBlur=0;
   }
 
+  /* Boss Stomp Ground Shockwaves */
+  for(const w of bossStompWaves){
+    const p=project(w.x,0,w.z);
+    const depthScale=clamp((w.z+32)/42,0.1,1.2);
+    ctx.save();
+    ctx.strokeStyle='rgba(255,71,87,'+(1-w.radius/w.maxRadius)+')';
+    ctx.lineWidth=4;
+    ctx.shadowColor='#ff4757';ctx.shadowBlur=12;
+    ctx.beginPath();
+    ctx.ellipse(p.x,roadY(w.z),w.radius*W*0.022*depthScale,w.radius*W*0.007*depthScale,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   /* Sort civilians and enemies by depth z for accurate 3D draw order */
   const objects=[
     ...civilians.filter(c=>!c.rescued).map(c=>({z:c.z,type:'civilian',o:c})),
@@ -2213,11 +2359,11 @@ function draw(){
     const radius=clamp(p.s*.025,1.2,2.6);
     ctx.save();
     ctx.lineCap='round';
-    ctx.strokeStyle='#ff9b45';
-    ctx.lineWidth=clamp(radius*.8,1,2);
+    ctx.strokeStyle=shot.isSuper?'#ffd27a':'#ff9b45';
+    ctx.lineWidth=shot.isSuper?3.5:clamp(radius*.8,1,2);
     ctx.globalAlpha=.65;
-    ctx.shadowColor='#ff9b45';
-    ctx.shadowBlur=2;
+    ctx.shadowColor=shot.isSuper?'#ff4757':'#ff9b45';
+    ctx.shadowBlur=shot.isSuper?10:2;
     ctx.beginPath();
     ctx.moveTo(tail.x,ty);
     ctx.lineTo(p.x,yy);
@@ -2227,7 +2373,7 @@ function draw(){
     ctx.shadowColor='#fff0a6';
     ctx.shadowBlur=2;
     ctx.beginPath();
-    ctx.arc(p.x,yy,radius,0,Math.PI*2);
+    ctx.arc(p.x,yy,radius*(shot.isSuper?1.6:1),0,Math.PI*2);
     ctx.fill();
     ctx.restore();
   }
@@ -2248,6 +2394,23 @@ function draw(){
   /* Render Hero and Weapon aligned with road */
   drawHero();
   drawGun();
+
+  /* Delhi Cyberpunk Atmospheric Rain */
+  ctx.save();
+  ctx.strokeStyle='rgba(111,247,255,0.22)';
+  ctx.lineWidth=1;
+  for(const r of cyberRain){
+    r.y-=0.016*r.speed;
+    r.z+=0.016*r.speed*0.25;
+    if(r.y<0){r.y=rand(6,12);r.z=rand(-34,8);r.x=rand(-14,14);}
+    const p1=project(r.x,r.y,r.z);
+    const p2=project(r.x,r.y+0.5,r.z);
+    ctx.beginPath();
+    ctx.moveTo(p1.x,p1.y);
+    ctx.lineTo(p2.x,p2.y);
+    ctx.stroke();
+  }
+  ctx.restore();
 
   /* Floating Popups & Damage Numbers */
   for(const pop of popups){
@@ -2417,6 +2580,8 @@ if(coopButton)coopButton.addEventListener('click',showCoopModal);
 
 window.addEventListener('error',e=>console.error('LAL HIT runtime error',e.message,e.filename,e.lineno));
 
+$('superBtn')?.addEventListener('click',triggerOverdrive);
+$('superTouchBtn')?.addEventListener('pointerdown',e=>{e.preventDefault();triggerOverdrive()});
 $('chronoBtn')?.addEventListener('click',toggleChrono);
 $('photoBtn')?.addEventListener('click',togglePhotoMode);
 $('armoryBtn')?.addEventListener('click',openArmory);
@@ -2524,6 +2689,7 @@ addEventListener('keydown',e=>{
   }
   if(e.code==='KeyC')toggleChrono();
   if(e.code==='KeyV')togglePhotoMode();
+  if(e.code==='KeyU'||e.code==='Digit4')triggerOverdrive();
   if(e.code==='KeyF')fire();
   if(e.code==='KeyE'||e.code==='KeyX')melee();
   if(['Digit1','Digit2','Digit3'].includes(e.code)){

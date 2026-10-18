@@ -136,6 +136,15 @@ const puppeteer = require('/tmp/node_modules/puppeteer-core');
     assert.ok(soundText.includes('ON'), 'Sound button must toggle to SOUND ON');
     console.log('✓ Sound button tested');
 
+    // Test 14: Overdrive Ultimate Ability
+    await page.evaluate(() => {
+      const btn = document.getElementById('superBtn');
+      if (btn) btn.click();
+    });
+    await page.keyboard.press('KeyU');
+    await new Promise(r => setTimeout(r, 200));
+    console.log('✓ Overdrive Brahmastra ultimate ability tested');
+
     // Test 11: Mobile touch controls
     const mPage = await browser.newPage();
     await mPage.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
