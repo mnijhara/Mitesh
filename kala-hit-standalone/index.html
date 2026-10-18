@@ -88,6 +88,19 @@ body:not(.in-game) .mobile-controls{
   display:none!important;
 }
 
+/* Low-health danger pulse */
+#dangerOverlay{position:fixed;inset:0;pointer-events:none;z-index:9;opacity:0;background:radial-gradient(ellipse at center,transparent 55%,#ff2233cc 100%);transition:opacity .15s}
+
+/* Killstreak popup animation */
+@keyframes streakPop{0%{transform:translate(-50%,-50%) scale(.5);opacity:0}30%{transform:translate(-50%,-50%) scale(1.4);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.streak-popup{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);z-index:300;font-size:clamp(28px,8vw,64px);font-weight:1000;letter-spacing:-.04em;font-style:italic;text-shadow:0 0 30px currentColor;pointer-events:none;animation:streakPop .4s cubic-bezier(.34,1.56,.64,1) forwards}
+
+/* Weapon mode indicator */
+#weaponHud{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:15;display:flex;gap:5px;pointer-events:none}
+.wslot{padding:5px 10px;border-radius:8px;border:1px solid #3e5872;background:#061322cc;font-size:9px;font-weight:1000;letter-spacing:.1em;color:#6d90b0;transition:all .12s}
+.wslot.active{background:#132840ee;border-color:var(--cyan);color:#e8faff;box-shadow:0 0 12px #6ff7ff44}
+.wslot.depleted{border-color:#ff475788;color:#ff8891}
+
 /* Mobile & Responsive Rules */
 @media(max-width:768px){
   .wave-metric{display:none}
@@ -111,6 +124,8 @@ body:not(.in-game) .mobile-controls{
   .mission span{font-size:9.5px;line-height:1.3;margin-top:2px}
 
   .mobile-controls{bottom:15px}
+  #weaponHud{display:none!important}
+  .streak-popup{font-size:clamp(22px,6vw,40px)}
 }
 
 @media(max-width:380px){.mobile-controls .move-pad{left:8px;width:106px;height:106px}
@@ -129,6 +144,16 @@ body:not(.in-game) .mobile-controls{
 <body>
 <canvas id="world" aria-label="LAL HIT game"></canvas>
 
+<!-- Danger pulse overlay (low health) -->
+<div id="dangerOverlay"></div>
+
+<!-- Weapon Selector HUD -->
+<div id="weaponHud">
+  <div class="wslot active" data-mode="0">1 · PULSE</div>
+  <div class="wslot" data-mode="1">2 · SCATTER</div>
+  <div class="wslot" data-mode="2">3 · HEAVY</div>
+</div>
+
 <!-- HUD Layer -->
 <div class="hud">
   <div class="brand">
@@ -144,11 +169,13 @@ body:not(.in-game) .mobile-controls{
     <div class="metric"><label>THREAT LEVEL</label><b id="threat">CRITICAL</b></div>
     <div class="metric"><label>SCORE</label><b id="score">000000</b></div>
     <div class="metric wave-metric"><label>WAVE</label><b id="waveText">01</b></div>
+    <div class="metric" id="streakMetric" style="display:none"><label>STREAK</label><b id="streakText" style="color:var(--gold)">x1</b></div>
   </div>
 
   <div class="bars">
     <div class="barrow"><span>VITALS</span><div class="bar"><i id="healthBar"></i></div></div>
     <div class="barrow"><span>CHAi</span><div class="bar"><i id="energyBar" style="background:linear-gradient(90deg,#ff4757,#62eaff)"></i></div></div>
+    <div class="barrow" id="dashRow" style="display:none"><span>DASH</span><div class="bar"><i id="dashBar" style="background:linear-gradient(90deg,#ffd27a,#ff9940);transition:width .08s"></i></div></div>
     <div id="bossPanel" class="boss-panel">
       <div class="boss-label"><span>MEGA ROACH</span><span id="bossHpText">100%</span></div>
       <div class="bar boss-bar"><i id="bossBar"></i></div>
@@ -208,7 +235,7 @@ const canvas=document.getElementById('world'),ctx=canvas.getContext('2d',{alpha:
 let W=innerWidth,H=innerHeight,dpr=1;
 const $=id=>document.getElementById(id);
 const keys={};
-let playing=false,paused=false,sound=false,score=0,hp=100,energy=100,kills=0,rescued=0,wave=1,zoneIndex=0,elapsed=0,last=0,spawnTimer=0,shake=0,fireHeld=false,toastTimer=0,combo=0,comboClock=0,meleeClock=0,weaponMode=0,fireKick=0,muzzleFlash=0,runCycle=0,hitStop=0;
+let playing=false,paused=false,sound=false,score=0,hp=100,energy=100,kills=0,rescued=0,wave=1,zoneIndex=0,elapsed=0,last=0,spawnTimer=0,shake=0,fireHeld=false,toastTimer=0,combo=0,comboClock=0,meleeClock=0,weaponMode=0,fireKick=0,muzzleFlash=0,runCycle=0,hitStop=0,killStreak=0,streakClock=0,scoreMultiplier=1,lowHealthPulse=0,dashCooldown=0,bossDeathFlash=0;
 let player={x:0,z:5,aimX:0,aimZ:-1};
 let enemies=[],shots=[],particles=[],pickups=[],civilians=[],buildings=[],popups=[],hazards=[];
 let touch={x:0,y:0,id:null},aimPointer={x:.5,y:.4,id:null},aimAngle=0,aimScreenX=.5,aimScreenY=.42;
@@ -955,6 +982,15 @@ function addPopup(x,y,z,text,color='#ffd27a'){
   popups.push({x,y,z,text,color,life:0.75,maxLife:0.75,vy:1.2});
 }
 
+function showStreakPopup(text,color){
+  const el=document.createElement('div');
+  el.className='streak-popup';
+  el.textContent=text;
+  el.style.color=color;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),800);
+}
+
 function drawPickup(p){
   const q=project(p.x,0,p.z),y=roadY(p.z),s=clamp(q.s,.45,2.2),color=p.type==='med'?'#ff4757':'#6ff7ff';
   ctx.save();
@@ -1011,6 +1047,12 @@ function resetGame(){
   spawnTimer=0;
   shake=0;
   hitStop=0;
+  killStreak=0;
+  streakClock=0;
+  scoreMultiplier=1;
+  lowHealthPulse=0;
+  dashCooldown=0;
+  bossDeathFlash=0;
   player={x:0,z:5,aimX:0,aimZ:-1};
   enemies=[];
   shots=[];
@@ -1148,15 +1190,26 @@ function melee(){
 
       if(e.hp<=0){
         enemies.splice(enemies.indexOf(e),1);
-        score+=e.boss?2500:200;
+        killStreak++;
+        streakClock=3.5;
+        scoreMultiplier=killStreak>=7?5:killStreak>=5?3:killStreak>=3?2:1;
+        score+=Math.round((e.boss?2500:200)*scoreMultiplier);
         kills++;
         dropPickup(e);
+        if(killStreak===3){showStreakPopup('TRIPLE KILL! x2','#ffd27a');$('streakMetric').style.display='';$('streakText').textContent='x2';}
+        else if(killStreak===5){showStreakPopup('PENTA KILL! x3','#6ff7ff');$('streakText').textContent='x3';}
+        else if(killStreak===7){showStreakPopup('MASSACRE! x5','#ff4757');$('streakText').textContent='x5';}
         if(e.boss){
+          bossDeathFlash=1.0;
+          shake=14;
+          rumble(400,1.0,1.0);
+          for(let n=0;n<30;n++)particles.push({x:e.x+rand(-1.5,1.5),z:e.z+rand(-1.5,1.5),y:rand(.3,2.2),vy:rand(.5,3),life:rand(.5,.9),color:['#ff4757','#ffd27a','#ffffff','#ff9940'][n%4]});
           wave++;
           $('waveText').textContent=String(wave).padStart(2,'0');
           syncZone(true);
           toast('BOSS DEFEATED · WAVE '+String(wave).padStart(2,'0'));
           addPopup(player.x,1.8,player.z,'BOSS ELIMINATED!','#ffd27a');
+          showStreakPopup('BOSS DOWN!','#ffd27a');
           if(wave>=4&&rescued>=4)missionVictory();
         }else{
           toast('MELEE TAKEDOWN · '+(combo===3?'FINISHER':'COMBO '+combo));
@@ -1177,14 +1230,18 @@ function melee(){
 }
 
 function dash(){
-  if(!playing||paused||energy<20)return;
+  if(!playing||paused||energy<20||dashCooldown>0)return;
   energy-=20;
+  dashCooldown=3.0; // 3-second cooldown
   meleeClock=0; // Dash-canceling: cancel any attack recovery frames!
   player.z-=1.5;
   shake=5;
   soundDash();
   rumble(70,0.5,0.3);
   for(let i=0;i<16;i++)particles.push({x:player.x+rand(-.5,.5),z:player.z+rand(-.4,.8),y:rand(.1,1.8),vy:rand(.1,1),life:.45,color:'#6ff7ff'});
+  // Dash afterimage particles trail
+  for(let i=0;i<8;i++)particles.push({x:player.x+rand(-.3,.3),z:player.z+1.5+i*.2,y:rand(.3,1.4),vy:rand(.05,.3),life:.6,color:'#ffffff66'});
+  $('dashRow').style.display='';
   toast('DASH · CHAI BOOST');
 }
 
@@ -1234,6 +1291,24 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
   if(comboClock>0)comboClock-=dt;
   if(comboClock<=0)combo=0;
   if(meleeClock>0)meleeClock-=dt;
+  if(streakClock>0){streakClock-=dt;}else{killStreak=0;scoreMultiplier=1;}
+  if(dashCooldown>0){
+    dashCooldown=Math.max(0,dashCooldown-dt);
+    const pct=1-(dashCooldown/3.0);
+    const db=$('dashBar');if(db)db.style.width=(pct*100)+'%';
+    if(dashCooldown<=0){$('dashRow').style.display='none';}
+  }
+  if(bossDeathFlash>0)bossDeathFlash=Math.max(0,bossDeathFlash-dt*2.5);
+
+  /* Low-health danger pulse */
+  if(hp<25){
+    lowHealthPulse+=dt*4;
+    const pulse=Math.abs(Math.sin(lowHealthPulse));
+    const dov=$('dangerOverlay');if(dov)dov.style.opacity=(pulse*0.6).toFixed(2);
+  }else{
+    const dov=$('dangerOverlay');if(dov)dov.style.opacity='0';
+    lowHealthPulse=0;
+  }
 
   let ax=gp.moveX,az=gp.moveY;
   if(keys.KeyA||keys.ArrowLeft)ax--;
@@ -1331,19 +1406,31 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
 
         if(e.hp<=0){
           enemies.splice(enemies.indexOf(e),1);
-          score+=e.boss?2500:150;
+          killStreak++;
+          streakClock=3.5;
+          scoreMultiplier=killStreak>=7?5:killStreak>=5?3:killStreak>=3?2:1;
+          score+=Math.round((e.boss?2500:150)*scoreMultiplier);
           kills++;
           dropPickup(e);
+          if(killStreak===3){showStreakPopup('TRIPLE KILL! x2','#ffd27a');$('streakMetric').style.display='';$('streakText').textContent='x2';}
+          else if(killStreak===5){showStreakPopup('PENTA KILL! x3','#6ff7ff');$('streakText').textContent='x3';}
+          else if(killStreak===7){showStreakPopup('MASSACRE! x5','#ff4757');$('streakText').textContent='x5';}
+          if(scoreMultiplier>1&&killStreak>=3)addPopup(e.x,1.6,e.z,'x'+scoreMultiplier,'#6ff7ff');
           if(e.boss){
             wave++;
+            bossDeathFlash=1.0;
+            shake=12;
+            rumble(400,1.0,1.0);
+            for(let n=0;n<30;n++)particles.push({x:e.x+rand(-1.5,1.5),z:e.z+rand(-1.5,1.5),y:rand(.3,2.2),vy:rand(.5,3),life:rand(.5,.9),color:['#ff4757','#ffd27a','#ffffff','#ff9940'][n%4]});
             $('waveText').textContent=String(wave).padStart(2,'0');
             syncZone(true);
             toast('BOSS DEFEATED · WAVE '+String(wave).padStart(2,'0'));
             addPopup(player.x,1.8,player.z,'BOSS DESTROYED!','#ffd27a');
+            showStreakPopup('BOSS DOWN!','#ffd27a');
             if(wave>=4&&rescued>=4)missionVictory();
             for(let n=0;n<Math.min(4+wave,8);n++)spawnEnemy(false);
           }else{
-            toast('COCKROACH ELIMINATED');
+            toast('COCKROACH ELIMINATED'+(scoreMultiplier>1?' · x'+scoreMultiplier+' BONUS':''));
             if(kills===8||((kills-8)>0&&(kills-8)%12===0))spawnEnemy(true);
           }
         }
@@ -1421,6 +1508,20 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
   $('missionText').textContent=rescued===4
     ?'Residents rescued! Eliminate the remaining mutant swarm.'
     :'Eliminate threats and approach trapped civilians when area is clear ('+rescued+'/4 rescued).';
+
+  /* Weapon HUD slot active/depleted sync */
+  const weaponCosts=[1.2,5,3];
+  document.querySelectorAll('#weaponHud .wslot').forEach(sl=>{
+    const m=parseInt(sl.dataset.mode);
+    sl.classList.toggle('active',m===weaponMode);
+    sl.classList.toggle('depleted',energy<weaponCosts[m]&&m!==weaponMode);
+  });
+  /* Streak HUD update */
+  if(scoreMultiplier>1){
+    const st=$('streakText');if(st)st.textContent='x'+scoreMultiplier;
+  }else if(streakClock<=0){
+    $('streakMetric').style.display='none';
+  }
 }
 
 function draw(){
@@ -1522,6 +1623,14 @@ function draw(){
   v.addColorStop(1,'#020711a8');
   ctx.fillStyle=v;
   ctx.fillRect(0,0,W,H);
+
+  /* Boss death white flash */
+  if(bossDeathFlash>0){
+    ctx.globalAlpha=clamp(bossDeathFlash,0,0.85);
+    ctx.fillStyle='#ffffff';
+    ctx.fillRect(0,0,W,H);
+    ctx.globalAlpha=1;
+  }
 
   if(!playing){
     ctx.fillStyle='#eaf8ff99';
@@ -1773,13 +1882,31 @@ canvas.addEventListener('pointermove',e=>{
 }));
 
 /* Menu Preview Animation */
+let menuElapsed=0,menuLast=0;
 function drawMenuPreview(){
   if(!menuPreview)return;
+  const now=performance.now();
+  const dt=Math.min(.05,(now-menuLast)/1000||.016);
+  menuLast=now;
+  menuElapsed+=dt;
+  elapsed=menuElapsed; // share timer for drawHero/drawRoach animations
   drawCity();
-  for(let i=0;i<4;i++)drawRoach({x:(i-1.5)*3,z:-6-i*5,scale:1.25+i*.1,hp:2,maxHp:2,phase:i});
+  // Drifting roaches in 2 rows
+  const roachDefs=[
+    {baseX:-6,z:-26,scale:0.95,phase:0},
+    {baseX:0, z:-24,scale:1.05,phase:1.2},
+    {baseX:6, z:-26,scale:0.9, phase:2.4},
+    {baseX:-3,z:-18,scale:1.15,phase:3.6},
+    {baseX:3, z:-20,scale:1.1, phase:4.8},
+  ];
+  for(const rd of roachDefs){
+    const drift=Math.sin(menuElapsed*.7+rd.phase)*1.8;
+    drawRoach({x:rd.baseX+drift,z:rd.z,scale:rd.scale,hp:2,maxHp:2,phase:rd.phase,boss:false,type:'standard',flash:0,strafe:1});
+  }
   drawHero();
   requestAnimationFrame(drawMenuPreview);
 }
+menuLast=performance.now();
 drawMenuPreview();
 
 })();
