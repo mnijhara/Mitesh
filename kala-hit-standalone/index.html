@@ -68,18 +68,22 @@ function drawHero(){const x=project(player.x,0,player.z).x,y=H*(H>W? .735:.77),s
  ctx.fillStyle='#bd8c6b';ctx.beginPath();ctx.arc(0,-93,13,0,7);ctx.fill();ctx.fillStyle='#101725';ctx.beginPath();ctx.arc(0,-98,14,Math.PI,Math.PI*2);ctx.fill();ctx.fillStyle='#070c16';rounded(-12,-95,24,6,2,'#101a29');ctx.fillStyle='#6ff7ff';ctx.fillRect(-9,-94,7,2);ctx.fillRect(3,-94,7,2);ctx.fillStyle='#ff4e61';ctx.beginPath();ctx.moveTo(-9,-82);ctx.lineTo(9,-82);ctx.lineTo(23,-40);ctx.lineTo(9,-47);ctx.closePath();ctx.fill();
  ctx.restore()}
 function drawGun(){
- /* Hand-held compact sidearm; no independent screen-space weapon overlay. */
- const mobile=H>W,scale=clamp(H*.00058,mobile?.48:.58,mobile?.68:.78);
- const hero=project(player.x,0,player.z),x=hero.x+14*scale,y=H*(mobile?.735:.77);
- ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.rotate(aimAngle);
+ /* Match the hero's exact canvas transform and attach the pistol at the right hand.
+    The barrel points upward at zero aim; rotating it uses the same world angle as shots. */
+ const mobile=H>W,heroScale=clamp(H*.0011,.65,1.18);
+ const heroX=project(player.x,0,player.z).x,heroY=H*(mobile?.735:.77);
+ ctx.save();
+ ctx.translate(heroX+20*heroScale,heroY-48*heroScale);
+ ctx.scale(heroScale,heroScale);
+ ctx.rotate(aimAngle);
  ctx.shadowColor='#000';ctx.shadowBlur=2;
- rounded(-3,-15,6,17,2,'#17283b','#91a9b9');
- rounded(-1.5,-26,3,12,1,'#26394a','#9bb5c7');
- rounded(-1.5,-30,3,4,1,'#101c2b','#6ff7ff');
- rounded(-2,-9,4,4,1,'#39dbea','#a3ffff');
- rounded(-3,1,6,9,2,'#172638','#607b8d');
+ rounded(-3,-13,6,15,2,'#17283b','#91a9b9');
+ rounded(-1.5,-24,3,12,1,'#26394a','#9bb5c7');
+ rounded(-1.5,-28,3,4,1,'#101c2b','#6ff7ff');
+ rounded(-2,-8,4,4,1,'#39dbea','#a3ffff');
+ rounded(-3,2,6,9,2,'#172638','#607b8d');
  ctx.shadowBlur=0;
- if(muzzleFlash>0){const f=clamp(muzzleFlash/.075,0,1);ctx.save();ctx.globalAlpha=f;ctx.shadowColor='#6ff7ff';ctx.shadowBlur=4;ctx.fillStyle='#fff6c7';ctx.beginPath();ctx.arc(0,-32,1+f,0,Math.PI*2);ctx.fill();ctx.restore()}
+ if(muzzleFlash>0){const f=clamp(muzzleFlash/.075,0,1);ctx.save();ctx.globalAlpha=f;ctx.shadowColor='#6ff7ff';ctx.shadowBlur=4;ctx.fillStyle='#fff6c7';ctx.beginPath();ctx.arc(0,-30,1+f,0,Math.PI*2);ctx.fill();ctx.restore()}
  ctx.restore();
 }
 function spawnEnemy(boss=false){const e={x:rand(-7,7),z:rand(-31,-18),scale:boss?rand(1.45,1.7):rand(.9,1.15),hp:boss?12:2,maxHp:boss?12:2,speed:(boss?rand(1.1,1.45):rand(1.7,2.5))*(1+Math.min(.65,(wave-1)*.07)),phase:rand(0,7),boss,attack:0,flash:0,strafe:rand(-1,1)};enemies.push(e)}
