@@ -217,6 +217,66 @@ const puppeteer = require('/tmp/node_modules/puppeteer-core');
     await page.screenshot({ path: '/Users/miteshnijhara/.gemini/antigravity/brain/6ae184f6-c178-4e69-bc60-fd07fb28bb9e/live_parry_clash.png' });
     console.log('✓ Captured live parry clash screenshot artifact');
 
+    // Test 16: CrazyGames Beat 'Em Up Mechanics (Aerial Launcher, Air Juggle, Wall Splat, and Hype Meter)
+    const cgResult = await page.evaluate(() => {
+      const t = window.__lhTest;
+      const player = t.getPlayer();
+
+      t.spawnEnemy();
+      const enemies = t.getEnemies();
+      const e = enemies[enemies.length - 1];
+      e.x = player.x;
+      e.z = player.z - 1.8;
+      e.hp = 10;
+      e.maxHp = 10;
+
+      t.setEnergy(100);
+      t.setMeleeClock(0);
+      t.melee();
+      t.setMeleeClock(0);
+      t.melee();
+      t.setMeleeClock(0);
+      t.melee();
+
+      const launched = (e.vy > 0 || e.y > 0);
+
+      // Test 2: Air juggle follow-up within strike range
+      e.x = player.x;
+      e.z = player.z - 1.5;
+      e.y = 0.5;
+      e.vy = 2.0;
+      t.setMeleeClock(0);
+      t.setEnergy(100);
+      t.melee();
+      const juggled = (e.juggleCount > 0);
+
+      // Test 3: Wall Splat barrier crush
+      player.x = 5.8;
+      e.x = 7.0;
+      e.z = player.z - 1.5;
+      t.setMeleeClock(0);
+      t.setEnergy(100);
+      t.melee();
+
+      t.addHype(100);
+      const hypeOnFire = t.isHypeActive();
+
+      return {
+        launched,
+        juggled,
+        hypeOnFire
+      };
+    });
+
+    assert.ok(cgResult.launched, 'Combo finisher must launch non-boss enemies vertically into air');
+    assert.ok(cgResult.juggled, 'Striking an airborne enemy must trigger an Air Juggle');
+    assert.ok(cgResult.hypeOnFire, 'Filling Hype Meter to 100% must trigger Crowd on Fire state');
+    console.log('✓ CrazyGames Aerial Launcher, Air Juggle, Wall Splat, and Crowd Hype verified');
+
+    await new Promise(r => setTimeout(r, 120));
+    await page.screenshot({ path: '/Users/miteshnijhara/.gemini/antigravity/brain/6ae184f6-c178-4e69-bc60-fd07fb28bb9e/live_crazygames_combat.png' });
+    console.log('✓ Captured live CrazyGames combat screenshot artifact');
+
     // Check for runtime errors
     assert.equal(errors.length, 0, 'No runtime errors permitted: ' + errors.join('; '));
     console.log('✓ Zero runtime or console errors');

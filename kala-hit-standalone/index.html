@@ -567,6 +567,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
     <div class="metric"><label>SCORE</label><b id="score">000000</b></div>
     <div class="metric wave-metric"><label>WAVE</label><b id="waveText">01</b></div>
     <div class="metric" id="streakMetric" style="display:none"><label>STREAK</label><b id="streakText">x1</b></div>
+    <div class="metric" id="hypeMetric" style="display:none"><label>HYPE</label><b id="hypeText" style="color:var(--c-gold)">100%</b></div>
   </div>
 
   <!-- Vital bars — left -->
@@ -666,6 +667,28 @@ let upgrades=JSON.parse(localStorage.getItem('lalhit_upgrades')||'{"damage":0,"e
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a);
 let superMeter=0,superActive=false,bossStompWaves=[];
 const cyberRain=Array.from({length:55},()=>({x:rand(-14,14),y:rand(1,10),z:rand(-34,10),speed:rand(18,28)}));
+
+/* CrazyGames Fighting Mechanics: Momentum & Crowd Hype Meter */
+let hypeMeter=0,hypeActive=false,hypeTimer=0;
+function addHype(amount){
+  if(hypeActive)return;
+  hypeMeter=Math.min(100,hypeMeter+amount);
+  const hm=$('hypeMetric'),ht=$('hypeText');
+  if(hm)hm.style.display='';
+  if(ht)ht.textContent=Math.round(hypeMeter)+'%';
+  if(hypeMeter>=100&&!hypeActive){
+    hypeActive=true;
+    hypeTimer=9.0;
+    toast('🔥 CROWD ON FIRE! 2X RUPEE BOUNTY! (भीड़ बेकाबू)');
+    showStreakPopup('CROWD ON FIRE! 🔥','#ffcc55');
+    speakAnnouncer('CROWD ON FIRE!');
+    shake=8;
+    playTone(523.25,0.15,'triangle',0.3);
+    setTimeout(()=>playTone(659.25,0.15,'triangle',0.3),100);
+    setTimeout(()=>playTone(783.99,0.25,'triangle',0.35),200);
+    setTimeout(()=>playTone(1046.5,0.4,'triangle',0.4),300);
+  }
+}
 
 /* Dynamic Resolution & Framerate Tracking */
 let frameTimes=[];
@@ -1296,14 +1319,24 @@ function drawPerson(x,z,scale,shirt,pose=0){
 /* Mutant Cockroaches with Variant Aesthetics */
 function drawRoach(e){
   const p=project(e.x,0,e.z),s=p.s*e.scale,base=roadY(e.z);
+  const airOffset=(e.y||0)*s*18;
+  ctx.save();
+  /* Ground Contact Shadow */
   ctx.save();
   ctx.translate(p.x,base);
   ctx.scale(s,s);
-  const bob=Math.sin(elapsed*7+e.phase)*.07;
-  ctx.fillStyle='#0009';
+  const shadowAlpha=Math.max(0.18,0.6/(1+(e.y||0)*1.4));
+  ctx.fillStyle='rgba(0,0,0,'+shadowAlpha+')';
   ctx.beginPath();
-  ctx.ellipse(0,0,1.05,.2,0,0,7);
+  const shadowScale=Math.max(0.35,1-(e.y||0)*0.16);
+  ctx.ellipse(0,0,1.05*shadowScale,.2*shadowScale,0,0,7);
   ctx.fill();
+  ctx.restore();
+
+  /* Roach Body Translation with Aerial Lift */
+  ctx.translate(p.x,base-airOffset);
+  ctx.scale(s,s);
+  const bob=Math.sin(elapsed*7+e.phase)*.07;
 
   /* 6 jointed spiny legs */
   for(let side of [-1,1]){
@@ -1440,7 +1473,7 @@ function drawRoach(e){
 
   /* Health bar */
   if(e.hp>1){
-    const bw=clamp(s*1.4,22,100),x=p.x-bw/2,y=base-s*2.5;
+    const bw=clamp(s*1.4,22,100),x=p.x-bw/2,y=base-airOffset-s*2.5;
     ctx.fillStyle='#07101d';
     ctx.fillRect(x,y,bw,4);
     ctx.fillStyle=e.type==='spitter'?'#a3e635':'#ff665f';
@@ -1465,6 +1498,35 @@ function drawHero(){
   ctx.save();
   ctx.translate(heroX,heroY);
   ctx.scale(heroScale,heroScale);
+
+  /* CrazyGames Combat Aura: Crowd on Fire & Low-Health Rage */
+  if(hypeActive){
+    ctx.save();
+    ctx.shadowColor='#ffd27a';ctx.shadowBlur=16;
+    ctx.strokeStyle='rgba(255,210,122,'+(0.4+0.3*Math.sin(elapsed*12))+')';
+    ctx.lineWidth=2.5;
+    ctx.beginPath();
+    ctx.ellipse(0,-24,18,32,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.fillStyle='#ffd27a';
+    ctx.font='900 7px system-ui';
+    ctx.textAlign='center';
+    ctx.fillText('🔥 ON FIRE',0,-56);
+    ctx.restore();
+  }else if(hp<=30){
+    ctx.save();
+    ctx.shadowColor='#ff4757';ctx.shadowBlur=14;
+    ctx.strokeStyle='rgba(255,71,87,'+(0.45+0.35*Math.sin(elapsed*10))+')';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.ellipse(0,-24,17,30,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.fillStyle='#ff4757';
+    ctx.font='900 7px system-ui';
+    ctx.textAlign='center';
+    ctx.fillText('⚡ RAGE',0,-56);
+    ctx.restore();
+  }
 
   const moving=Math.abs(runCycle)>0.001;
   const legSwing=moving?Math.sin(runCycle)*15:0;
@@ -1677,7 +1739,10 @@ function spawnEnemy(boss=false){
     spitTimer:rand(1.5,3.5),
     strafe:rand(-1,1),
     stunClock:0,
-    windingUp:false
+    windingUp:false,
+    y:0,
+    vy:0,
+    juggleCount:0
   };
   enemies.push(e);
 }
@@ -1777,6 +1842,8 @@ function resetGame(){
   popups=[];
   hazards=[];
   superMeter=0;superActive=false;bossStompWaves=[];
+  hypeMeter=0;hypeActive=false;hypeTimer=0;
+  const hm=$('hypeMetric');if(hm)hm.style.display='none';
   for(let i=0;i<5;i++)spawnEnemy();
   for(let i=0;i<4;i++)spawnCivilian();
 
@@ -1920,6 +1987,7 @@ function melee(){
       shots.push({x:curX,y:1.1,z:curZ,dx:0,dz:-1,life:1.2,speed:28,damage:5,angle:0,originX:curX,originZ:curZ});
       for(let k=0;k<12;k++)particles.push({x:curX+rand(-.4,.4),z:curZ+rand(-.4,.4),y:rand(.4,1.8),vy:rand(.2,1.8),life:.5,color:'#6ff7ff'});
       addPopup(player.x,1.8,player.z,'PROJECTILE DEFLECTED!','#6ff7ff');
+      addHype(20);
     }
   }
 
@@ -1928,6 +1996,7 @@ function melee(){
     shake=10;
     energy=Math.min(100,energy+35);
     superMeter=Math.min(100,superMeter+25);
+    addHype(30);
     const sb=$('superBar'),sbtn=$('superBtn'),stb=$('superTouchBtn');
     if(sb)sb.style.width=superMeter+'%';
     if(sbtn)sbtn.style.display=superMeter>=100?'inline-block':'none';
@@ -1940,20 +2009,55 @@ function melee(){
     speakAnnouncer('PERFECT PARRY!');
   }
 
+  const rageActive = (hp<=30);
+  const dmgMultiplier = (rageActive?1.5:1.0);
+
   for(const e of [...enemies]){
     const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz);
     const angle=Math.atan2(dx,-dz);
     let diff=Math.atan2(Math.sin(angle-reachAngle),Math.cos(angle-reachAngle));
     if(d<range&&Math.abs(diff)<(combo===3?0.95:0.72)){
-      e.hp-=combo===3?2.5:1.2;
+      const baseDmg=(combo===3?2.5:1.2)*dmgMultiplier;
+      e.hp-=baseDmg;
       e.z+=dz/(d||1)*.75;
       e.x+=dx/(d||1)*.5;
       e.flash=.15;
       hitCount++;
+      addHype(8);
       shake=combo===3?8:3.5;
       hitStop=combo===3?0.08:0.04; // 3-frame hit-stop!
       soundImpact(combo===3);
       rumble(combo===3?100:60,combo===3?0.8:0.4,combo===3?0.9:0.5);
+
+      /* CrazyGames Beat 'Em Up Mechanic: Aerial Uppercut Launch & Air Juggle */
+      if(combo===3&&!e.boss){
+        e.y=0.25;
+        e.vy=4.4; // Launch vertically into air!
+        addPopup(e.x,1.8,e.z,'UPPERCUT LAUNCH! ⬆','#ffcc55');
+        addHype(15);
+      }else if((e.y||0)>0.1){
+        // Enemy is airborne: AIR JUGGLE!
+        e.juggleCount=(e.juggleCount||0)+1;
+        e.vy=Math.max(e.vy||0,3.0);
+        addPopup(e.x,1.8,e.z,'AIR JUGGLE x'+e.juggleCount+'! 🤹','#6ff7ff');
+        toast('AIR JUGGLE x'+e.juggleCount+' · COMBO BONUS');
+        playTone(880+e.juggleCount*120,0.12,'sine',0.25);
+        addHype(12);
+        score+=120*e.juggleCount;
+      }
+
+      /* CrazyGames Arena Barrier: Wall Splat */
+      if(Math.abs(e.x)>=6.8){
+        e.x=Math.sign(e.x)*6.7;
+        e.hp-=1.8;
+        shake=9;
+        hitStop=0.08;
+        for(let k=0;k<14;k++)particles.push({x:e.x,z:e.z+rand(-.5,.5),y:rand(.3,1.6),vy:rand(.3,1.8),life:.5,color:['#e2e8f0','#94a3b8','#ffd27a'][k%3]});
+        addPopup(e.x,1.9,e.z,'WALL SPLAT! 💥','#ff4757');
+        toast('💥 WALL SPLAT · BARRIER CRUSH!');
+        playTone(130,0.22,'sawtooth',0.32);
+        addHype(20);
+      }
 
       for(let i=0;i<14;i++)particles.push({x:e.x+rand(-.55,.55),z:e.z+rand(-.4,.4),y:rand(.25,1.8),vy:rand(.2,1.7),life:.42,color:combo===3?'#6ff7ff':['#ffd27a','#ff4757'][i%2]});
       addPopup(e.x,1.4,e.z,combo===3?'CRITICAL!':'+COMBO x'+combo,combo===3?'#6ff7ff':'#ffd27a');
@@ -1969,10 +2073,11 @@ function melee(){
         streakClock=3.5;
         scoreMultiplier=killStreak>=7?5:killStreak>=5?3:killStreak>=3?2:1;
         score+=Math.round((e.boss?2500:200)*scoreMultiplier);
-        rupees+=(e.boss?250:35);
+        const reward=(e.boss?250:35)*(hypeActive?2:1);
+        rupees+=reward;
         localStorage.setItem('lalhit_rupees',String(rupees));
         $('bountyText').textContent='₹'+rupees;
-        addPopup(e.x,2.0,e.z,e.boss?'+₹250':'+₹35','#ffdf80');
+        addPopup(e.x,2.0,e.z,(e.boss?'+₹':'+₹')+reward+(hypeActive?' (2X HYPE!)':''),'#ffdf80');
         superMeter=Math.min(100,superMeter+(e.boss?40:16));
         if(sb)sb.style.width=superMeter+'%';
         if(sbtn)sbtn.style.display=superMeter>=100?'inline-block':'none';
@@ -2161,6 +2266,18 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
     e.x=clamp(e.x+Math.sin(elapsed*1.7+e.phase)*simDt*(e.boss?.25:.55)*(e.strafe||1),-8,8);
     e.z+=e.speed*simDt*.38;
 
+    /* Aerial gravity and ground landing */
+    if((e.y||0)>0||(e.vy||0)!==0){
+      e.vy=(e.vy||0)-simDt*9.8;
+      e.y=(e.y||0)+e.vy*simDt;
+      if(e.y<=0){
+        e.y=0;
+        e.vy=0;
+        e.juggleCount=0;
+        for(let k=0;k<6;k++)particles.push({x:e.x+rand(-.5,.5),z:e.z+rand(-.3,.3),y:.1,vy:rand(.1,.5),life:.35,color:'#94a3b8'});
+      }
+    }
+
     /* Mega Roach Phase 2 Enrage & Ground Slam Stomp */
     if(e.boss){
       if(!e.enraged&&e.hp<=e.maxHp*0.5){
@@ -2256,16 +2373,25 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
         for(let i=0;i<8;i++)particles.push({x:e.x+rand(-.6,.6),z:e.z+rand(-.4,.4),y:rand(.2,1.6),vy:rand(.2,1.6),life:.5,color:['#ffd27a','#ff4757','#aeefff'][i%3]});
         addPopup(e.x,1.3,e.z,'-'+Math.round((s.damage||1)*15),'#ffd27a');
 
+        /* Aerial Shot Juggle */
+        if((e.y||0)>0.1){
+          e.juggleCount=(e.juggleCount||0)+1;
+          e.vy=Math.max(e.vy||0,2.6);
+          addPopup(e.x,1.6,e.z,'AIR JUGGLE! 🤹','#6ff7ff');
+          addHype(6);
+        }
+
         if(e.hp<=0){
           enemies.splice(enemies.indexOf(e),1);
           killStreak++;
           streakClock=3.5;
           scoreMultiplier=killStreak>=7?5:killStreak>=5?3:killStreak>=3?2:1;
           score+=Math.round((e.boss?2500:150)*scoreMultiplier);
-          rupees+=(e.boss?250:35);
+          const reward=(e.boss?250:35)*(hypeActive?2:1);
+          rupees+=reward;
           localStorage.setItem('lalhit_rupees',String(rupees));
           $('bountyText').textContent='₹'+rupees;
-          addPopup(e.x,2.0,e.z,e.boss?'+₹250':'+₹35','#ffdf80');
+          addPopup(e.x,2.0,e.z,(e.boss?'+₹':'+₹')+reward+(hypeActive?' (2X HYPE!)':''),'#ffdf80');
           superMeter=Math.min(100,superMeter+(e.boss?40:16));
           if(sb)sb.style.width=superMeter+'%';
           if(sbtn)sbtn.style.display=superMeter>=100?'inline-block':'none';
@@ -2382,6 +2508,28 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
     const st=$('streakText');if(st)st.textContent='x'+scoreMultiplier;
   }else if(streakClock<=0){
     $('streakMetric').style.display='none';
+  }
+
+  /* Hype Meter Timer & Decay */
+  if(hypeActive){
+    hypeTimer-=dt;
+    const ht=$('hypeText');
+    if(ht)ht.textContent=Math.ceil(hypeTimer)+'s 🔥';
+    if(hypeTimer<=0){
+      hypeActive=false;
+      hypeMeter=0;
+      const hm=$('hypeMetric');
+      if(hm)hm.style.display='none';
+      toast('CROWD COOLED DOWN');
+    }
+  }else if(hypeMeter>0){
+    hypeMeter=Math.max(0,hypeMeter-dt*3.5);
+    const ht=$('hypeText');
+    if(ht)ht.textContent=Math.round(hypeMeter)+'%';
+    if(hypeMeter<=0){
+      const hm=$('hypeMetric');
+      if(hm)hm.style.display='none';
+    }
   }
 }
 
@@ -2886,7 +3034,10 @@ window.__lhTest={
   getHazards:()=>hazards,
   getSuperMeter:()=>superMeter,
   setEnergy:v=>{energy=v},
-  setMeleeClock:v=>{meleeClock=v}
+  setMeleeClock:v=>{meleeClock=v},
+  addHype,
+  getHypeMeter:()=>hypeMeter,
+  isHypeActive:()=>hypeActive
 };
 
 })();
