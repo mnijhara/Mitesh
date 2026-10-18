@@ -34,6 +34,16 @@ assert.ok(html.includes('@media(max-width:380px){.mobile-controls .move-pad{left
 for (const id of ['startBtn', 'controlsBtn', 'pauseBtn', 'movePad', 'fireBtn', 'meleeBtn', 'dashBtn', 'aimBtn']) {
   assert.ok(html.includes('id="' + id + '"'), 'required control missing: ' + id);
 }
+
+const gunFn = script.match(/function drawGun\(\)\{([\s\S]*?)\n\}\nfunction spawnEnemy/);
+assert.ok(gunFn, 'foreground weapon renderer must exist');
+assert.ok(gunFn[1].includes('ctx.translate(heroX,heroY)'),
+  'weapon must be anchored to the hero rather than the screen corner');
+assert.ok(gunFn[1].includes('compact sidearm in the hero\'s hand'),
+  'weapon renderer must use the compact hand-held sidearm design');
+assert.ok(!gunFn[1].includes('H*(H>W?.765:.79)'),
+  'weapon must not be rendered as a large independent foreground overlay');
+
 console.log('KALA HIT regression checks passed.');
 
 // Campaign progression must visibly move the player through distinct Delhi districts.
