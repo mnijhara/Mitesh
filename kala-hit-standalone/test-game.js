@@ -57,11 +57,11 @@ assert.ok(script.includes('pickups=[];civilians=[]'), 'starting a fresh mission 
 // Perspective depth must grow toward the player, not shrink as enemies approach.
 assert.ok(script.includes('function perspectiveDepth(z){return clamp((z+32)/42,.04,1.2)}'),
   'scene depth must be derived consistently from world z');
-const depthSource = script.match(/function perspectiveDepth\\(z\\)\\{[^}]+\\}/);
+const depthSource = script.match(/function perspectiveDepth\(z\)\{[^}]+\}/);
 assert.ok(depthSource, 'perspective depth helper must exist');
 const clampValue = (v, min, max) => Math.max(min, Math.min(max, v));
 const perspectiveDepth = new Function('clamp', depthSource[0] + '; return perspectiveDepth;')(clampValue);
-const scaleSource = script.match(/function perspectiveScale\\(z,height=H\\)\\{[^}]+\\}/);
+const scaleSource = script.match(/function perspectiveScale\(z,height=H\)\{[^}]+\}/);
 assert.ok(scaleSource, 'perspective scale helper must exist');
 const perspectiveScale = new Function('perspectiveDepth', 'H', scaleSource[0] + '; return perspectiveScale;')(perspectiveDepth, 800);
 const farScale = perspectiveScale(-30, 800);
