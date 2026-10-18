@@ -143,3 +143,14 @@ Confirm the hosting provider and deployment path for `lalhit.fun` (the live Canv
 - This prevents merging the gameplay fix from accidentally triggering an unverified Netlify production deploy. It is a temporary safety gate, not a deployment solution.
 - Hostinger tools available in this workspace are mail-only; the authoritative website publishing route for `lalhit.fun` is still not established.
 - Restore deployment only after the exact canonical site/hosting target is identified and tested. Do not touch the separate ROACH RIOT or SANJEEVANI QUEST sites.
+
+
+### Merged and live parity verified — 2026-10-18
+
+- PR #8 merged by squash into `main`: https://github.com/mnijhara/Mitesh/pull/8
+- Merge commit: `3402f6adaa7f39b5b811689e1895664b6955c903`.
+- GitHub Actions workflow `KALA HIT checks` completed successfully on main (run 8): regression tests and static build both passed. Run: https://github.com/mnijhara/Mitesh/actions/runs/39129828839
+- Re-fetched `https://lalhit.fun/` and raw `main/kala-hit-standalone/index.html` with cache disabled: both HTTP 200, 40,087 bytes, SHA-256 `67366b3e319507f964c45d14c54d32ed5c4415102fd83486755d2ae304bcd9fc`; byte-for-byte identical.
+- Live browser smoke test after the merge: Start Solo Mission closed the menu; Pause toggled to Resume and back; no JavaScript errors were reported.
+- The deployment workflow is now preflight-only and does not publish to Netlify. Live parity is verified, but the exact hosting synchronization mechanism remains unverified; do not restore Netlify deployment until the canonical host/site identity is confirmed.
+- Remaining validation: mobile touch controls on a real device and physical gamepad pause/resume. Static tests cannot replace those hardware tests.
