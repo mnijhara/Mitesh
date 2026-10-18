@@ -127,8 +127,8 @@ let menuPreview=true;
 function startMission(e){if(e){e.preventDefault();e.stopPropagation()}menuPreview=false;const ov=$('overlay');ov.classList.add('hide');try{if(playing){paused=false;last=performance.now();requestAnimationFrame(frame);return}resetGame()}catch(err){console.error('LAL HIT start failed',err);ov.classList.remove('hide');toast('MISSION ERROR · TAP START AGAIN')}}
 function showControls(e){if(e){e.preventDefault();e.stopPropagation()}toast('MOVE: WASD / ARROWS / LEFT STICK · AIM: MOUSE / RIGHT STICK · FIRE: SPACE / J / LEFT TRIGGER · MELEE: E / X / A · DASH: SHIFT / K / B · PAUSE: P / ESC')}
 const startButton=$('startBtn'),controlsButton=$('controlsBtn');
-['click','pointerup'].forEach(type=>{startButton.addEventListener(type,startMission);controlsButton.addEventListener(type,showControls)});
-document.addEventListener('click',e=>{const b=e.target.closest?.('#startBtn,#controlsBtn');if(!b)return;if(b.id==='startBtn')startMission(e);else showControls(e)},true);
+startButton.addEventListener('click',startMission);
+controlsButton.addEventListener('click',showControls);
 window.addEventListener('error',e=>console.error('LAL HIT runtime error',e.message,e.filename,e.lineno));
 $('pauseBtn').addEventListener('click',()=>{if(!playing)return;paused=!paused;$('pauseBtn').textContent=paused?'▶ RESUME':'Ⅱ PAUSE';if(!paused){last=performance.now();requestAnimationFrame(frame)}else toast('MISSION PAUSED')});
 $('soundBtn').addEventListener('click',()=>{sound=!sound;$('soundBtn').textContent=sound?'♫ SOUND ON':'♫ SOUND OFF';if(sound)beep(660,.1)});
