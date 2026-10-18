@@ -42,3 +42,13 @@ assert.ok(html.includes("function syncZone(notify=false)") && html.includes("$('
 assert.ok(html.includes("ctx.fillStyle=zones[zoneIndex].tint"), 'district transitions must affect the game world palette');
 assert.ok(html.includes("Math.min(.65,(wave-1)*.07)"), 'enemy difficulty must scale with campaign waves');
 assert.ok(html.includes("if(e.boss){wave++;$('waveText').textContent=String(wave).padStart(2,'0');syncZone(true);"), 'melee boss defeats must advance the campaign district just like ranged boss defeats');
+
+// Combat pickups add a risk/reward loop and must be drawn, collectible, and reset between runs.
+assert.ok(script.includes('pickups=[]'), 'pickup state must be maintained separately from enemies and particles');
+assert.ok(script.includes('function dropPickup(e)'), 'defeated enemies must be able to drop supplies');
+assert.ok(script.includes("type=e.boss?(hp<65?'med':'energy')"), 'boss drops must respond to the player condition');
+assert.ok(script.includes("hp=Math.min(100,hp+30)"), 'medkits must restore health without exceeding the cap');
+assert.ok(script.includes("energy=Math.min(100,energy+45)"), 'energy cells must restore ability energy without exceeding the cap');
+assert.ok(script.includes('Math.hypot(player.x-p.x,player.z-p.z)<1.45'), 'players must collect pickups by moving close to them');
+assert.ok(script.includes('for(const pickup of pickups)drawPickup(pickup)'), 'pickups must be visible in the game world');
+assert.ok(script.includes('pickups=[];civilians=[]'), 'starting a fresh mission must clear old pickups');
