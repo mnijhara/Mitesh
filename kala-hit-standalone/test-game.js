@@ -51,6 +51,19 @@ const currentGun = script.match(/function drawGun\(\)\{([\s\S]*?)\n\}\nfunction 
 assert.ok(currentGun && currentGun[1].includes('ctx.rotate(aimAngle)'),
   'the visible weapon must rotate with the actual shot direction');
 
+
+const shotRenderer = script.match(/for\s*\(const shot of shots\)\s*\{([\s\S]*?)\n\s*for\s*\(const p of particles\)/);
+assert.ok(shotRenderer, 'projectiles must have a dedicated renderer');
+assert.ok(shotRenderer[1].includes('shot.dx*.48') && shotRenderer[1].includes('shot.dz*.48'),
+  'projectile trails must be short and follow the actual shot direction');
+assert.ok(!shotRenderer[1].includes('origin=project(shot.originX'),
+  'projectiles must not draw a screen-spanning line from a fixed foreground origin');
+const currentGun = script.match(/function drawGun\(\)\{([\s\S]*?)\n\}\nfunction spawnEnemy/);
+assert.ok(currentGun && currentGun[1].includes('ctx.rotate(aimAngle)'),
+  'weapon orientation must follow the shot direction');
+assert.ok(currentGun[1].includes('Barrel points up at zero angle'),
+  'zero-angle weapon orientation must match forward movement and projectile direction');
+
 console.log('KALA HIT regression checks passed.');
 
 // Campaign progression must visibly move the player through distinct Delhi districts.
