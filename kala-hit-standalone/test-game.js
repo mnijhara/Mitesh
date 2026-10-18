@@ -46,7 +46,7 @@ assert.ok(script.includes('shot.dx*.20') && script.includes('shot.dz*.20') &&
   'projectile trails must be short and projectile radius capped');
 
 
-assert.ok(script.includes('heroScale=clamp(H*.00082,.48,.82)') &&
+assert.ok(script.includes('heroScale=clamp(H*.00048,.34,.56)') &&
   script.includes('ctx.translate(heroX+20*heroScale,heroY-48*heroScale)') &&
   script.includes('ctx.scale(heroScale,heroScale)'),
   'weapon must use the same compact scale and hand anchor as the hero sprite');
