@@ -52,3 +52,31 @@ assert.ok(script.includes("energy=Math.min(100,energy+45)"), 'energy cells must 
 assert.ok(script.includes('Math.hypot(player.x-p.x,player.z-p.z)<1.45'), 'players must collect pickups by moving close to them');
 assert.ok(script.includes('for(const pickup of pickups)drawPickup(pickup)'), 'pickups must be visible in the game world');
 assert.ok(script.includes('pickups=[];civilians=[]'), 'starting a fresh mission must clear old pickups');
+
+
+// Perspective depth must grow toward the player, not shrink as enemies approach.
+assert.ok(script.includes('function perspectiveDepth(z){return clamp((z+32)/42,.04,1.2)}'),
+  'scene depth must be derived consistently from world z');
+const depthSource = script.match(/function perspectiveDepth\\(z\\)\\{[^}]+\\}/);
+assert.ok(depthSource, 'perspective depth helper must exist');
+const clampValue = (v, min, max) => Math.max(min, Math.min(max, v));
+const perspectiveDepth = new Function('clamp', depthSource[0] + '; return perspectiveDepth;')(clampValue);
+const scaleSource = script.match(/function perspectiveScale\\(z,height=H\\)\\{[^}]+\\}/);
+assert.ok(scaleSource, 'perspective scale helper must exist');
+const perspectiveScale = new Function('perspectiveDepth', 'H', scaleSource[0] + '; return perspectiveScale;')(perspectiveDepth, 800);
+const farScale = perspectiveScale(-30, 800);
+const midScale = perspectiveScale(-18, 800);
+const nearScale = perspectiveScale(3, 800);
+assert.ok(farScale < midScale && midScale < nearScale,
+  'cockroaches must grow as their z position approaches the player');
+
+assert.ok(script.includes('xScale=W*.035*depth/(37/42)'),
+  'world horizontal projection must track depth consistently with the player lane');
+assert.ok(script.includes('const x=project(player.x,0,player.z).x,y=H*(H>W? .735:.77)'),
+  'hero horizontal position must use the same projection as world entities');
+assert.ok(script.includes('ctx.translate(30,-14);ctx.rotate(aimAngle);ctx.translate(-30,14)'),
+  'gun barrel axis must rotate with the aim angle around its barrel base');
+assert.ok(!script.includes('ctx.rotate(aimAngle-Math.PI/2)'),
+  'gun must not retain the 90-degree aiming offset');
+assert.ok(script.includes('weaponAngle:aimAngle') && script.includes('origin=project(shot.originX,0,shot.originZ)'),
+  'shot tracers must preserve the firing angle and use the projected firing origin');
