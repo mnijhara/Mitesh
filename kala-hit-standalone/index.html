@@ -68,36 +68,32 @@ function drawHero(){const x=project(player.x,0,player.z).x,y=H*(H>W? .735:.77),s
  ctx.fillStyle='#bd8c6b';ctx.beginPath();ctx.arc(0,-93,13,0,7);ctx.fill();ctx.fillStyle='#101725';ctx.beginPath();ctx.arc(0,-98,14,Math.PI,Math.PI*2);ctx.fill();ctx.fillStyle='#070c16';rounded(-12,-95,24,6,2,'#101a29');ctx.fillStyle='#6ff7ff';ctx.fillRect(-9,-94,7,2);ctx.fillRect(3,-94,7,2);ctx.fillStyle='#ff4e61';ctx.beginPath();ctx.moveTo(-9,-82);ctx.lineTo(9,-82);ctx.lineTo(23,-40);ctx.lineTo(9,-47);ctx.closePath();ctx.fill();
  ctx.restore()}
 function drawGun(){
- /* Compact, readable foreground blaster. Clamp rotation so aiming can never turn
-    the weapon into a screen-filling shape on portrait/mobile displays. */
+ /* Draw a compact sidearm in the hero's hand, not as a giant foreground overlay. */
  const mobile=H>W;
- const scale=clamp(H*.00078,mobile?.52:.62,mobile?.78:.9);
- const x=mobile?W*.69:W*.72;
- const y=mobile?H*.835:H*.82;
- const angle=clamp(aimAngle,-.72,.72);
+ const scale=clamp(H*.00072,mobile?.55:.65,mobile?.82:.92);
+ const heroX=project(player.x,0,player.z).x;
+ const heroY=H*(mobile?.735:.77);
+ const angle=clamp(aimAngle,-.55,.55);
  ctx.save();
- ctx.translate(x,y+clamp(fireKick,-2,3)*.45);
+ ctx.translate(heroX,heroY);
  ctx.scale(scale,scale);
- ctx.rotate(angle);
- ctx.shadowColor='#000';ctx.shadowBlur=6;
- /* short stock and grip */
- rounded(-24,-2,16,11,3,'#111c2b','#49657a');
- rounded(-13,5,8,15,2,'#172638','#607b8d');
- /* compact receiver */
- rounded(-10,-8,31,17,4,'#17283b','#91a9b9');
+ /* right hand is near (20,-48) in drawHero's local coordinates */
+ ctx.translate(19,-50);
+ ctx.rotate(angle*.65);
+ ctx.shadowColor='#000';ctx.shadowBlur=3;
+ /* grip */
+ rounded(-1,1,7,13,2,'#172638','#607b8d');
+ /* small receiver and short barrel */
+ rounded(-5,-5,15,8,2,'#17283b','#91a9b9');
+ rounded(6,-4,10,5,1,'#26394a','#9bb5c7');
+ rounded(14,-3,3,4,1,'#101c2b','#6ff7ff');
+ ctx.fillStyle='#ff535b';ctx.fillRect(-2,-4,4,2);
+ ctx.fillStyle='#39dbea';ctx.fillRect(2,-3,4,3);
  ctx.shadowBlur=0;
- ctx.fillStyle='#263e52';ctx.fillRect(-6,-6,22,12);
- ctx.fillStyle='#ff535b';ctx.beginPath();ctx.moveTo(-5,-6);ctx.lineTo(2,-6);ctx.lineTo(11,6);ctx.lineTo(4,6);ctx.closePath();ctx.fill();
- rounded(8,-5,9,10,2,'#39dbea','#a3ffff');
- ctx.fillStyle='#092033';ctx.font='1000 5px system-ui';ctx.textAlign='center';ctx.fillText('LH',12,2);
- /* barrel and muzzle point forward, with no oversized glow */
- rounded(14,-5,22,8,2,'#26394a','#9bb5c7');
- rounded(33,-4,5,6,1,'#101c2b','#6ff7ff');
- ctx.fillStyle='#6ff7ff';ctx.fillRect(19,4,2,7);
  if(muzzleFlash>0){
    const f=clamp(muzzleFlash/.095,0,1);
-   ctx.save();ctx.globalAlpha=f;ctx.shadowColor='#6ff7ff';ctx.shadowBlur=7;
-   ctx.fillStyle='#fff6c7';ctx.beginPath();ctx.moveTo(38,-1);ctx.lineTo(44,-5-f*3);ctx.lineTo(43,1);ctx.lineTo(44,5+f*2);ctx.lineTo(38,3);ctx.closePath();ctx.fill();
+   ctx.save();ctx.globalAlpha=f;ctx.shadowColor='#6ff7ff';ctx.shadowBlur=5;
+   ctx.fillStyle='#fff6c7';ctx.beginPath();ctx.ellipse(18,-1,2+f,2+f,0,0,Math.PI*2);ctx.fill();
    ctx.restore();
  }
  ctx.restore();
