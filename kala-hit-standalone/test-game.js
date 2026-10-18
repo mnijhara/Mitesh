@@ -80,3 +80,19 @@ assert.ok(!script.includes('ctx.rotate(aimAngle-Math.PI/2)'),
   'gun must not retain the 90-degree aiming offset');
 assert.ok(script.includes('weaponAngle:aimAngle') && script.includes('origin=project(shot.originX,0,shot.originZ)'),
   'shot tracers must preserve the firing angle and use the projected firing origin');
+
+// Phase 0 deployment safety: this workflow must remain a manual, non-publishing preflight.
+const deployWorkflow = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'deploy-kalahit.yml'), 'utf8');
+assert.ok(/^\s*on:\s*\r?\n\s+workflow_dispatch:\s*$/m.test(deployWorkflow),
+  'deployment preflight must only run through manual workflow_dispatch');
+assert.ok(!/^\s*uses:\s/m.test(deployWorkflow),
+  'deployment preflight must not invoke an external action that could publish files');
+assert.ok(!/\b(?:NETLIFY_AUTH_TOKEN|NETLIFY_SITE_ID|netlify deploy|netlify-cli|curl|wget|rsync|scp)\b/i.test(deployWorkflow),
+  'deployment preflight must not contain unverified deployment credentials or upload commands');
+const executableLines = deployWorkflow.split(/\r?\n/).filter(line => /^\s{10,}\S/.test(line));
+assert.ok(executableLines.length > 0 && executableLines.every(line => /^\s*echo\s/.test(line.trim())),
+  'deployment preflight shell must remain echo-only until the canonical host is verified');
+assert.ok(deployWorkflow.includes('No files were uploaded and no Netlify project was modified.'),
+  'deployment preflight must explicitly state that it modifies no production project');
+
+console.log('KALA HIT regression checks passed.');
