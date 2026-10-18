@@ -39,7 +39,7 @@ for (const id of ['startBtn', 'controlsBtn', 'pauseBtn', 'movePad', 'fireBtn', '
 
 assert.ok(script.includes('if(!gamepadAim&&enemies.length)') && script.includes('aimAngle=Math.atan2(target.x-player.x,-(target.z-player.z))'),
   'touch firing must aim at the nearest enemy without a clamped angle');
-assert.ok(script.includes('Hand-held compact sidearm') && script.includes('ctx.rotate(aimAngle)'),
+assert.ok(script.includes('attach the pistol at the right hand') && script.includes('ctx.rotate(aimAngle)'),
   'weapon must remain compact and rotate with aim');
 assert.ok(script.includes('shot.dx*.20') && script.includes('shot.dz*.20') &&
   script.includes('clamp(p.s*.025,1.2,2.6)'),
