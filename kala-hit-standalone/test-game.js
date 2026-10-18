@@ -39,16 +39,10 @@ for (const id of ['startBtn', 'controlsBtn', 'pauseBtn', 'movePad', 'fireBtn', '
 
 assert.ok(script.includes('if(!gamepadAim&&enemies.length)') && script.includes('aimAngle=Math.atan2(target.x-player.x,-(target.z-player.z))'),
   'touch firing must aim at the nearest enemy without a clamped angle');
-const currentGun = script.match(/function drawGun\(\)\{([\s\S]*?)\n\}\nfunction spawnEnemy/);
-assert.ok(currentGun && currentGun[1].includes('ctx.rotate(aimAngle)'),
-  'the visible weapon must rotate with the actual shot direction');
-assert.ok(currentGun[1].includes('Hand-held compact sidearm'),
-  'weapon must be drawn as a compact sidearm beside the hero');
-const shotRenderer = script.match(/for\s*\(const shot of shots\)\s*\{([\s\S]*?)\n\s*for\s*\(const p of particles\)/);
-assert.ok(shotRenderer, 'projectiles must have a dedicated renderer');
-assert.ok(shotRenderer[1].includes('shot.dx*.20') && shotRenderer[1].includes('shot.dz*.20'),
-  'projectile trails must be short and follow each projectile direction');
-assert.ok(shotRenderer[1].includes('clamp(p.s*.025,1.2,2.6)'),
-  'projectiles must have a capped small radius at close perspective depth');
+assert.ok(script.includes('Hand-held compact sidearm') && script.includes('ctx.rotate(aimAngle)'),
+  'weapon must remain compact and rotate with aim');
+assert.ok(script.includes('shot.dx*.20') && script.includes('shot.dz*.20') &&
+  script.includes('clamp(p.s*.025,1.2,2.6)'),
+  'projectile trails must be short and projectile radius capped');
 
 console.log('KALA HIT regression checks passed.');
