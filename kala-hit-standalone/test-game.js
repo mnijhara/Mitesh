@@ -45,4 +45,10 @@ assert.ok(script.includes('shot.dx*.20') && script.includes('shot.dz*.20') &&
   script.includes('clamp(p.s*.025,1.2,2.6)'),
   'projectile trails must be short and projectile radius capped');
 
+
+assert.ok(script.includes('heroScale=clamp(H*.0011,.65,1.18)') &&
+  script.includes('ctx.translate(heroX+20*heroScale,heroY-48*heroScale)') &&
+  script.includes('ctx.scale(heroScale,heroScale)'),
+  'weapon must use the same scale and hand anchor as the hero sprite');
+
 console.log('KALA HIT regression checks passed.');
