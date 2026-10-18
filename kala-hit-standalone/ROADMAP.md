@@ -115,3 +115,13 @@ Confirm the hosting provider and deployment path for `lalhit.fun` (the live Canv
 - Not yet verified: interactive browser regression across keyboard, touch, and physical gamepad. No live deployment performed; `lalhit.fun` remains unchanged until the correct Hostinger publish path and regression checks are established.
 - Pull request: https://github.com/mnijhara/Mitesh/pull/8
 - Next: run interactive controls regression, then merge/publish only after confirming no new input regressions and the actual Hostinger publishing process.
+
+
+### Regression test harness — 2026-10-18
+
+- Added `kala-hit-standalone/test-game.js` using Node's built-in assertions; no third-party dependencies added.
+- Added `npm test` and a dedicated GitHub Actions workflow `.github/workflows/kalahit-tests.yml` to run the regression suite and static build on relevant pull requests and main-branch changes.
+- Executed the test file against the exact source fetched from commit `0115d1abc96404abda7a118bf1fbba05a0ef8603`; result: `KALA HIT regression checks passed.` (exit code 0).
+- These tests cover JavaScript parse validity, guarded animation scheduling, removal of duplicate Start/Controls handlers, controller input while paused, controller pause toggle, Escape/HUD synchronization, and required touch/desktop controls.
+- Limitation: static regression tests do not replace interactive browser testing on touch devices or with a physical gamepad. No production deployment performed.
+- Current review: https://github.com/mnijhara/Mitesh/pull/8
