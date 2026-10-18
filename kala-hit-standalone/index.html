@@ -63,13 +63,37 @@ function drawHero(){const x=W*.5+(player.x*.035*W),y=H*(H>W? .735:.77),s=clamp(H
  /* head and scarf */
  ctx.fillStyle='#bd8c6b';ctx.beginPath();ctx.arc(0,-93,13,0,7);ctx.fill();ctx.fillStyle='#101725';ctx.beginPath();ctx.arc(0,-98,14,Math.PI,Math.PI*2);ctx.fill();ctx.fillStyle='#070c16';rounded(-12,-95,24,6,2,'#101a29');ctx.fillStyle='#6ff7ff';ctx.fillRect(-9,-94,7,2);ctx.fillRect(3,-94,7,2);ctx.fillStyle='#ff4e61';ctx.beginPath();ctx.moveTo(-9,-82);ctx.lineTo(9,-82);ctx.lineTo(23,-40);ctx.lineTo(9,-47);ctx.closePath();ctx.fill();
  ctx.restore()}
-function drawGun(){const x=W*.5+(player.x*.035*W),y=H*(H>W? .735:.77),s=clamp(H*.0011,.65,1.18);ctx.save();ctx.translate(x,y-55*s);ctx.rotate(aimAngle-Math.PI/2);ctx.scale(s,s);
- /* Signature LAL HIT energy weapon: unmistakable LH receiver, glowing core, red heat rails and cyan muzzle. */
- ctx.shadowColor='#5cf5ff';ctx.shadowBlur=12;ctx.fillStyle='#0a1726';rounded(2,-8,49,18,5,'#111f32','#6ff7ff');ctx.shadowBlur=0;
- ctx.fillStyle='#ff4e61';ctx.beginPath();ctx.moveTo(8,-8);ctx.lineTo(22,-8);ctx.lineTo(31,8);ctx.lineTo(17,8);ctx.closePath();ctx.fill();
- ctx.fillStyle='#6ff7ff';rounded(21,-5,18,12,3,'#173d51','#8dfaff');ctx.fillStyle='#07101d';ctx.font='1000 8px system-ui';ctx.textAlign='center';ctx.fillText('LH',30,4);
- ctx.fillStyle='#18283b';rounded(7,8,15,12,3,'#18283b','#58758c');ctx.fillStyle='#9bb7ce';rounded(41,-4,12,9,2,'#a4c1d6','#e4faff');
- ctx.fillStyle='#6ff7ff';ctx.fillRect(50,-3,5,7);ctx.shadowColor='#ff9f45';ctx.shadowBlur=20;ctx.fillStyle='#ffd27a';ctx.beginPath();ctx.arc(55,.5,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.restore()}
+function drawGun(){
+ /* Foreground, over-the-shoulder LAL HIT rifle. Keep it separate from the hero's head and torso. */
+ const s=clamp(H*.0011,.72,1.12);
+ const x=W*.5+(player.x*.035*W)+Math.min(W*.075,46*s);
+ const y=H*(H>W?.765:.79);
+ ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.rotate(aimAngle-Math.PI/2);
+ /* stock and grip */
+ ctx.shadowColor='#000';ctx.shadowBlur=9;
+ rounded(-15,-5,20,15,3,'#111c2b','#49657a');
+ rounded(-8,7,10,19,3,'#172638','#607b8d');
+ ctx.fillStyle='#0b1522';ctx.beginPath();ctx.moveTo(-3,18);ctx.lineTo(8,17);ctx.lineTo(13,32);ctx.lineTo(2,35);ctx.closePath();ctx.fill();
+ /* angular receiver with dark metal facets */
+ rounded(0,-10,38,22,4,'#17283b','#91a9b9');
+ ctx.shadowBlur=0;
+ ctx.fillStyle='#263e52';ctx.beginPath();ctx.moveTo(5,-9);ctx.lineTo(30,-8);ctx.lineTo(36,-2);ctx.lineTo(32,9);ctx.lineTo(7,9);ctx.closePath();ctx.fill();
+ /* signature red LAL rail and cyan power cell */
+ ctx.fillStyle='#ff535b';ctx.beginPath();ctx.moveTo(4,-9);ctx.lineTo(13,-9);ctx.lineTo(23,9);ctx.lineTo(14,9);ctx.closePath();ctx.fill();
+ rounded(16,-6,14,12,2,'#39dbea','#a3ffff');
+ ctx.fillStyle='#092033';ctx.font='1000 7px system-ui';ctx.textAlign='center';ctx.fillText('LH',23,2);
+ /* top rail and long barrel */
+ rounded(10,-18,20,8,2,'#26394a','#69859a');
+ rounded(25,-39,10,25,2,'#26394a','#9bb5c7');
+ rounded(27,-47,7,10,2,'#101c2b','#6ff7ff');
+ ctx.fillStyle='#ffcf78';ctx.shadowColor='#6ff7ff';ctx.shadowBlur=13;ctx.beginPath();ctx.ellipse(30,-47,3,5,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+ /* cyan energy conduit and tiny sight */
+ ctx.fillStyle='#6ff7ff';ctx.fillRect(31,-35,2,17);
+ rounded(28,-24,4,4,1,'#ffe08a');
+ /* visible weapon highlights */
+ ctx.strokeStyle='#d8f7ff';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(5,-5);ctx.lineTo(12,-5);ctx.moveTo(19,5);ctx.lineTo(27,5);ctx.stroke();
+ ctx.restore()
+}
 function spawnEnemy(boss=false){const e={x:rand(-7,7),z:rand(-31,-18),scale:boss?rand(1.45,1.7):rand(.9,1.15),hp:boss?12:2,maxHp:boss?12:2,speed:boss?rand(1.1,1.45):rand(1.7,2.5),phase:rand(0,7),boss,attack:0};enemies.push(e)}
 function spawnCivilian(){const c={x:rand(-6,6),z:rand(-8,-1),shirt:['#b46d43','#537b91','#8b668c','#8c8853'][Math.floor(Math.random()*4)],rescued:false};civilians.push(c)}
 function resetGame(){playing=true;paused=false;score=0;hp=100;energy=100;kills=0;rescued=0;wave=1;elapsed=0;spawnTimer=0;shake=0;player={x:0,z:5,aimX:0,aimZ:-1};enemies=[];shots=[];particles=[];civilians=[];for(let i=0;i<5;i++)spawnEnemy();for(let i=0;i<4;i++)spawnCivilian();$('overlay').classList.add('hide');$('score').textContent='000000';$('waveText').textContent='01';$('bossPanel').style.display='none';$('bossBar').style.width='100%';$('healthBar').style.width='100%';$('energyBar').style.width='100%';$('objective').textContent='OBJECTIVE · CLEAR RAJIV CHOWK';$('missionText').textContent='Defeat the giant cockroaches and escort residents to safety.';toast('MISSION LIVE · RAJIV CHOWK');last=performance.now();requestAnimationFrame(frame)}
