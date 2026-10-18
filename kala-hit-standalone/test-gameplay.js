@@ -277,6 +277,52 @@ const puppeteer = require('/tmp/node_modules/puppeteer-core');
     await page.screenshot({ path: '/Users/miteshnijhara/.gemini/antigravity/brain/6ae184f6-c178-4e69-bc60-fd07fb28bb9e/live_crazygames_combat.png' });
     console.log('✓ Captured live CrazyGames combat screenshot artifact');
 
+    // Test 17: GitHub Fighting Game Systems (Fighter Scouter Mode, Delhi Plasma Surge, Dash i-Frames)
+    const ghCombatResult = await page.evaluate(() => {
+      const t = window.__lhTest;
+      const player = t.getPlayer();
+
+      // 1. Dash i-Frames
+      t.setEnergy(100);
+      t.dash();
+      const iFramesActive = (player.invulnerable > 0);
+
+      // 2. Fighter Scouter Mode toggle
+      const initialScouter = t.isScouterActive();
+      t.toggleScouterMode();
+      const scouterToggledOn = t.isScouterActive() && !initialScouter;
+
+      // 3. Delhi Plasma Surge Special Motion Attack
+      t.spawnEnemy();
+      const enemies = t.getEnemies();
+      const e = enemies[enemies.length - 1];
+      e.x = player.x;
+      e.z = player.z - 5.0;
+      const initialHp = e.hp;
+
+      t.setEnergy(100);
+      t.triggerSpecialSurge();
+      const surgeActive = t.isSpecialSurgeActive();
+      const enemyDamagedBySurge = (e.hp < initialHp);
+
+      return {
+        iFramesActive,
+        scouterToggledOn,
+        surgeActive,
+        enemyDamagedBySurge
+      };
+    });
+
+    assert.ok(ghCombatResult.iFramesActive, 'Dash Chai Boost must grant player invulnerability frames (i-Frames)');
+    assert.ok(ghCombatResult.scouterToggledOn, 'Fighter Scouter Mode must toggle active');
+    assert.ok(ghCombatResult.surgeActive, 'Delhi Plasma Surge must activate special beam');
+    assert.ok(ghCombatResult.enemyDamagedBySurge, 'Delhi Plasma Surge piercing laser must damage enemies in its lane');
+    console.log('✓ GitHub Fighting Game Systems: Scouter Mode, Plasma Surge, and Dash i-Frames verified');
+
+    await new Promise(r => setTimeout(r, 120));
+    await page.screenshot({ path: '/Users/miteshnijhara/.gemini/antigravity/brain/6ae184f6-c178-4e69-bc60-fd07fb28bb9e/live_github_scouter_combat.png' });
+    console.log('✓ Captured live GitHub Scouter and Plasma Surge screenshot artifact');
+
     // Check for runtime errors
     assert.equal(errors.length, 0, 'No runtime errors permitted: ' + errors.join('; '));
     console.log('✓ Zero runtime or console errors');

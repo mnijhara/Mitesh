@@ -589,7 +589,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   </div>
 
   <!-- Desktop keybinds -->
-  <div class="help">WASD / ARROWS · MOVE<br>MOUSE / RIGHT STICK · AIM<br>SPACE / J / F · FIRE · 1/2/3 OR Q · WEAPON · E/X · MELEE<br>SHIFT / K · DASH · U · OVERDRIVE · C · 4D CHRONO · V · 3D CAM · P / ESC · PAUSE · R · RESTART</div>
+  <div class="help">WASD / ARROWS · MOVE<br>MOUSE / RIGHT STICK · AIM<br>SPACE / J / F · FIRE · 1/2/3 OR Q · WEAPON · E/X · MELEE<br>SHIFT / K · DASH (i-FRAMES) · T · SURGE · H · SCOUTER · U · OVERDRIVE · C · 4D CHRONO · V · 3D CAM · P / ESC · PAUSE · R · RESTART</div>
 
   <!-- Objective panel -->
   <div class="mission">
@@ -600,6 +600,8 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   <!-- Action bar — bottom right -->
   <div class="actions">
     <button id="superBtn" style="border-color:rgba(255,71,87,.8);color:#ff4757;display:none;background:rgba(255,71,87,.2)">⚡ OVERDRIVE (U)</button>
+    <button id="specialBtn" style="border-color:rgba(77,245,255,.5);color:var(--c-cyan)">⚡ SURGE (T)</button>
+    <button id="scouterBtn" style="border-color:rgba(255,204,85,.5);color:var(--c-gold)">🎯 SCOUTER (H)</button>
     <button id="chronoBtn" style="border-color:rgba(77,245,255,.5);color:var(--c-cyan)">⏱ 4D CHRONO</button>
     <button id="photoBtn" style="border-color:rgba(255,204,85,.5);color:var(--c-gold)">📷 3D CAM</button>
     <button id="armoryBtn">⚔ ARMORY</button>
@@ -641,6 +643,9 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
       <span>PERFECT PARRY &amp; DEFLECTION</span>
       <span>AERIAL JUGGLES &amp; WALL SPLAT</span>
       <span>CROWD ON FIRE HYPE</span>
+      <span>SCOUTER HITBOXES &amp; FRAME DATA</span>
+      <span>PLASMA SURGE SPECIAL</span>
+      <span>DASH i-FRAMES</span>
       <span>DELHI ARMORY ROGUELITE</span>
       <span>BRAHMASTRA OVERDRIVE</span>
       <span>CO-OP MULTIPLAYER</span>
@@ -670,6 +675,7 @@ let rupees=parseInt(localStorage.getItem('lalhit_rupees')||'0',10);
 let upgrades=JSON.parse(localStorage.getItem('lalhit_upgrades')||'{"damage":0,"energy":0,"chrono":0,"health":0}');
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a);
 let superMeter=0,superActive=false,bossStompWaves=[];
+let scouterMode=false,specialSurgeClock=0;
 const cyberRain=Array.from({length:55},()=>({x:rand(-14,14),y:rand(1,10),z:rand(-34,10),speed:rand(18,28)}));
 
 /* CrazyGames Fighting Mechanics: Momentum & Crowd Hype Meter */
@@ -1849,6 +1855,7 @@ function resetGame(){
   popups=[];
   hazards=[];
   superMeter=0;superActive=false;bossStompWaves=[];
+  specialSurgeClock=0;
   hypeMeter=0;hypeActive=false;hypeTimer=0;
   const hm=$('hypeMetric');if(hm)hm.style.display='none';
   for(let i=0;i<5;i++)spawnEnemy();
@@ -2130,6 +2137,7 @@ function dash(){
   dashCooldown=3.0; // 3-second cooldown
   meleeClock=0; // Dash-canceling: cancel any attack recovery frames!
   player.z-=1.5;
+  player.invulnerable=0.45; // GitHub fighting game i-Frames!
   shake=5;
   soundDash();
   rumble(70,0.5,0.3);
@@ -2137,7 +2145,70 @@ function dash(){
   // Dash afterimage particles trail
   for(let i=0;i<8;i++)particles.push({x:player.x+rand(-.3,.3),z:player.z+1.5+i*.2,y:rand(.3,1.4),vy:rand(.05,.3),life:.6,color:'#ffffff66'});
   $('dashRow').style.display='';
-  toast('DASH · CHAI BOOST');
+  addPopup(player.x,1.8,player.z,'i-FRAME EVADE! 🛡','#6ff7ff');
+  toast('DASH · i-FRAME INVULNERABILITY');
+}
+
+function triggerSpecialSurge(){
+  if(!playing||paused||energy<25||specialSurgeClock>0)return;
+  energy-=25;
+  specialSurgeClock=0.65;
+  shake=12;
+  hitStop=0.08;
+  playTone(880,0.25,'sawtooth',0.35);
+  setTimeout(()=>playTone(1320,0.3,'triangle',0.3),100);
+  rumble(200,0.9,1.0);
+  toast('⚡ DELHI PLASMA SURGE! (घातक प्रहार)');
+  speakAnnouncer('PLASMA SURGE!');
+  addPopup(player.x,2.2,player.z,'PLASMA SURGE! ⚡','#4df5ff');
+
+  // Pierce through hazards
+  for(let i=hazards.length-1;i>=0;i--){
+    const h=hazards[i];
+    const curX=h.x+(h.tx-h.x)*h.progress;
+    if(Math.abs(curX-player.x)<2.2){
+      hazards.splice(i,1);
+      for(let k=0;k<8;k++)particles.push({x:curX,y:rand(.4,1.8),z:player.z-rand(2,10),vy:rand(.3,2),life:.4,color:'#4df5ff'});
+    }
+  }
+
+  // Pierce enemies along center road
+  for(const e of [...enemies]){
+    if(Math.abs(e.x-player.x)<2.2&&e.z<player.z){
+      e.hp-=4.5*(1+(upgrades.damage||0)*0.3);
+      e.flash=0.35;
+      e.z-=2.5;
+      for(let i=0;i<16;i++)particles.push({x:e.x+rand(-.8,.8),z:e.z+rand(-.5,.5),y:rand(.3,2.2),vy:rand(.5,2.5),life:.55,color:['#ffffff','#4df5ff','#ffd27a'][i%3]});
+      addPopup(e.x,1.6,e.z,'SURGE CRIT! -65','#4df5ff');
+      addHype(18);
+      if(e.hp<=0){
+        enemies.splice(enemies.indexOf(e),1);
+        kills++;
+        score+=e.boss?3000:300;
+        rupees+=e.boss?300:45;
+        localStorage.setItem('lalhit_rupees',String(rupees));
+        $('bountyText').textContent='₹'+rupees;
+        dropPickup(e);
+        toast(e.boss?'MEGA ROACH VAPORIZED!':'COCKROACH VAPORIZED!');
+        if(e.boss){
+          bossDeathFlash=1.0;
+          wave++;
+          $('waveText').textContent=String(wave).padStart(2,'0');
+          syncZone(true);
+          if(wave>=4&&rescued>=4)missionVictory();
+        }
+      }
+    }
+  }
+}
+
+function toggleScouterMode(){
+  scouterMode=!scouterMode;
+  toast(scouterMode?'🎯 FIGHTER SCOUTER: ACTIVE (HITBOXES & FRAME DATA)':'🎯 FIGHTER SCOUTER: DISABLED');
+  const scBtn=$('scouterBtn');
+  if(scBtn){
+    scBtn.style.background=scouterMode?'rgba(255,204,85,.3)':'';
+  }
 }
 
 let gamepadFire=false,gamepadAim=false,gamepadPrev={melee:false,dash:false,pause:false};
@@ -2199,6 +2270,14 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
   if(comboClock>0)comboClock-=dt;
   if(comboClock<=0)combo=0;
   if(meleeClock>0)meleeClock-=dt;
+  if((player.invulnerable||0)>0){
+    player.invulnerable-=dt;
+    if(player.invulnerable<0)player.invulnerable=0;
+  }
+  if(specialSurgeClock>0){
+    specialSurgeClock-=dt;
+    if(specialSurgeClock<0)specialSurgeClock=0;
+  }
   if(streakClock>0){streakClock-=dt;}else{killStreak=0;scoreMultiplier=1;}
   if(dashCooldown>0){
     dashCooldown=Math.max(0,dashCooldown-dt);
@@ -2319,9 +2398,13 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
 
     if(e.z>player.z-1.4){
       if(Math.abs(e.x-player.x)<2.4){
-        hp-=dt*(e.boss?20:12);
-        shake=3;
-        rumble(80,0.6,0.8);
+        if((player.invulnerable||0)<=0){
+          hp-=dt*(e.boss?20:12);
+          shake=3;
+          rumble(80,0.6,0.8);
+        }else{
+          for(let k=0;k<3;k++)particles.push({x:player.x+rand(-.4,.4),z:player.z,y:rand(.5,1.6),vy:rand(.2,1.2),life:.3,color:'#6ff7ff'});
+        }
       }
       e.z=-28;
       e.x=rand(-7,7);
@@ -2336,11 +2419,15 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
     const curZ=h.z+(h.tz-h.z)*h.progress;
     if(h.progress>=1){
       if(Math.hypot(player.x-curX,player.z-curZ)<1.8){
-        hp-=8;
-        shake=4;
-        rumble(100,0.7,0.9);
-        toast('ACID BURN!');
-        if(hp<=0)gameOver();
+        if((player.invulnerable||0)<=0){
+          hp-=8;
+          shake=4;
+          rumble(100,0.7,0.9);
+          toast('ACID BURN!');
+          if(hp<=0)gameOver();
+        }else{
+          addPopup(player.x,1.8,player.z,'i-FRAME DODGE! 🛡','#6ff7ff');
+        }
       }
       hazards.splice(hazards.indexOf(h),1);
     }
@@ -2351,11 +2438,13 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
     w.radius+=simDt*w.speed;
     const d=Math.hypot(player.x-w.x,player.z-w.z);
     if(Math.abs(w.radius-d)<1.2&&dashCooldown<2.4){
-      hp-=dt*36;
-      shake=5;
-      rumble(80,0.6,0.8);
-      toast('SHOCKWAVE DAMAGE!');
-      if(hp<=0)gameOver();
+      if((player.invulnerable||0)<=0){
+        hp-=dt*36;
+        shake=5;
+        rumble(80,0.6,0.8);
+        toast('SHOCKWAVE DAMAGE!');
+        if(hp<=0)gameOver();
+      }
     }
     if(w.radius>=w.maxRadius)bossStompWaves.splice(bossStompWaves.indexOf(w),1);
   }
@@ -2637,6 +2726,54 @@ function draw(){
   drawHero();
   drawGun();
 
+  /* Delhi Plasma Surge Beam */
+  if(specialSurgeClock>0){
+    ctx.save();
+    const pStart=project(player.x,0,player.z);
+    const pEnd=project(player.x,0,-38);
+    const beamAlpha=Math.min(1,specialSurgeClock/0.65);
+    const yStart=roadY(player.z)-pStart.s*0.45;
+    const yEnd=roadY(-38)-pEnd.s*0.2;
+    // Outer aura
+    const beamGrad=ctx.createLinearGradient(pStart.x-38,yStart,pStart.x+38,yStart);
+    beamGrad.addColorStop(0,'rgba(77,245,255,0)');
+    beamGrad.addColorStop(0.3,'rgba(77,245,255,'+(0.75*beamAlpha)+')');
+    beamGrad.addColorStop(0.5,'rgba(255,255,255,'+(0.95*beamAlpha)+')');
+    beamGrad.addColorStop(0.7,'rgba(77,245,255,'+(0.75*beamAlpha)+')');
+    beamGrad.addColorStop(1,'rgba(77,245,255,0)');
+    ctx.fillStyle=beamGrad;
+    ctx.beginPath();
+    ctx.moveTo(pStart.x-38,yStart);
+    ctx.lineTo(pStart.x+38,yStart);
+    ctx.lineTo(pEnd.x+14,yEnd);
+    ctx.lineTo(pEnd.x-14,yEnd);
+    ctx.closePath();
+    ctx.fill();
+    // Core laser line
+    ctx.strokeStyle='rgba(255,255,255,'+beamAlpha+')';
+    ctx.lineWidth=6;
+    ctx.shadowColor='#4df5ff';
+    ctx.shadowBlur=24;
+    ctx.beginPath();
+    ctx.moveTo(pStart.x,yStart);
+    ctx.lineTo(pEnd.x,yEnd);
+    ctx.stroke();
+    // Surge energy rings
+    for(let r=0;r<5;r++){
+      const ringZ=player.z-(r*6+((elapsed*22)%6));
+      if(ringZ>-38&&ringZ<player.z){
+        const rp=project(player.x,0,ringZ);
+        const ry=roadY(ringZ)-rp.s*0.35;
+        ctx.strokeStyle='rgba(77,245,255,'+(0.6*beamAlpha)+')';
+        ctx.lineWidth=2;
+        ctx.beginPath();
+        ctx.ellipse(rp.x,ry,rp.s*0.8,rp.s*0.3,0,0,Math.PI*2);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
   /* Delhi Cyberpunk Atmospheric Rain */
   ctx.save();
   ctx.strokeStyle='rgba(111,247,255,0.22)';
@@ -2708,6 +2845,76 @@ function draw(){
     ctx.textAlign='center';
     ctx.shadowColor='#000';ctx.shadowBlur=8;
     ctx.fillText('📷 3D SPATIAL ORBIT MODE · DRAG TO ROTATE · WHEEL TO ZOOM',W/2,36);
+    ctx.restore();
+  }
+
+  /* Fighter Scouter Mode (SF6 / openfight inspired live 3D wireframe hitboxes & frame data) */
+  if(scouterMode){
+    ctx.save();
+    // Player hurtbox in lime green
+    const pp=project(player.x,0,player.z);
+    const ps=pp.s;
+    const py=roadY(player.z);
+    const hw=ps*0.55,hh=ps*1.35;
+    ctx.strokeStyle='rgba(0,255,102,0.85)';
+    ctx.lineWidth=1.8;
+    ctx.strokeRect(pp.x-hw/2,py-hh,hw,hh);
+    ctx.fillStyle='rgba(0,255,102,0.15)';
+    ctx.fillRect(pp.x-hw/2,py-hh,hw,hh);
+    ctx.fillStyle='#00ff66';
+    ctx.font='bold 9px monospace';
+    ctx.fillText('HURTBOX [PLAYER] iF:'+((player.invulnerable||0)>0?(player.invulnerable).toFixed(2)+'s':'0.00s'),pp.x-hw/2,py-hh-4);
+
+    // Civilians hurtbox in cyan
+    for(const c of civilians.filter(civ=>!civ.rescued)){
+      const cp=project(c.x,0,c.z);
+      const cy=roadY(c.z);
+      const cw=cp.s*0.45,ch=cp.s*1.1;
+      ctx.strokeStyle='rgba(0,240,255,0.7)';
+      ctx.lineWidth=1.5;
+      ctx.strokeRect(cp.x-cw/2,cy-ch,cw,ch);
+      ctx.fillStyle='#00f0ff';
+      ctx.font='bold 8px monospace';
+      ctx.fillText('HURTBOX [CIVILIAN]',cp.x-cw/2,cy-ch-3);
+    }
+
+    // Enemies hitboxes in red / orange
+    for(const e of enemies){
+      const ep=project(e.x,0,e.z);
+      const ey=roadY(e.z)-(e.y||0)*ep.s*18;
+      const ew=ep.s*(e.boss?1.6:0.95),eh=ep.s*(e.boss?1.4:0.85);
+      ctx.strokeStyle=e.windingUp?'rgba(255,187,0,0.95)':e.stunClock>0?'rgba(100,180,255,0.95)':'rgba(255,0,51,0.85)';
+      ctx.lineWidth=2;
+      ctx.strokeRect(ep.x-ew/2,ey-eh,ew,eh);
+      ctx.fillStyle=e.windingUp?'rgba(255,187,0,0.18)':'rgba(255,0,51,0.15)';
+      ctx.fillRect(ep.x-ew/2,ey-eh,ew,eh);
+      ctx.fillStyle=e.windingUp?'#ffbb00':e.stunClock>0?'#64b4ff':'#ff3344';
+      ctx.font='bold 9px monospace';
+      const statusStr=e.stunClock>0?'STUNNED':e.windingUp?'WINDUP !':(e.y||0)>0.1?'AIRBORNE [vy:'+e.vy.toFixed(1)+']':'ACTIVE';
+      ctx.fillText((e.boss?'BOSS_HITBOX':'HITBOX')+' ['+statusStr+']',ep.x-ew/2,ey-eh-4);
+    }
+
+    // Screen-space Scouter Telemetry & Frame Data HUD
+    ctx.save();
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.fillStyle='rgba(5,15,25,0.92)';
+    ctx.strokeStyle='rgba(0,255,102,0.7)';
+    ctx.lineWidth=1;
+    ctx.fillRect(20,204,244,96);
+    ctx.strokeRect(20,204,244,96);
+    ctx.textAlign='left';
+    ctx.textBaseline='alphabetic';
+    ctx.fillStyle='#00ff66';
+    ctx.font='bold 10px monospace';
+    ctx.fillText('⚡ FIGHTER SCOUTER · FRAME DATA',28,221);
+    ctx.fillStyle='#aeefff';
+    ctx.font='9px monospace';
+    const fpsVal=frameTimes.length?(1/(frameTimes.reduce((a,b)=>a+b,0)/frameTimes.length)).toFixed(0):'60';
+    const frameAdvStr=meleeClock>0?'-3F RECOVERY':comboClock>0?'+4F ADVANTAGE':'+0F NEUTRAL';
+    ctx.fillText('FPS: '+fpsVal+' · ADV: '+frameAdvStr,28,236);
+    ctx.fillText('i-FRAMES: '+((player.invulnerable||0)>0?(player.invulnerable).toFixed(2)+'s (INVULNERABLE)':'0.00s'),28,251);
+    ctx.fillText('HURTBOXES: '+(1+civilians.filter(c=>!c.rescued).length)+' · HITBOXES: '+enemies.length,28,266);
+    ctx.fillText('EST COMBAT DPS: '+(Math.round((weaponMode===2?38:weaponMode===1?48:30)*(1+(upgrades.damage||0)*0.3))),28,281);
     ctx.restore();
   }
 
@@ -2793,8 +3000,20 @@ function showControls(e){
         <b style="color:#ff4757;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">💥 WALL SPLAT &amp; BARRIER CRUSH</b>
         <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Slam enemies toward road barriers to crush them against concrete pillars for impact shockwaves and bonus damage.</p>
       </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(0,255,102,0.25);border-radius:10px">
+        <b style="color:#00ff66;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">🎯 FIGHTER SCOUTER MODE (H)</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>H</b> to inspect live 3D wireframe hurtboxes (green) and hitboxes (red) with real-time frame advantage telemetry (+4F ON HIT) and DPS metrics.</p>
+      </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(77,245,255,0.25);border-radius:10px">
+        <b style="color:var(--c-cyan);font-family:var(--font-display);font-size:11px;letter-spacing:.1em">⚡ DELHI PLASMA SURGE (T)</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>T</b> to execute a focused piercing laser ray along the center road. Vaporizes clustered mutant roaches and incinerates acid projectiles.</p>
+      </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(77,245,255,0.25);border-radius:10px">
+        <b style="color:var(--c-cyan);font-family:var(--font-display);font-size:11px;letter-spacing:.1em">🛡 DASH i-FRAMES (SHIFT / K)</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Chai Dash gives 0.45s of invulnerability frames (i-Frames) and attack-recovery animation canceling. Phase through shockwaves and acid burns.</p>
+      </div>
       <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(176,138,255,0.25);border-radius:10px">
-        <b style="color:#b08aff;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">⏱ 4D CHRONO BULLET-TIME</b>
+        <b style="color:#b08aff;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">⏱ 4D CHRONO BULLET-TIME (C)</b>
         <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>C</b> to dilate spacetime to 0.22x speed. Dodge point-blank attacks, weave between shockwaves, and pick off targets with sniper precision.</p>
       </div>
       <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(255,210,122,0.25);border-radius:10px">
@@ -2865,6 +3084,8 @@ window.addEventListener('error',e=>console.error('LAL HIT runtime error',e.messa
 
 $('superBtn')?.addEventListener('click',triggerOverdrive);
 $('superTouchBtn')?.addEventListener('pointerdown',e=>{e.preventDefault();triggerOverdrive()});
+$('specialBtn')?.addEventListener('click',triggerSpecialSurge);
+$('scouterBtn')?.addEventListener('click',toggleScouterMode);
 $('chronoBtn')?.addEventListener('click',toggleChrono);
 $('photoBtn')?.addEventListener('click',togglePhotoMode);
 $('armoryBtn')?.addEventListener('click',openArmory);
@@ -2970,6 +3191,8 @@ addEventListener('keydown',e=>{
     if(!paused){last=performance.now();ensureFrame()}else toast('MISSION PAUSED');
     $('pauseBtn').textContent=paused?'▶ RESUME':'Ⅱ PAUSE';
   }
+  if(e.code==='KeyT')triggerSpecialSurge();
+  if(e.code==='KeyH')toggleScouterMode();
   if(e.code==='KeyC')toggleChrono();
   if(e.code==='KeyV')togglePhotoMode();
   if(e.code==='KeyU'||e.code==='Digit4')triggerOverdrive();
@@ -3077,6 +3300,11 @@ window.__lhTest={
   spawnEnemy,
   getEnemies:()=>enemies,
   melee,
+  dash,
+  triggerSpecialSurge,
+  toggleScouterMode,
+  isScouterActive:()=>scouterMode,
+  isSpecialSurgeActive:()=>specialSurgeClock>0,
   getPlayer:()=>player,
   getShots:()=>shots,
   getHazards:()=>hazards,
