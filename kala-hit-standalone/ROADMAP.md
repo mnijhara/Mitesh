@@ -134,3 +134,12 @@ Confirm the hosting provider and deployment path for `lalhit.fun` (the live Canv
 - Added a regression assertion to prevent the duplicated movement hint from returning.
 - Re-ran the Node regression suite against the branch source: PASS (exit code 0). Ran the static build command: PASS (exit code 0).
 - Live site remains unchanged; fixes are still in PR #8 pending review/merge and the publishing path remains unverified.
+
+
+### Deployment safety gate — 2026-10-18
+
+- Read-only Netlify inspection confirms the connected project named `kalahit` publishes at `kalahit.netlify.app`; this is not proof that it owns `lalhit.fun`.
+- Because the existing workflow auto-published the game to an unverified `NETLIFY_SITE_ID` on main pushes, replaced that workflow on this review branch with a manual preflight-only workflow. It performs no upload and makes no Netlify changes.
+- This prevents merging the gameplay fix from accidentally triggering an unverified Netlify production deploy. It is a temporary safety gate, not a deployment solution.
+- Hostinger tools available in this workspace are mail-only; the authoritative website publishing route for `lalhit.fun` is still not established.
+- Restore deployment only after the exact canonical site/hosting target is identified and tested. Do not touch the separate ROACH RIOT or SANJEEVANI QUEST sites.
