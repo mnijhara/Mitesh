@@ -523,7 +523,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   .mobile-controls{bottom:0;height:170px}
   #weaponHud{display:none!important}
   .streak-popup{font-size:clamp(24px,7vw,48px)}
-  .toast{bottom:10px;font-size:10px;padding:7px 16px}
+  .toast{bottom:158px;font-size:10px;padding:7px 16px}
 }
 
 @media(max-width:380px){.mobile-controls .move-pad{left:8px;width:106px;height:106px}
@@ -636,14 +636,18 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
       <button id="controlsBtn">⌘ CONTROLS &amp; ABILITIES</button>
     </div>
     <div class="chips">
-      <span>4D CHRONO TIME DILATION</span>
+      <span>4D CHRONO BULLET-TIME</span>
       <span>3D SPATIAL PARALLAX</span>
-      <span>ROGUE BOUNTY UPGRADES</span>
-      <span>DYNAMIC CYBERPUNK SYNTH</span>
+      <span>PERFECT PARRY &amp; DEFLECTION</span>
+      <span>AERIAL JUGGLES &amp; WALL SPLAT</span>
+      <span>CROWD ON FIRE HYPE</span>
+      <span>DELHI ARMORY ROGUELITE</span>
+      <span>BRAHMASTRA OVERDRIVE</span>
       <span>CO-OP MULTIPLAYER</span>
     </div>
   </div>
   <div class="menu" id="armoryModal" style="display:none;width:min(580px,94vw)"></div>
+  <div class="menu" id="controlsModal" style="display:none;width:min(620px,94vw);max-height:85vh;overflow-y:auto"></div>
 </div>
 
 <script>
@@ -900,6 +904,9 @@ function rumble(duration=60,weak=0.3,strong=0.6){
         weakMagnitude:weak,
         strongMagnitude:strong
       }).catch(()=>{});
+    }
+    if(navigator.vibrate){
+      navigator.vibrate(Math.min(90,Math.round(duration*0.6)));
     }
   }catch(e){}
 }
@@ -2765,7 +2772,48 @@ function startMission(e){
 
 function showControls(e){
   if(e){e.preventDefault();e.stopPropagation()}
-  toast('WASD / STICK: MOVE · MOUSE / RIGHT STICK: AIM · SPACE / RT: FIRE · E / X: MELEE · SHIFT / B: DASH');
+  const mm=$('menuModal'),cm=$('controlsModal');
+  if(!cm)return;
+  mm.style.display='none';
+  cm.style.display='block';
+  cm.innerHTML=`
+    <div class="kicker">DELHI DEFENCE FORCE · TACTICAL MANUAL</div>
+    <h1>COMBAT <span>GUIDE</span></h1>
+    <div class="subtitle">TACTICAL ABILITIES &amp; KEYBINDS</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:16px 0;text-align:left">
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(77,245,255,0.25);border-radius:10px">
+        <b style="color:var(--c-cyan);font-family:var(--font-display);font-size:11px;letter-spacing:.1em">⚡ PERFECT PARRY &amp; CLASH</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>E / X / MELEE</b> as an enemy flashes <b>!</b> or right before an acid spit lands to parry, stagger with dizzy stars, deflect the projectile, and recharge Chai &amp; Ultimate.</p>
+      </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(255,204,85,0.25);border-radius:10px">
+        <b style="color:var(--c-gold);font-family:var(--font-display);font-size:11px;letter-spacing:.1em">🤹 UPPERCUT &amp; AIR JUGGLE</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">The 3rd hit of your melee combo launches enemies airborne. Strike them while airborne to trigger escalating <b>Air Juggles</b> for massive score and Hype.</p>
+      </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(255,71,87,0.25);border-radius:10px">
+        <b style="color:#ff4757;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">💥 WALL SPLAT &amp; BARRIER CRUSH</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Slam enemies toward road barriers to crush them against concrete pillars for impact shockwaves and bonus damage.</p>
+      </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(176,138,255,0.25);border-radius:10px">
+        <b style="color:#b08aff;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">⏱ 4D CHRONO BULLET-TIME</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>C</b> to dilate spacetime to 0.22x speed. Dodge point-blank attacks, weave between shockwaves, and pick off targets with sniper precision.</p>
+      </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(255,210,122,0.25);border-radius:10px">
+        <b style="color:#ffd27a;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">🔥 CROWD ON FIRE HYPE</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Land stylish combos, parries, and juggles to fill the Hype meter to 100%. Unlocks double rupee bounties (<b>₹ x2</b>) and golden combat aura.</p>
+      </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(255,100,80,0.25);border-radius:10px">
+        <b style="color:#ff6450;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">⚡ BRAHMASTRA OVERDRIVE (U)</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Fill your Ultimate gauge to unleash a 360° screen-clearing lightning barrage with slow-mo freeze frames and voice callouts.</p>
+      </div>
+    </div>
+    <div class="menu-buttons">
+      <button id="closeControlsBtn" class="hot">← RETURN TO MENU</button>
+    </div>
+  `;
+  $('closeControlsBtn').addEventListener('click',()=>{
+    cm.style.display='none';
+    mm.style.display='block';
+  });
 }
 
 function showCoopModal(e){
