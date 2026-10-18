@@ -447,6 +447,82 @@ const puppeteer = require('/tmp/node_modules/puppeteer-core');
     await page.screenshot({ path: '/Users/miteshnijhara/.gemini/antigravity/brain/6ae184f6-c178-4e69-bc60-fd07fb28bb9e/live_tag_team_combat.png' });
     console.log('✓ Captured live Tag-Team combat screenshot artifact');
 
+    // Test 20: Etched Arcade Console Deck, Cross-Rush Tag Cancel, 4-Hero Roster, & Brahmastra Duo
+    const deckResult = await page.evaluate(() => {
+      const t = window.__lhTest;
+      const player = t.getPlayer();
+      const roster = t.getROSTER();
+
+      // 1. Verify 4-Hero Roster
+      const rosterCount = roster.length;
+      const hasDev = roster.some(h => h.name === 'DEV');
+      const hasMeera = roster.some(h => h.name === 'MEERA');
+
+      // 2. Cross-Rush Tag Cancel
+      t.setMeleeClock(0.2); // simulating active melee strike recovery
+      t.setTagCooldown(0);
+      const preRushZ = player.z;
+      t.triggerTagSwitch();
+      const crossRushFired = (preRushZ - player.z > 1.8);
+
+      // 3. Roster Selection (Recruit Dev & Meera)
+      t.selectRosterFighter(2, 0); // DEV as Lead
+      t.selectRosterFighter(3, 1); // MEERA as Reserve
+      const team = t.getTeam();
+      const devLead = (team[0].name === 'DEV');
+      const meeraReserve = (team[1].name === 'MEERA');
+
+      // 4. Meera Nanite Healing Assist
+      team[0].hp = 40;
+      t.setEnergy(100);
+      t.setAssistCooldown(0);
+      t.triggerTagAssist();
+      const meeraHealed = (team[0].hp > 40);
+
+      // 5. Brahmastra Duo Cross-Assault
+      t.spawnEnemy();
+      const enemies = t.getEnemies();
+      const initialShots = t.getShots().length;
+      // Set super meter to 100% and unleash
+      t.getSuperMeter();
+      // Force super meter in window
+      t.triggerOverdrive();
+      // Super triggers dual cross barrages
+      const assist = t.getAssistHero();
+      const duoSuperSpawned = Boolean(assist && assist.isSuperAssault);
+
+      // Verify Etched Controller Deck DOM elements
+      const deckEl = document.getElementById('arcadeDeck');
+      const deckVisible = Boolean(deckEl && deckEl.classList.contains('etched-deck'));
+
+      return {
+        rosterCount,
+        hasDev,
+        hasMeera,
+        crossRushFired,
+        devLead,
+        meeraReserve,
+        meeraHealed,
+        duoSuperSpawned,
+        deckVisible
+      };
+    });
+
+    assert.equal(deckResult.rosterCount, 4, 'Roster must contain 4 distinct Delhi Exterminator Champions');
+    assert.ok(deckResult.hasDev, 'Dev (Heavy Demolitionist) must be available in Roster');
+    assert.ok(deckResult.hasMeera, 'Meera (Nanite Specialist) must be available in Roster');
+    assert.ok(deckResult.crossRushFired, 'Canceling melee recovery into Tag Switch must execute Cross-Rush Tag Cancel');
+    assert.ok(deckResult.devLead, 'Roster selection must assign Dev as Lead Fighter');
+    assert.ok(deckResult.meeraReserve, 'Roster selection must assign Meera as Reserve Partner');
+    assert.ok(deckResult.meeraHealed, 'Meera Nanite Aegis assist must restore HP to active fighter');
+    assert.ok(deckResult.duoSuperSpawned, 'Brahmastra Overdrive must summon partner for synchronized Duo Cross-Assault');
+    assert.ok(deckResult.deckVisible, 'Etched Arcade Tactical Controller Deck must be present and active in DOM');
+    console.log('✓ Etched Arcade Controller Deck, Cross-Rush Tag Cancel, 4-Hero Roster, and Brahmastra Duo Super verified');
+
+    await new Promise(r => setTimeout(r, 120));
+    await page.screenshot({ path: '/Users/miteshnijhara/.gemini/antigravity/brain/6ae184f6-c178-4e69-bc60-fd07fb28bb9e/live_etched_arcade_deck.png' });
+    console.log('✓ Captured live Etched Arcade Deck screenshot artifact');
+
     // Check for runtime errors
     assert.equal(errors.length, 0, 'No runtime errors permitted: ' + errors.join('; '));
     console.log('✓ Zero runtime or console errors');

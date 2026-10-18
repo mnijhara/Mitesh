@@ -353,6 +353,92 @@ button:focus-visible{outline:2px solid var(--c-cyan);outline-offset:2px}
 .mobile-controls .dash-control{right:83px;bottom:0;background:radial-gradient(135deg,#9a6518,#4a2e08)!important;border:1.5px solid rgba(255,204,85,.45)!important;color:var(--c-gold)!important;font-size:10px;width:60px;height:60px}
 .mobile-controls .aim-pad{right:153px;bottom:0;width:52px;height:52px;background:radial-gradient(135deg,rgba(20,50,70,.95),rgba(8,20,35,.95));border:1.5px solid rgba(77,245,255,.3);color:rgba(77,245,255,.7);font-size:9px;letter-spacing:.04em}
 
+/* ─── ETCHED ARCADE TACTICAL CONTROLLER CONSOLE DECK ─── */
+.etched-deck{
+  position:fixed;left:0;right:0;bottom:0;
+  height:78px;
+  background:linear-gradient(180deg,rgba(16,26,42,0.96) 0%,rgba(8,14,24,0.98) 100%);
+  border-top:1.5px solid rgba(77,245,255,0.45);
+  box-shadow:0 -6px 32px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.18);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;
+  z-index:90;
+  pointer-events:auto;
+  user-select:none;-webkit-user-select:none;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  transition:transform .25s ease,opacity .25s ease;
+}
+body:not(.in-game) .etched-deck{display:none!important}
+.deck-group{display:flex;align-items:center;gap:7px}
+.deck-left{display:flex;align-items:center;gap:6px}
+.deck-center{display:flex;align-items:center;gap:7px}
+.deck-right{display:flex;align-items:center;gap:6px}
+
+.etched-btn{
+  position:relative;height:50px;min-width:54px;
+  padding:0 9px;border-radius:8px;
+  border:1.5px solid rgba(255,255,255,0.18);
+  border-bottom:3px solid rgba(0,0,0,0.7);
+  background:linear-gradient(180deg,rgba(28,45,68,0.92) 0%,rgba(12,22,36,0.96) 100%);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,0.2),inset 0 -2px 4px rgba(0,0,0,0.6),0 4px 10px rgba(0,0,0,0.6);
+  color:#e2f0fd;font-family:var(--font-display);font-size:9.5px;font-weight:800;letter-spacing:.08em;
+  text-transform:uppercase;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;cursor:pointer;transition:transform .06s,box-shadow .06s,filter .06s;touch-action:manipulation;
+}
+.etched-btn:hover{
+  border-color:rgba(77,245,255,0.55);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,0.25),inset 0 -2px 4px rgba(0,0,0,0.6),0 0 14px rgba(77,245,255,0.3);
+  color:#fff;
+}
+.etched-btn:active,.etched-btn.pressed{
+  transform:translateY(2px) scale(0.96);
+  border-bottom-width:1.5px;
+  box-shadow:inset 0 3px 6px rgba(0,0,0,0.8),0 1px 3px rgba(0,0,0,0.5),0 0 12px currentColor;
+  filter:brightness(1.28);
+}
+.etched-btn .key-badge{
+  font-size:7px;font-weight:900;letter-spacing:.06em;
+  padding:1px 4px;border-radius:3px;
+  background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.12);
+  color:rgba(180,210,240,0.75);
+}
+.etched-btn.btn-melee{border-color:rgba(77,245,255,0.5);color:#7df5ff}
+.etched-btn.btn-fire{background:linear-gradient(180deg,rgba(85,20,30,0.95) 0%,rgba(45,10,16,0.98) 100%);border-color:rgba(255,71,87,0.6);color:#ff6b7b}
+.etched-btn.btn-dash{border-color:rgba(255,204,85,0.5);color:#ffd27a}
+.etched-btn.btn-tag{background:linear-gradient(180deg,rgba(50,26,75,0.95) 0%,rgba(22,10,38,0.98) 100%);border-color:rgba(176,138,255,0.6);color:#c7a8ff}
+.etched-btn.btn-assist{background:linear-gradient(180deg,rgba(18,52,34,0.95) 0%,rgba(8,26,16,0.98) 100%);border-color:rgba(0,255,102,0.55);color:#4df596}
+.etched-btn.btn-super{background:linear-gradient(180deg,rgba(80,18,32,0.95) 0%,rgba(45,8,16,0.98) 100%);border-color:rgba(255,210,122,0.75);color:#ffe08a;box-shadow:0 0 22px rgba(255,204,85,0.3),inset 0 1px 1px #fff5}
+.etched-btn.btn-super.ready{animation:superPulse 1.1s ease-in-out infinite}
+
+.etched-deck button,.etched-deck .etched-btn{
+  position:relative!important;
+  left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+}
+.etched-deck .move-pad{
+  position:relative!important;
+  left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+  width:62px!important;height:62px!important;
+}
+.actions{
+  position:fixed!important;right:16px!important;bottom:92px!important;
+  z-index:100!important;display:flex!important;gap:6px!important;pointer-events:auto!important;
+}
+@media(max-width:768px){
+  .etched-deck{display:block!important;height:142px!important;bottom:0!important;padding:0!important}
+  .etched-deck .deck-group{display:contents!important}
+  .etched-deck button,.etched-deck .etched-btn{position:absolute!important}
+  .etched-deck .move-pad{position:absolute!important;left:13px!important;bottom:8px!important;width:116px!important;height:116px!important}
+  .etched-deck .fire-control{right:13px!important;bottom:70px!important;width:64px!important;height:64px!important}
+  .etched-deck .melee-control{right:83px!important;bottom:70px!important;width:58px!important;height:58px!important}
+  .etched-deck .dash-control{right:83px!important;bottom:8px!important;width:58px!important;height:58px!important}
+  .etched-deck .aim-pad{right:148px!important;bottom:8px!important;width:48px!important;height:48px!important}
+  #tagSwitchBtn{left:140px!important;bottom:64px!important}
+  #superTouchBtn{left:140px!important;bottom:8px!important}
+  #tagAssistBtn{left:206px!important;bottom:64px!important}
+  #deckChronoBtn{left:206px!important;bottom:8px!important}
+  .in-game .mission{bottom:150px!important}
+}
+
 /* ─── MAIN MENU / OVERLAY ────────────────────────────── */
 .overlay{
   position:fixed;inset:0;z-index:100;
@@ -495,10 +581,13 @@ button:focus-visible{outline:2px solid var(--c-cyan);outline-offset:2px}
   animation:fadeUp .5s .5s var(--ease-out) both;
 }
 
-/* ─── RESPONSIVE — MOBILE ────────────────────────────── */
-@media(min-width:769px){.mobile-controls{display:none!important}}
+/* ─── RESPONSIVE — MOBILE & DESKTOP CONTROLS ────────── */
+@media(min-width:769px){.mobile-controls:not(.etched-deck){display:none!important}}
 body:not(.in-game) .mobile-controls{display:none!important}
 body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
+.in-game .actions{bottom:88px!important}
+.in-game .mission{bottom:88px!important}
+.in-game #weaponHud{bottom:88px!important}
 
 @media(max-width:768px){
   .wave-metric,.help{display:none}
@@ -515,8 +604,20 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   .bar-label{font-size:7px}
   .bar{height:4px}
   #bossPanel{top:10px;width:calc(100% - 20px)}
-  .actions{right:10px;top:48px;bottom:auto;gap:4px}
-  .actions button{padding:6px 8px;font-size:8px;border-radius:7px}
+  .actions, .in-game .actions{
+    position:fixed!important;
+    right:10px!important;
+    top:48px!important;
+    bottom:auto!important;
+    max-width:180px!important;
+    display:flex!important;
+    flex-wrap:wrap!important;
+    justify-content:flex-end!important;
+    gap:4px!important;
+    z-index:90!important;
+  }
+  .actions button{padding:5px 7px!important;font-size:7.5px!important;border-radius:6px!important}
+  #impactBtn,#hadokenBtn,#shoryukenBtn,#specialBtn,#scouterBtn,#chronoBtn,#photoBtn{display:none!important}
   .mission{left:10px;right:10px;top:80px;bottom:auto;width:auto;max-width:none;padding:7px 12px;border-left-width:2px}
   .mission b{font-size:8px;letter-spacing:.1em}
   .mission span{font-size:9px;line-height:1.35}
@@ -605,11 +706,9 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
     <span id="missionText">Eliminate the giant cockroaches. Reach the civilians and escort them to safety.</span>
   </div>
 
-  <!-- Action bar — bottom right -->
+  <!-- Action bar — top/utility buttons -->
   <div class="actions">
-    <button id="superBtn" style="border-color:rgba(255,71,87,.8);color:#ff4757;display:none;background:rgba(255,71,87,.2)">⚡ OVERDRIVE (U)</button>
-    <button id="tagSwitchBtn" style="border-color:rgba(176,138,255,.7);color:#b08aff">👥 TAG (TAB)</button>
-    <button id="tagAssistBtn" style="border-color:rgba(0,255,102,.7);color:#00ff66">🤝 ASSIST (B)</button>
+    <button id="superBtn" style="display:none">⚡ OVERDRIVE (U)</button>
     <button id="impactBtn" style="border-color:rgba(255,42,133,.6);color:#ff2a85">💥 IMPACT (Y)</button>
     <button id="hadokenBtn" style="border-color:rgba(77,245,255,.6);color:var(--c-cyan)">🔥 HADOKEN (G)</button>
     <button id="shoryukenBtn" style="border-color:rgba(255,204,85,.7);color:var(--c-gold)">🐉 SHORYUKEN (Z)</button>
@@ -623,14 +722,60 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
     <button id="pauseBtn">Ⅱ PAUSE</button>
   </div>
 
-  <!-- Mobile Touch Controls -->
-  <div class="mobile-controls">
-    <div id="movePad" class="move-pad" role="application" aria-label="Movement joystick"><span id="moveKnob"></span></div>
-    <button id="aimBtn" class="aim-pad">AIM<br>LOCK</button>
-    <button id="meleeBtn" class="melee-control">MELEE</button>
-    <button id="fireBtn" class="fire-control">FIRE</button>
-    <button id="dashBtn" class="dash-control">DASH</button>
-    <button id="superTouchBtn" class="super-control" style="position:absolute;right:182px;bottom:42px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#ff4757,#ffd27a);border:2px solid #fff;color:#fff;font-family:var(--font-display);font-size:10px;font-weight:900;display:none;pointer-events:auto;z-index:9">⚡ ULT</button>
+  <!-- Etched Arcade Tactical Controller Console Deck (Bottom Bar) -->
+  <div id="arcadeDeck" class="mobile-controls etched-deck">
+    <!-- Left Wing: Tactical Navigation & D-Pad -->
+    <div class="deck-group deck-left">
+      <div id="movePad" class="move-pad" role="application" aria-label="Movement joystick"><span id="moveKnob"></span></div>
+      <button id="deckChronoBtn" class="etched-btn" title="4D Chrono Bullet-Time (C / Q)">
+        <span>⏱ 4D</span>
+        <span class="key-badge">C</span>
+      </button>
+      <button id="deckParryBtn" class="etched-btn" title="Drive Parry & Deflection (E / X)">
+        <span>🛡 PARRY</span>
+        <span class="key-badge">E</span>
+      </button>
+      <button id="deckWepBtn" class="etched-btn" title="Cycle Weapons (Q / 1-3)">
+        <span>⚔ WEP</span>
+        <span class="key-badge">Q</span>
+      </button>
+    </div>
+
+    <!-- Center Core: Tag Team Roster & Brahmastra Super -->
+    <div class="deck-group deck-center">
+      <button id="tagSwitchBtn" class="etched-btn btn-tag" title="Tag-Team Switch / Cross-Rush (Tab)">
+        <span>👥 TAG IN</span>
+        <span class="key-badge" id="deckTagBadge">TAB</span>
+      </button>
+      <button id="superTouchBtn" class="super-control etched-btn btn-super" title="Brahmastra Dual Hyper Combo (Space / U)">
+        <span>⚡ HYPER</span>
+        <span class="key-badge">SPACE</span>
+      </button>
+      <button id="tagAssistBtn" class="etched-btn btn-assist" title="Partner Assist Support Strike (B)">
+        <span>🤝 ASSIST</span>
+        <span class="key-badge" id="deckAssistBadge">B</span>
+      </button>
+    </div>
+
+    <!-- Right Wing: Combat Action Cluster -->
+    <div class="deck-group deck-right">
+      <button id="aimBtn" class="etched-btn aim-pad" title="Aim Lock Scouter (H)">
+        <span>🎯 AIM</span>
+        <span class="key-badge">LOCK</span>
+      </button>
+      <button id="meleeBtn" class="etched-btn btn-melee melee-control" title="Melee Strike / Air Juggle (J / E)">
+        <span>👊 MELEE</span>
+        <span class="key-badge">J</span>
+      </button>
+      <button id="fireBtn" class="etched-btn btn-fire fire-control" title="Blaster Fire (K / Left-Click)">
+        <span>🔫 FIRE</span>
+        <span class="key-badge">K</span>
+      </button>
+      <button id="dashBtn" class="etched-btn btn-dash dash-control" title="Drive Dash / i-Frames (L / Shift)">
+        <span>💨 DASH</span>
+        <span class="key-badge">L</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -694,14 +839,38 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a)
 let superMeter=0,superActive=false,bossStompWaves=[];
 let scouterMode=false,specialSurgeClock=0,driveImpactClock=0,shoryukenClock=0;
 /* Tag-Team Fighting Dynamics (itch.io HTML5 tag fighter inspired) */
-let activeFighter=0; // 0: Kabir (Delhi Vanguard), 1: Ananya (Cyber Valkyrie)
+const ROSTER=[
+  {id:0,name:'KABIR',title:'DELHI VANGUARD',hp:100,maxHp:100,recoverableHp:0,color:'#ff4757',assistName:'SUPPRESSIVE PULSE',bio:'Solar plasma blaster, Agni Hadoken & rising dragon Shoryuken.'},
+  {id:1,name:'ANANYA',title:'CYBER VALKYRIE',hp:90,maxHp:90,recoverableHp:0,color:'#b08aff',assistName:'ELECTRO-KATAR VORTEX',bio:'Acrobatic twin plasma katars & gravitational shockwave vortex.'},
+  {id:2,name:'DEV',title:'HEAVY DEMO',hp:125,maxHp:125,recoverableHp:0,color:'#ff9f43',assistName:'CLUSTER BOMBARDMENT',bio:'Powered exo-armor with concussive mortar shells & shockwave blasts.'},
+  {id:3,name:'MEERA',title:'NANITE MEDIC',hp:95,maxHp:95,recoverableHp:0,color:'#2ed573',assistName:'NANITE AEGIS FIELD',bio:'Nanite beam and restorative healing field restoring 22 HP & repelling foes.'}
+];
+let activeFighter=0; // 0: Lead fighter, 1: Reserve partner
 const team=[
-  {name:'KABIR',title:'DELHI VANGUARD',hp:100,maxHp:100,recoverableHp:0,color:'#ff4757',assistName:'SUPPRESSIVE PULSE'},
-  {name:'ANANYA',title:'CYBER VALKYRIE',hp:100,maxHp:100,recoverableHp:0,color:'#b08aff',assistName:'ELECTRO-KATAR VORTEX'}
+  Object.assign({},ROSTER[0]),
+  Object.assign({},ROSTER[1])
 ];
 let tagCooldown=0,assistCooldown=0;
-let assistHero=null; // {active:false,fighter:1,x:0,z:0,timer:0,maxTimer:0.85}
+let assistHero=null; // {active:false,fighter:1,x:0,z:0,timer:0,maxTimer:0.85,isSuperAssault:false}
 const cyberRain=Array.from({length:55},()=>({x:rand(-14,14),y:rand(1,10),z:rand(-34,10),speed:rand(18,28)}));
+
+function selectRosterFighter(fighterIdx,slot=0){
+  if(!ROSTER[fighterIdx])return;
+  const fighter=ROSTER[fighterIdx];
+  const otherSlot=1-slot;
+  if(team[otherSlot].name===fighter.name){
+    const temp=Object.assign({},team[slot]);
+    team[slot]=Object.assign({},fighter);
+    team[otherSlot]=temp;
+  }else{
+    team[slot]=Object.assign({},fighter);
+  }
+  if(slot===activeFighter)hp=team[activeFighter].hp;
+  toast((slot===0?'LEAD':'RESERVE')+' FIGHTER: '+fighter.name+' ('+fighter.title+')');
+  soundPickup('energy');
+  speakAnnouncer(fighter.name);
+  updateTagHUD();
+}
 
 /* CrazyGames Fighting Mechanics: Momentum & Crowd Hype Meter */
 let hypeMeter=0,hypeActive=false,hypeTimer=0;
@@ -922,6 +1091,27 @@ function soundPickup(type){
   setTimeout(()=>playTone(base*1.25,0.1,'sine',0.08),60);
 }
 
+function soundMicroClick(){
+  if(!sound)return;
+  playTone(1200,0.015,'square',0.12);
+  setTimeout(()=>playTone(1800,0.012,'triangle',0.08),10);
+}
+
+function soundCrossRush(){
+  if(!sound)return;
+  playTone(220,0.18,'sawtooth',0.32);
+  playTone(660,0.22,'sine',0.28);
+  setTimeout(()=>playTone(880,0.25,'triangle',0.35),80);
+}
+
+function soundDualSuper(){
+  if(!sound)return;
+  playTone(110,0.8,'sawtooth',0.35);
+  playTone(220,0.7,'square',0.3);
+  setTimeout(()=>playTone(440,0.5,'sine',0.35),100);
+  setTimeout(()=>playTone(880,0.6,'sawtooth',0.38),200);
+}
+
 /* =========================================================
    GAMEPAD HAPTICS ENGINE (RUMBLE)
    ========================================================= */
@@ -1053,39 +1243,83 @@ function triggerOverdrive(){
   if(!playing||paused||photoMode||superMeter<100)return;
   superMeter=0;
   superActive=true;
-  hitStop=0.18;
-  shake=18;
-  bossDeathFlash=0.9;
-  rumble(350,1.0,1.0);
-  toast('⚡ DELHI OVERDRIVE · BRAHMASTRA UNLEASHED!');
-  speakAnnouncer('DELHI OVERDRIVE!');
-  playTone(880,0.35,'sawtooth',0.28);
-  playTone(180,0.7,'sine',0.35);
+  hitStop=0.24;
+  shake=24;
+  bossDeathFlash=1.0;
+  rumble(450,1.0,1.0);
 
-  const count=28;
+  const partnerIdx=1-activeFighter;
+  const partner=team[partnerIdx];
+  const active=team[activeFighter];
+
+  assistHero={
+    active:true,
+    fighter:partnerIdx,
+    x:player.x+(activeFighter===0?1.5:-1.5),
+    z:player.z-0.6,
+    timer:1.6,
+    maxTimer:1.6,
+    isSuperAssault:true
+  };
+
+  toast('⚡ DUAL HYPER COMBO · BRAHMASTRA CROSS-ASSAULT!');
+  showStreakPopup('BRAHMASTRA DUO! ⚡','#ffcc55');
+  speakAnnouncer('BRAHMASTRA CROSS ASSAULT!');
+  soundDualSuper();
+
+  const count=36;
   for(let i=0;i<count;i++){
     const ang=(Math.PI*2/count)*i;
     shots.push({
       x:player.x,y:1.1,z:player.z,
       dx:Math.sin(ang),dz:-Math.cos(ang),
-      life:1.6,speed:26,damage:4,
+      life:1.8,speed:28,damage:5,
       angle:ang,originX:player.x,originZ:player.z,
+      isSuper:true
+    });
+    shots.push({
+      x:assistHero.x,y:1.1,z:assistHero.z,
+      dx:Math.sin(ang),dz:-Math.cos(ang),
+      life:1.8,speed:28,damage:5,
+      angle:ang,originX:assistHero.x,originZ:assistHero.z,
       isSuper:true
     });
   }
   hazards=[];
-  for(let i=0;i<40;i++){
+  for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i];
+    e.hp-=e.boss?12:7;
+    e.flash=0.6;
+    e.stunClock=2.4;
+    e.vy=2.2;
+    if(e.hp<=0){
+      enemies.splice(i,1);
+      kills++;
+      score+=e.boss?1200:300;
+      rupees+=e.boss?250:50;
+      for(let k=0;k<20;k++){
+        particles.push({
+          x:e.x+rand(-.8,.8),z:e.z+rand(-.8,.8),y:rand(.4,2.5),
+          vy:rand(1,4),life:rand(.6,1.4),
+          color:['#ffd27a','#ff4757','#6ff7ff','#ffffff'][k%4]
+        });
+      }
+    }
+  }
+  for(let i=0;i<48;i++){
     particles.push({
-      x:player.x+rand(-1.5,1.5),z:player.z+rand(-1.5,1.5),
-      y:rand(.3,2.5),vy:rand(1,4),life:rand(.6,1.2),
-      color:['#ffd27a','#ff4757','#6ff7ff','#ffffff'][i%4]
+      x:player.x+rand(-2,2),z:player.z+rand(-2,2),
+      y:rand(.3,2.8),vy:rand(1,5),life:rand(.7,1.5),
+      color:['#ffd27a','#ff4757','#6ff7ff','#ffffff',partner.color][i%5]
     });
   }
   const sb=$('superBar'),sbtn=$('superBtn'),stb=$('superTouchBtn');
   if(sb)sb.style.width='0%';
   if(sbtn)sbtn.style.display='none';
-  if(stb)stb.style.display='none';
-  setTimeout(()=>{superActive=false;},1200);
+  if(stb){
+    stb.classList.remove('ready');
+  }
+  setTimeout(()=>{superActive=false;},1600);
 }
 
 function openArmory(){
@@ -1149,6 +1383,32 @@ function renderArmory(){
         <button id="upHpBtn" class="${(upgrades.health||0)>=3?'':'hot'}" style="padding:7px 12px;font-size:10px">${(upgrades.health||0)>=3?'MAXED':'BUY ₹600'}</button>
       </div>
     </div>
+    <div style="background:rgba(12,24,38,0.88);border:1.5px solid rgba(77,245,255,0.35);border-radius:10px;padding:12px;margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-family:var(--font-display);font-size:11px;font-weight:800;letter-spacing:.15em;color:var(--c-cyan)">✦ TACTICAL ROSTER · TEAM SELECT (टीम चयन)</span>
+        <span style="font-family:var(--font-display);font-size:9px;color:#a0b8cf">ACTIVE: ${team[0].name} &amp; ${team[1].name}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">
+        ${ROSTER.map((f,idx)=>{
+          const isLead = (team[0].name === f.name);
+          const isReserve = (team[1].name === f.name);
+          return `
+            <div style="background:rgba(8,16,28,0.9);border:1.5px solid ${isLead?'#ff4757':isReserve?'#b08aff':'rgba(255,255,255,0.1)'};border-radius:8px;padding:9px;display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <b style="color:${f.color};font-family:var(--font-display);font-size:11px;font-weight:900">${f.name}</b>
+                <span style="font-size:8px;color:#ffd27a;font-weight:800">${f.hp} HP</span>
+              </div>
+              <small style="color:#8ca9c2;font-size:8.5px;line-height:1.3">${f.title}</small>
+              <div style="font-size:8px;color:#00ff66;font-family:var(--font-display)">⚡ ${f.assistName}</div>
+              <div style="display:flex;gap:4px;margin-top:4px">
+                <button class="roster-lead-btn" data-idx="${idx}" style="flex:1;padding:5px 2px;font-size:8px;border-radius:4px;border:1px solid ${isLead?'#ff4757':'rgba(255,255,255,0.15)'};background:${isLead?'rgba(255,71,87,0.3)':'rgba(20,35,55,0.8)'};color:${isLead?'#fff':'#a0b8cf'}">${isLead?'★ LEAD':'SET 1'}</button>
+                <button class="roster-res-btn" data-idx="${idx}" style="flex:1;padding:5px 2px;font-size:8px;border-radius:4px;border:1px solid ${isReserve?'#b08aff':'rgba(255,255,255,0.15)'};background:${isReserve?'rgba(176,138,255,0.3)':'rgba(20,35,55,0.8)'};color:${isReserve?'#fff':'#a0b8cf'}">${isReserve?'★ RES':'SET 2'}</button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
     <div class="menu-buttons">
       <button id="closeArmoryBtn" class="hot">← RETURN TO BATTLE</button>
     </div>
@@ -1172,6 +1432,20 @@ function renderArmory(){
   bindBuy('upEngBtn','energy',400);
   bindBuy('upChrBtn','chrono',500);
   bindBuy('upHpBtn','health',600);
+  am.querySelectorAll('.roster-lead-btn').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      const idx=Number(e.currentTarget.getAttribute('data-idx'));
+      selectRosterFighter(idx,0);
+      renderArmory();
+    });
+  });
+  am.querySelectorAll('.roster-res-btn').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      const idx=Number(e.currentTarget.getAttribute('data-idx'));
+      selectRosterFighter(idx,1);
+      renderArmory();
+    });
+  });
   $('closeArmoryBtn').addEventListener('click',closeArmory);
 }
 
@@ -1668,11 +1942,14 @@ function drawHero(){
   ctx.fillRect(5,-2,4,4);
 
   /* Tactical armor vest */
-  const isAnanya=(activeFighter===1);
+  const curFighter=team[activeFighter];
+  const fName=curFighter?curFighter.name:'KABIR';
+  const isAnanya=(fName==='ANANYA'),isDev=(fName==='DEV'),isMeera=(fName==='MEERA');
   let vest=ctx.createLinearGradient(-11,-26,11,0);
-  vest.addColorStop(0,isAnanya?'#532f82':'#2d445a');
-  vest.addColorStop(.5,isAnanya?'#331859':'#1e2f40');
-  vest.addColorStop(1,isAnanya?'#1c0c33':'#111b26');
+  if(isAnanya){vest.addColorStop(0,'#532f82');vest.addColorStop(.5,'#331859');vest.addColorStop(1,'#1c0c33');}
+  else if(isDev){vest.addColorStop(0,'#574b28');vest.addColorStop(.5,'#382e16');vest.addColorStop(1,'#1a1508');}
+  else if(isMeera){vest.addColorStop(0,'#1b4332');vest.addColorStop(.5,'#082e1e');vest.addColorStop(1,'#041a11');}
+  else{vest.addColorStop(0,'#2d445a');vest.addColorStop(.5,'#1e2f40');vest.addColorStop(1,'#111b26');}
   ctx.fillStyle=vest;
   ctx.beginPath();
   ctx.moveTo(-10,0);
@@ -1681,23 +1958,23 @@ function drawHero(){
   ctx.lineTo(-13,-24);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle=isAnanya?'#8b5cf6':'#3d5c7a';
+  ctx.strokeStyle=isAnanya?'#8b5cf6':isDev?'#ff9f43':isMeera?'#2ed573':'#3d5c7a';
   ctx.lineWidth=1;
   ctx.stroke();
 
   /* Lal Hit chest insignia */
-  ctx.fillStyle=isAnanya?'#ffd27a':'#ff4757';
+  ctx.fillStyle=isAnanya?'#ffd27a':isDev?'#ffd27a':isMeera?'#00f0ff':'#ff4757';
   ctx.beginPath();
   ctx.moveTo(0,-20);
   ctx.lineTo(6,-12);
   ctx.lineTo(-6,-12);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle=isAnanya?'#e056fd':'#6ff7ff';
+  ctx.fillStyle=isAnanya?'#e056fd':isDev?'#ff9f43':isMeera?'#2ed573':'#6ff7ff';
   ctx.fillRect(-2,-11,4,2);
 
   /* --- FLOWING SCARF --- */
-  ctx.fillStyle=isAnanya?'#b08aff':'#ff3848';
+  ctx.fillStyle=isAnanya?'#b08aff':isDev?'#ff9f43':isMeera?'#2ed573':'#ff3848';
   ctx.beginPath();
   ctx.moveTo(-8,-25);
   ctx.quadraticCurveTo(-15+scarfWave,-18,-24+scarfWave*1.4,-13);
@@ -1717,7 +1994,7 @@ function drawHero(){
   ctx.beginPath();
   ctx.arc(0,-34,8,Math.PI*.9,Math.PI*2.1);
   ctx.fill();
-  ctx.fillStyle=isAnanya?'#8b5cf6':'#ff4757';
+  ctx.fillStyle=isAnanya?'#8b5cf6':isDev?'#ff9f43':isMeera?'#2ed573':'#ff4757';
   ctx.beginPath();
   ctx.roundRect(-9,-27,18,6,3);
   ctx.fill();
@@ -1725,18 +2002,20 @@ function drawHero(){
   /* Optics */
   ctx.fillStyle='#0c141e';
   ctx.fillRect(-6,-33,12,3.5);
-  ctx.fillStyle=isAnanya?'#e056fd':'#6ff7ff';
-  ctx.shadowColor=isAnanya?'#e056fd':'#6ff7ff';
+  const opticCol=isAnanya?'#e056fd':isDev?'#ffd27a':isMeera?'#00f0ff':'#6ff7ff';
+  ctx.fillStyle=opticCol;
+  ctx.shadowColor=opticCol;
   ctx.shadowBlur=4;
   ctx.fillRect(-5,-32.5,4,1.8);
   ctx.fillRect(1,-32.5,4,1.8);
   ctx.shadowBlur=0;
 
   /* Tag Fighter Name Banner */
-  ctx.fillStyle=isAnanya?'#b08aff':'#ff4757';
+  ctx.fillStyle=isAnanya?'#b08aff':isDev?'#ff9f43':isMeera?'#2ed573':'#ff4757';
   ctx.font='900 8px system-ui';
   ctx.textAlign='center';
-  ctx.fillText(isAnanya?'⚡ ANANYA':'🛡 KABIR',0,-46);
+  const heroBadge=isAnanya?'⚡ ANANYA':isDev?'💣 DEV':isMeera?'💚 MEERA':'🛡 KABIR';
+  ctx.fillText(heroBadge,0,-46);
 
   /* Left arm (bracing weapon) */
   ctx.strokeStyle='#2d445a';
@@ -2269,6 +2548,10 @@ function updateTagHUD(){
       tsb.style.color='#00ff66';
     }
   }
+  const dtl=$('deckTagLabel');
+  if(dtl)dtl.textContent=partner.hp<=0?'KO':tagCooldown>0?tagCooldown.toFixed(1)+'s':'TAG '+partner.name;
+  const dab=$('deckAssistBadge');
+  if(dab)dab.textContent=partner.hp<=0?'KO':assistCooldown>0?assistCooldown.toFixed(1)+'s':'B';
 }
 
 function triggerTagSwitch(isEmergency=false){
@@ -2279,7 +2562,8 @@ function triggerTagSwitch(isEmergency=false){
     toast('PARTNER DOWN! CANNOT TAG');
     return;
   }
-  if(!isEmergency&&tagCooldown>0){
+  const isCrossRush=(comboClock>0||meleeClock>0||driveImpactClock>0);
+  if(!isEmergency&&!isCrossRush&&tagCooldown>0){
     toast('TAG ON COOLDOWN ('+tagCooldown.toFixed(1)+'s)');
     return;
   }
@@ -2287,22 +2571,55 @@ function triggerTagSwitch(isEmergency=false){
   // Tag swap active fighter
   activeFighter=partnerIdx;
   hp=team[activeFighter].hp;
-  tagCooldown=4.0;
-  shake=7;
-  hitStop=0.08;
+  tagCooldown=isCrossRush?3.0:4.0;
+  shake=isCrossRush?14:7;
+  hitStop=isCrossRush?0.12:0.08;
 
-  // Distinct warrior audio callouts & chimes
-  if(activeFighter===1){
-    playTone(880,0.1,'sawtooth',0.3);
-    setTimeout(()=>playTone(1320,0.18,'sine',0.35),70);
+  if(isCrossRush){
+    meleeClock=0;
+    driveImpactClock=0;
+    player.z=Math.max(-28,player.z-2.2);
+    soundCrossRush();
+    toast('⚡ CROSS-RUSH TAG CANCEL! +250 PTS');
+    showStreakPopup('CROSS RUSH! ⚡','#00ff66');
+    speakAnnouncer('CROSS RUSH!');
+    addHype(22);
+    score+=250;
+    addPopup(player.x,2.1,player.z,'CROSS RUSH! ⚡ +250','#00ff66');
+    for(const e of enemies){
+      const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz);
+      if(d<3.8){
+        e.hp-=3.5*(1+(upgrades.damage||0)*0.3);
+        e.flash=0.45;
+        e.stunClock=1.6;
+        e.vy=1.8;
+        e.z-=2.2;
+        addPopup(e.x,2.0,e.z,'CROSS SMASH! 💥','#00ff66');
+        for(let i=0;i<12;i++)particles.push({x:e.x+rand(-.5,.5),z:e.z+rand(-.5,.5),y:rand(.4,2),vy:rand(1,3),life:.6,color:['#00ff66','#6ff7ff','#ffffff'][i%3]});
+      }
+    }
   }else{
-    playTone(330,0.14,'triangle',0.35);
-    setTimeout(()=>playTone(440,0.2,'square',0.3),70);
+    if(team[activeFighter].name==='ANANYA'){
+      playTone(880,0.1,'sawtooth',0.3);
+      setTimeout(()=>playTone(1320,0.18,'sine',0.35),70);
+    }else if(team[activeFighter].name==='DEV'){
+      playTone(180,0.16,'sawtooth',0.35);
+      setTimeout(()=>playTone(360,0.2,'square',0.3),70);
+    }else if(team[activeFighter].name==='MEERA'){
+      playTone(587.33,0.15,'triangle',0.3);
+      setTimeout(()=>playTone(1174.66,0.22,'sine',0.32),70);
+    }else{
+      playTone(330,0.14,'triangle',0.35);
+      setTimeout(()=>playTone(440,0.2,'square',0.3),70);
+    }
+    const tagTitle=isEmergency?'EMERGENCY TAG! ⚠':'TAG IN! 👥';
+    speakAnnouncer(isEmergency?'EMERGENCY TAG!':'TAG IN!');
+    toast(tagTitle+' ACTIVE: '+team[activeFighter].name+' ('+team[activeFighter].title+')');
+    addPopup(player.x,2.1,player.z,tagTitle+' '+team[activeFighter].name,team[activeFighter].color);
   }
-  rumble(110,0.6,0.8);
 
-  // Speedlines and energy particles
-  for(let i=0;i<22;i++){
+  rumble(120,0.7,0.85);
+  for(let i=0;i<24;i++){
     particles.push({
       x:player.x+rand(-.8,.8),
       z:player.z+rand(-.5,.5),
@@ -2312,11 +2629,6 @@ function triggerTagSwitch(isEmergency=false){
       color:team[activeFighter].color
     });
   }
-
-  const tagTitle=isEmergency?'EMERGENCY TAG! ⚠':'TAG IN! 👥';
-  speakAnnouncer(isEmergency?'EMERGENCY TAG!':'TAG IN!');
-  toast(tagTitle+' ACTIVE: '+team[activeFighter].name+' ('+team[activeFighter].title+')');
-  addPopup(player.x,2.1,player.z,tagTitle+' '+team[activeFighter].name,team[activeFighter].color);
   updateTagHUD();
 }
 
@@ -2344,7 +2656,8 @@ function triggerTagAssist(){
     x:player.x+assistSide,
     z:player.z-0.6,
     timer:0.85,
-    maxTimer:0.85
+    maxTimer:0.85,
+    isSuperAssault:false
   };
 
   const partnerName=partner.name;
@@ -2353,7 +2666,7 @@ function triggerTagAssist(){
   addPopup(assistHero.x,2.2,assistHero.z,'TAG ASSIST! 🤝 '+partnerName,partner.color);
 
   // Partner Assist Attack execution
-  if(partnerIdx===1){
+  if(partnerName==='ANANYA'){
     // Ananya: Electro-Katar Vortex
     for(let i=0;i<18;i++){
       particles.push({
@@ -2365,7 +2678,6 @@ function triggerTagAssist(){
         color:['#b08aff','#00f0ff','#ffffff'][i%3]
       });
     }
-    // Shock nearby roaches and draw them in
     for(const e of enemies){
       const dx=e.x-assistHero.x,dz=e.z-assistHero.z,d=Math.hypot(dx,dz);
       if(d<4.2){
@@ -2387,6 +2699,47 @@ function triggerTagAssist(){
       }
     }
     addHype(16);
+  }else if(partnerName==='DEV'){
+    // Dev: Cluster Bombardment
+    for(let k=-1;k<=1;k++){
+      const a=aimAngle+k*0.22;
+      const dx=Math.sin(a),dz=-Math.cos(a);
+      shots.push({
+        x:assistHero.x+dx*0.6,
+        y:1.2,
+        z:assistHero.z+dz*0.6,
+        dx,dz,
+        life:1.2,
+        speed:20,
+        damage:4.6*(1+(upgrades.damage||0)*0.3),
+        angle:a,
+        originX:assistHero.x,
+        originZ:assistHero.z,
+        isSuper:true
+      });
+    }
+    shake=12;
+    addHype(16);
+  }else if(partnerName==='MEERA'){
+    // Meera: Nanite Aegis Healing Field
+    const healVal=22;
+    hp=Math.min(100+(upgrades.health||0)*30,hp+healVal);
+    team[activeFighter].hp=hp;
+    team[activeFighter].recoverableHp=Math.max(0,team[activeFighter].recoverableHp-healVal);
+    toast('💚 NANITE AEGIS · +'+healVal+' HP RESTORED!');
+    soundPickup('med');
+    addPopup(player.x,2.3,player.z,'+'+healVal+' HP! 💚','#2ed573');
+    for(const e of enemies){
+      const dx=e.x-assistHero.x,dz=e.z-assistHero.z,d=Math.hypot(dx,dz);
+      if(d<4.5){
+        e.hp-=2.2;
+        e.flash=0.35;
+        e.stunClock=1.2;
+        e.x+=-Math.sign(dx)*2.2;
+        e.z+=-Math.sign(dz)*2.2;
+      }
+    }
+    addHype(14);
   }else{
     // Kabir: Suppressive Pulse Barrage
     for(let k=-2;k<=2;k++){
@@ -3563,13 +3916,21 @@ function showControls(e){
     <h1>COMBAT <span>GUIDE</span></h1>
     <div class="subtitle">TACTICAL ABILITIES &amp; KEYBINDS</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:16px 0;text-align:left">
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(77,245,255,0.45);border-radius:10px">
+        <b style="color:var(--c-cyan);font-family:var(--font-display);font-size:11px;letter-spacing:.1em">🕹️ ETCHED ARCADE DECK &amp; HOTKEYS (J, K, L)</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Play with the tactile etched arcade console at the bottom! <b>J / E</b> = Melee Strike, <b>K / Left-Click</b> = Blaster Fire, <b>L / Shift</b> = Drive Dash, <b>C</b> = 4D Bullet-Time, <b>Tab</b> = Tag Switch, <b>B</b> = Assist, <b>Space</b> = Hyper Super. All buttons feature real microswitch audio feedback and depress on press.</p>
+      </div>
       <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(176,138,255,0.35);border-radius:10px">
-        <b style="color:#b08aff;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">👥 TAG-TEAM SWITCH &amp; RED HEALTH (Q / TAB)</b>
-        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>Q / TAB</b> to swap between <b>Kabir</b> (Delhi Vanguard) and <b>Ananya</b> (Cyber Valkyrie). While resting in reserve, your partner regenerates missing red health back into real HP over time.</p>
+        <b style="color:#b08aff;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">👥 TAG-TEAM SWITCH &amp; CROSS-RUSH (TAB)</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>TAB</b> to swap active fighter. Pressing <b>TAB</b> during a melee combo or Drive Impact triggers a <b>Cross-Rush Tag Cancel</b> (+250 PTS), launching enemies into an aerial juggle as your partner rushes in!</p>
       </div>
       <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(0,255,102,0.35);border-radius:10px">
         <b style="color:#00ff66;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">🤝 TAG ASSIST SUPPORT STRIKE (B)</b>
-        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>B / ASSIST</b> to call your off-screen partner into battle for an instant support strike (Ananya's Electro-Katar Vortex or Kabir's Suppressive Pulse Spread) before leaping back out.</p>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>B / ASSIST</b> to call your off-screen partner into battle for their signature strike (Ananya: Electro-Vortex, Dev: Cluster Mortar, Meera: Nanite Heal Dome, Kabir: Pulse Barrage).</p>
+      </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(255,210,122,0.35);border-radius:10px">
+        <b style="color:#ffd27a;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">⚡ DUAL HYPER COMBO · BRAHMASTRA (SPACE / U)</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Charge your Super gauge to 100% and press <b>SPACE / U</b> to trigger a synchronized dual cross-assault! Both fighters unleash screen-clearing laser storms, disintegrating mutant roaches and incinerating all acid hazards.</p>
       </div>
       <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(77,245,255,0.25);border-radius:10px">
         <b style="color:var(--c-cyan);font-family:var(--font-display);font-size:11px;letter-spacing:.1em">⚡ PERFECT PARRY &amp; CLASH</b>
@@ -3618,10 +3979,6 @@ function showControls(e){
       <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(255,210,122,0.25);border-radius:10px">
         <b style="color:#ffd27a;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">🔥 CROWD ON FIRE HYPE</b>
         <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Land stylish combos, parries, and juggles to fill the Hype meter to 100%. Unlocks double rupee bounties (<b>₹ x2</b>) and golden combat aura.</p>
-      </div>
-      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(255,100,80,0.25);border-radius:10px">
-        <b style="color:#ff6450;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">⚡ BRAHMASTRA OVERDRIVE (U)</b>
-        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Fill your Ultimate gauge to unleash a 360° screen-clearing lightning barrage with slow-mo freeze frames and voice callouts.</p>
       </div>
     </div>
     <div class="menu-buttons">
@@ -3730,15 +4087,91 @@ $('fullBtn').addEventListener('click',async()=>{
   }
 });
 
-/* Mobile Touch Controls */
-$('fireBtn').addEventListener('pointerdown',e=>{
+/* Mobile & Etched Arcade Controls */
+$('fireBtn')?.addEventListener('pointerdown',e=>{
   e.preventDefault();
+  soundMicroClick();
+  $('fireBtn')?.classList.add('pressed');
   fireHeld=true;
   fire();
 });
-['pointerup','pointercancel','pointerleave'].forEach(n=>$('fireBtn').addEventListener(n,()=>fireHeld=false));
-$('dashBtn').addEventListener('pointerdown',e=>{e.preventDefault();dash()});
-$('meleeBtn').addEventListener('pointerdown',e=>{e.preventDefault();melee()});
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('fireBtn')?.addEventListener(n,()=>{
+  $('fireBtn')?.classList.remove('pressed');
+  fireHeld=false;
+}));
+$('dashBtn')?.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  soundMicroClick();
+  $('dashBtn')?.classList.add('pressed');
+  dash();
+});
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('dashBtn')?.addEventListener(n,()=>{
+  $('dashBtn')?.classList.remove('pressed');
+}));
+$('meleeBtn')?.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  soundMicroClick();
+  $('meleeBtn')?.classList.add('pressed');
+  melee();
+});
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('meleeBtn')?.addEventListener(n,()=>{
+  $('meleeBtn')?.classList.remove('pressed');
+}));
+$('deckChronoBtn')?.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  soundMicroClick();
+  $('deckChronoBtn')?.classList.add('pressed');
+  toggleChrono();
+});
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('deckChronoBtn')?.addEventListener(n,()=>{
+  $('deckChronoBtn')?.classList.remove('pressed');
+}));
+$('deckParryBtn')?.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  soundMicroClick();
+  $('deckParryBtn')?.classList.add('pressed');
+  melee();
+});
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('deckParryBtn')?.addEventListener(n,()=>{
+  $('deckParryBtn')?.classList.remove('pressed');
+}));
+$('deckWepBtn')?.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  soundMicroClick();
+  $('deckWepBtn')?.classList.add('pressed');
+  weaponMode=(weaponMode+1)%3;
+  toast(['PULSE BLASTER','SCATTER SHOT','HEAVY PULSE'][weaponMode]);
+});
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('deckWepBtn')?.addEventListener(n,()=>{
+  $('deckWepBtn')?.classList.remove('pressed');
+}));
+$('tagSwitchBtn')?.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  soundMicroClick();
+  $('tagSwitchBtn')?.classList.add('pressed');
+  triggerTagSwitch();
+});
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('tagSwitchBtn')?.addEventListener(n,()=>{
+  $('tagSwitchBtn')?.classList.remove('pressed');
+}));
+$('tagAssistBtn')?.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  soundMicroClick();
+  $('tagAssistBtn')?.classList.add('pressed');
+  triggerTagAssist();
+});
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('tagAssistBtn')?.addEventListener(n,()=>{
+  $('tagAssistBtn')?.classList.remove('pressed');
+}));
+$('superTouchBtn')?.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  soundMicroClick();
+  $('superTouchBtn')?.classList.add('pressed');
+  triggerOverdrive();
+});
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('superTouchBtn')?.addEventListener(n,()=>{
+  $('superTouchBtn')?.classList.remove('pressed');
+}));
 
 const movePad=$('movePad'),moveKnob=$('moveKnob');
 function movePadStart(e){
@@ -3772,6 +4205,7 @@ movePad.addEventListener('pointermove',movePadMove);
 ['pointerup','pointercancel','lostpointercapture'].forEach(n=>movePad.addEventListener(n,movePadEnd));
 
 $('aimBtn').addEventListener('click',()=>{
+  soundMicroClick();
   const target=enemies.reduce((best,e)=>{
     const d=Math.hypot(e.x-player.x,e.z-player.z);
     return d<best.d?{e,d}:best;
@@ -3798,28 +4232,74 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyY')triggerDriveImpact();
   if(e.code==='KeyG')triggerHadoken();
   if(e.code==='KeyZ')triggerShoryuken();
-  if(e.code==='Tab'){e.preventDefault();triggerTagSwitch();}
-  if(e.code==='KeyB')triggerTagAssist();
+  if(e.code==='Tab'){
+    e.preventDefault();
+    $('tagSwitchBtn')?.classList.add('pressed');
+    triggerTagSwitch();
+  }
+  if(e.code==='KeyB'){
+    $('tagAssistBtn')?.classList.add('pressed');
+    triggerTagAssist();
+  }
   if(e.code==='KeyT')triggerSpecialSurge();
   if(e.code==='KeyH')toggleScouterMode();
-  if(e.code==='KeyC')toggleChrono();
+  if(e.code==='KeyC'){
+    $('deckChronoBtn')?.classList.add('pressed');
+    toggleChrono();
+  }
   if(e.code==='KeyV')togglePhotoMode();
-  if(e.code==='KeyU'||e.code==='Digit4')triggerOverdrive();
-  if(e.code==='KeyF')fire();
-  if(e.code==='KeyE'||e.code==='KeyX')melee();
+  if(e.code==='KeyU'||e.code==='Digit4'){
+    $('superTouchBtn')?.classList.add('pressed');
+    triggerOverdrive();
+  }
+  if(e.code==='KeyJ'){
+    $('meleeBtn')?.classList.add('pressed');
+    soundMicroClick();
+    melee();
+  }
+  if(e.code==='KeyK'){
+    $('fireBtn')?.classList.add('pressed');
+    soundMicroClick();
+    fire();
+  }
+  if(e.code==='KeyL'){
+    $('dashBtn')?.classList.add('pressed');
+    soundMicroClick();
+    dash();
+  }
+  if(e.code==='KeyF'){
+    $('fireBtn')?.classList.add('pressed');
+    fire();
+  }
+  if(e.code==='KeyE'||e.code==='KeyX'){
+    $('meleeBtn')?.classList.add('pressed');
+    melee();
+  }
   if(['Digit1','Digit2','Digit3'].includes(e.code)){
     weaponMode=Number(e.code.slice(-1))-1;
     toast(['PULSE BLASTER · BALANCED','SCATTER SHOT · CLOSE RANGE','HEAVY PULSE · HIGH DAMAGE'][weaponMode]);
   }
   if(e.code==='KeyQ'){
+    $('deckWepBtn')?.classList.add('pressed');
     weaponMode=(weaponMode+1)%3;
     toast(['PULSE BLASTER','SCATTER SHOT','HEAVY PULSE'][weaponMode]);
   }
-  if(e.code==='ShiftLeft'||e.code==='ShiftRight')dash();
+  if(e.code==='ShiftLeft'||e.code==='ShiftRight'){
+    $('dashBtn')?.classList.add('pressed');
+    dash();
+  }
 });
 addEventListener('keyup',e=>{
   keys[e.code]=false;
   if(['Space','KeyJ','Enter'].includes(e.code))fireHeld=false;
+  if(['KeyJ','KeyE','KeyX'].includes(e.code)) $('meleeBtn')?.classList.remove('pressed');
+  if(['KeyK','KeyF','Space'].includes(e.code)) { $('fireBtn')?.classList.remove('pressed'); $('superTouchBtn')?.classList.remove('pressed'); }
+  if(['KeyL','ShiftLeft','ShiftRight'].includes(e.code)) $('dashBtn')?.classList.remove('pressed');
+  if(e.code==='Tab') $('tagSwitchBtn')?.classList.remove('pressed');
+  if(e.code==='KeyB') $('tagAssistBtn')?.classList.remove('pressed');
+  if(e.code==='KeyC') $('deckChronoBtn')?.classList.remove('pressed');
+  if(e.code==='KeyQ') $('deckWepBtn')?.classList.remove('pressed');
+  if(e.code==='KeyU'||e.code==='Digit4') $('superTouchBtn')?.classList.remove('pressed');
 });
 
 /* Canvas Pointer Controls */
@@ -3915,9 +4395,12 @@ window.__lhTest={
   triggerShoryuken,
   triggerTagSwitch,
   triggerTagAssist,
+  triggerOverdrive,
   getActiveFighter:()=>activeFighter,
   getTeam:()=>team,
   getAssistHero:()=>assistHero,
+  getROSTER:()=>ROSTER,
+  selectRosterFighter,
   setTagCooldown:v=>{tagCooldown=v},
   setAssistCooldown:v=>{assistCooldown=v},
   triggerSpecialSurge,
