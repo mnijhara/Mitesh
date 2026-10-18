@@ -109,6 +109,16 @@ const path = require('path');
   await page.waitForTimeout(250);
   await page.keyboard.press('KeyH'); // Scouter Mode with SF6 Frame Meter
 
+  // Tag-Team Fighting Mechanics Live Test
+  await page.click('#tagSwitchBtn'); // Tag Switch to Ananya
+  await page.waitForTimeout(250);
+  await page.click('#tagAssistBtn'); // Call Kabir Assist Strike
+  await page.waitForTimeout(300);
+
+  // Capture Tag-Team combat screenshot
+  await page.screenshot({ path: path.join(artifactDir, 'live_playwright_tag_team.png') });
+  console.log('✓ Captured desktop Tag-Team combat screenshot');
+
   // Capture Street Fighter combat screenshot
   await page.screenshot({ path: path.join(artifactDir, 'live_playwright_street_fighter.png') });
   console.log('✓ Captured desktop Street Fighter combat screenshot');

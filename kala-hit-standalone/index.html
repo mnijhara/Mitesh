@@ -574,6 +574,14 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   <div class="bars">
     <div class="barrow"><span class="bar-label">VITALS</span><div class="bar"><i id="healthBar"></i></div></div>
     <div class="barrow"><span class="bar-label">CHAI</span><div class="bar"><i id="energyBar"></i></div></div>
+    <div class="barrow" id="tagPartnerRow" style="margin-top:2px">
+      <span class="bar-label" id="tagPartnerLabel" style="color:#b08aff;font-size:9px">TAG: ANANYA</span>
+      <div class="bar" style="background:rgba(20,15,35,0.7);position:relative">
+        <i id="tagRecoverableBar" style="position:absolute;left:0;top:0;height:100%;background:#ff2a85;width:100%;opacity:0.4;border-radius:2px"></i>
+        <i id="tagPartnerBar" style="position:absolute;left:0;top:0;height:100%;background:linear-gradient(90deg,#b08aff,#70a1ff);width:100%;border-radius:2px"></i>
+      </div>
+      <span id="tagStatusBadge" style="font-size:8px;font-family:var(--font-display);color:#00ff66;margin-left:4px">READY</span>
+    </div>
     <div class="barrow" id="chronoRow"><span class="bar-label">4D TIME</span><div class="bar"><i id="chronoBar" style="background:linear-gradient(90deg,var(--c-cyan),#b08aff);width:100%"></i></div></div>
     <div class="barrow" id="superRow"><span class="bar-label">ULTIMATE</span><div class="bar"><i id="superBar" style="background:linear-gradient(90deg,#ff4757,#ffd27a);width:0%"></i></div></div>
     <div class="barrow" id="dashRow" style="display:none"><span class="bar-label">DASH</span><div class="bar"><i id="dashBar"></i></div></div>
@@ -589,7 +597,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   </div>
 
   <!-- Desktop keybinds -->
-  <div class="help">WASD / ARROWS · MOVE<br>MOUSE / RIGHT STICK · AIM<br>SPACE / J / F · FIRE · 1/2/3 OR Q · WEAPON · E/X · MELEE<br>Y · IMPACT · G · HADOKEN · Z · SHORYUKEN · SHIFT/K · DASH (i-FRAMES) · T · SURGE · H · SCOUTER · U · OVERDRIVE · C · 4D CHRONO · V · 3D CAM · P / ESC · PAUSE · R · RESTART</div>
+  <div class="help">WASD / ARROWS · MOVE<br>MOUSE / RIGHT STICK · AIM<br>SPACE / J / F · FIRE · 1/2/3 OR Q · WEAPON · E/X · MELEE<br>TAB · TAG SWITCH · B · ASSIST · Y · IMPACT · G · HADOKEN · Z · SHORYUKEN · SHIFT/K · DASH (i-FRAMES) · T · SURGE · H · SCOUTER · U · OVERDRIVE · C · 4D CHRONO · V · 3D CAM · P / ESC · PAUSE · R · RESTART</div>
 
   <!-- Objective panel -->
   <div class="mission">
@@ -600,6 +608,8 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   <!-- Action bar — bottom right -->
   <div class="actions">
     <button id="superBtn" style="border-color:rgba(255,71,87,.8);color:#ff4757;display:none;background:rgba(255,71,87,.2)">⚡ OVERDRIVE (U)</button>
+    <button id="tagSwitchBtn" style="border-color:rgba(176,138,255,.7);color:#b08aff">👥 TAG (TAB)</button>
+    <button id="tagAssistBtn" style="border-color:rgba(0,255,102,.7);color:#00ff66">🤝 ASSIST (B)</button>
     <button id="impactBtn" style="border-color:rgba(255,42,133,.6);color:#ff2a85">💥 IMPACT (Y)</button>
     <button id="hadokenBtn" style="border-color:rgba(77,245,255,.6);color:var(--c-cyan)">🔥 HADOKEN (G)</button>
     <button id="shoryukenBtn" style="border-color:rgba(255,204,85,.7);color:var(--c-gold)">🐉 SHORYUKEN (Z)</button>
@@ -643,6 +653,9 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
     <div class="chips">
       <span>4D CHRONO BULLET-TIME</span>
       <span>3D SPATIAL PARALLAX</span>
+      <span>TAG TEAM FIGHTER DYNAMICS</span>
+      <span>RECOVERABLE RED HEALTH REGEN</span>
+      <span>TAG ASSIST STRIKES</span>
       <span>SF6 DRIVE IMPACT &amp; CRUMPLE</span>
       <span>AGNI HADOKEN &amp; SHORYUKEN</span>
       <span>SF6 FRAME METER &amp; SCOUTER</span>
@@ -680,6 +693,14 @@ let upgrades=JSON.parse(localStorage.getItem('lalhit_upgrades')||'{"damage":0,"e
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a);
 let superMeter=0,superActive=false,bossStompWaves=[];
 let scouterMode=false,specialSurgeClock=0,driveImpactClock=0,shoryukenClock=0;
+/* Tag-Team Fighting Dynamics (itch.io HTML5 tag fighter inspired) */
+let activeFighter=0; // 0: Kabir (Delhi Vanguard), 1: Ananya (Cyber Valkyrie)
+const team=[
+  {name:'KABIR',title:'DELHI VANGUARD',hp:100,maxHp:100,recoverableHp:0,color:'#ff4757',assistName:'SUPPRESSIVE PULSE'},
+  {name:'ANANYA',title:'CYBER VALKYRIE',hp:100,maxHp:100,recoverableHp:0,color:'#b08aff',assistName:'ELECTRO-KATAR VORTEX'}
+];
+let tagCooldown=0,assistCooldown=0;
+let assistHero=null; // {active:false,fighter:1,x:0,z:0,timer:0,maxTimer:0.85}
 const cyberRain=Array.from({length:55},()=>({x:rand(-14,14),y:rand(1,10),z:rand(-34,10),speed:rand(18,28)}));
 
 /* CrazyGames Fighting Mechanics: Momentum & Crowd Hype Meter */
@@ -1647,10 +1668,11 @@ function drawHero(){
   ctx.fillRect(5,-2,4,4);
 
   /* Tactical armor vest */
+  const isAnanya=(activeFighter===1);
   let vest=ctx.createLinearGradient(-11,-26,11,0);
-  vest.addColorStop(0,'#2d445a');
-  vest.addColorStop(.5,'#1e2f40');
-  vest.addColorStop(1,'#111b26');
+  vest.addColorStop(0,isAnanya?'#532f82':'#2d445a');
+  vest.addColorStop(.5,isAnanya?'#331859':'#1e2f40');
+  vest.addColorStop(1,isAnanya?'#1c0c33':'#111b26');
   ctx.fillStyle=vest;
   ctx.beginPath();
   ctx.moveTo(-10,0);
@@ -1659,23 +1681,23 @@ function drawHero(){
   ctx.lineTo(-13,-24);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle='#3d5c7a';
+  ctx.strokeStyle=isAnanya?'#8b5cf6':'#3d5c7a';
   ctx.lineWidth=1;
   ctx.stroke();
 
   /* Lal Hit chest insignia */
-  ctx.fillStyle='#ff4757';
+  ctx.fillStyle=isAnanya?'#ffd27a':'#ff4757';
   ctx.beginPath();
   ctx.moveTo(0,-20);
   ctx.lineTo(6,-12);
   ctx.lineTo(-6,-12);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle='#6ff7ff';
+  ctx.fillStyle=isAnanya?'#e056fd':'#6ff7ff';
   ctx.fillRect(-2,-11,4,2);
 
-  /* --- FLOWING CRIMSON SCARF --- */
-  ctx.fillStyle='#ff3848';
+  /* --- FLOWING SCARF --- */
+  ctx.fillStyle=isAnanya?'#b08aff':'#ff3848';
   ctx.beginPath();
   ctx.moveTo(-8,-25);
   ctx.quadraticCurveTo(-15+scarfWave,-18,-24+scarfWave*1.4,-13);
@@ -1695,20 +1717,26 @@ function drawHero(){
   ctx.beginPath();
   ctx.arc(0,-34,8,Math.PI*.9,Math.PI*2.1);
   ctx.fill();
-  ctx.fillStyle='#ff4757';
+  ctx.fillStyle=isAnanya?'#8b5cf6':'#ff4757';
   ctx.beginPath();
   ctx.roundRect(-9,-27,18,6,3);
   ctx.fill();
 
-  /* Cyan optics */
+  /* Optics */
   ctx.fillStyle='#0c141e';
   ctx.fillRect(-6,-33,12,3.5);
-  ctx.fillStyle='#6ff7ff';
-  ctx.shadowColor='#6ff7ff';
+  ctx.fillStyle=isAnanya?'#e056fd':'#6ff7ff';
+  ctx.shadowColor=isAnanya?'#e056fd':'#6ff7ff';
   ctx.shadowBlur=4;
   ctx.fillRect(-5,-32.5,4,1.8);
   ctx.fillRect(1,-32.5,4,1.8);
   ctx.shadowBlur=0;
+
+  /* Tag Fighter Name Banner */
+  ctx.fillStyle=isAnanya?'#b08aff':'#ff4757';
+  ctx.font='900 8px system-ui';
+  ctx.textAlign='center';
+  ctx.fillText(isAnanya?'⚡ ANANYA':'🛡 KABIR',0,-46);
 
   /* Left arm (bracing weapon) */
   ctx.strokeStyle='#2d445a';
@@ -1910,6 +1938,12 @@ function resetGame(){
   specialSurgeClock=0;
   driveImpactClock=0;
   shoryukenClock=0;
+  activeFighter=0;
+  team[0].hp=maxHp;team[0].maxHp=maxHp;team[0].recoverableHp=0;
+  team[1].hp=maxHp;team[1].maxHp=maxHp;team[1].recoverableHp=0;
+  tagCooldown=0;
+  assistCooldown=0;
+  assistHero=null;
   hypeMeter=0;hypeActive=false;hypeTimer=0;
   const hm=$('hypeMetric');if(hm)hm.style.display='none';
   for(let i=0;i<5;i++)spawnEnemy();
@@ -1923,6 +1957,7 @@ function resetGame(){
   $('bossBar').style.width='100%';
   $('healthBar').style.width='100%';
   $('energyBar').style.width='100%';
+  updateTagHUD();
   const cb=$('chronoBar');if(cb)cb.style.width='100%';
   const sb=$('superBar'),sbtn=$('superBtn'),stb=$('superTouchBtn');
   if(sb)sb.style.width='0%';
@@ -2210,6 +2245,170 @@ function dash(){
   // Dash afterimage particles trail
   for(let i=0;i<8;i++)particles.push({x:player.x+rand(-.3,.3),z:player.z+1.5+i*.2,y:rand(.3,1.4),vy:rand(.05,.3),life:.6,color:'#ffffff66'});
   $('dashRow').style.display='';
+}
+
+function updateTagHUD(){
+  const partnerIdx=1-activeFighter;
+  const partner=team[partnerIdx];
+  const tpl=$('tagPartnerLabel'),tpb=$('tagPartnerBar'),trb=$('tagRecoverableBar'),tsb=$('tagStatusBadge');
+  if(tpl){
+    tpl.textContent='TAG: '+partner.name;
+    tpl.style.color=partner.color;
+  }
+  if(tpb)tpb.style.width=Math.max(0,partner.hp)+'%';
+  if(trb)trb.style.width=Math.max(0,partner.hp+(partner.recoverableHp||0))+'%';
+  if(tsb){
+    if(partner.hp<=0){
+      tsb.textContent='KO';
+      tsb.style.color='#ff3344';
+    }else if(tagCooldown>0){
+      tsb.textContent=tagCooldown.toFixed(1)+'s';
+      tsb.style.color='#ffd27a';
+    }else{
+      tsb.textContent='READY';
+      tsb.style.color='#00ff66';
+    }
+  }
+}
+
+function triggerTagSwitch(isEmergency=false){
+  if(!playing||paused)return;
+  const partnerIdx=1-activeFighter;
+  const partner=team[partnerIdx];
+  if(partner.hp<=0){
+    toast('PARTNER DOWN! CANNOT TAG');
+    return;
+  }
+  if(!isEmergency&&tagCooldown>0){
+    toast('TAG ON COOLDOWN ('+tagCooldown.toFixed(1)+'s)');
+    return;
+  }
+
+  // Tag swap active fighter
+  activeFighter=partnerIdx;
+  hp=team[activeFighter].hp;
+  tagCooldown=4.0;
+  shake=7;
+  hitStop=0.08;
+
+  // Distinct warrior audio callouts & chimes
+  if(activeFighter===1){
+    playTone(880,0.1,'sawtooth',0.3);
+    setTimeout(()=>playTone(1320,0.18,'sine',0.35),70);
+  }else{
+    playTone(330,0.14,'triangle',0.35);
+    setTimeout(()=>playTone(440,0.2,'square',0.3),70);
+  }
+  rumble(110,0.6,0.8);
+
+  // Speedlines and energy particles
+  for(let i=0;i<22;i++){
+    particles.push({
+      x:player.x+rand(-.8,.8),
+      z:player.z+rand(-.5,.5),
+      y:rand(.3,2.2),
+      vy:rand(.4,2.8),
+      life:.65,
+      color:team[activeFighter].color
+    });
+  }
+
+  const tagTitle=isEmergency?'EMERGENCY TAG! ⚠':'TAG IN! 👥';
+  speakAnnouncer(isEmergency?'EMERGENCY TAG!':'TAG IN!');
+  toast(tagTitle+' ACTIVE: '+team[activeFighter].name+' ('+team[activeFighter].title+')');
+  addPopup(player.x,2.1,player.z,tagTitle+' '+team[activeFighter].name,team[activeFighter].color);
+  updateTagHUD();
+}
+
+function triggerTagAssist(){
+  if(!playing||paused||energy<15||assistCooldown>0)return;
+  const partnerIdx=1-activeFighter;
+  const partner=team[partnerIdx];
+  if(partner.hp<=0){
+    toast('PARTNER DOWN! NO ASSIST');
+    return;
+  }
+  energy-=15;
+  assistCooldown=6.0;
+  shake=8;
+  hitStop=0.06;
+
+  playTone(587.33,0.12,'triangle',0.32);
+  setTimeout(()=>playTone(880,0.22,'sawtooth',0.36),80);
+  rumble(140,0.7,0.85);
+
+  const assistSide=activeFighter===0?1.5:-1.5;
+  assistHero={
+    active:true,
+    fighter:partnerIdx,
+    x:player.x+assistSide,
+    z:player.z-0.6,
+    timer:0.85,
+    maxTimer:0.85
+  };
+
+  const partnerName=partner.name;
+  speakAnnouncer('ASSIST!');
+  toast('🤝 TAG ASSIST · '+partnerName+' ('+partner.assistName+')');
+  addPopup(assistHero.x,2.2,assistHero.z,'TAG ASSIST! 🤝 '+partnerName,partner.color);
+
+  // Partner Assist Attack execution
+  if(partnerIdx===1){
+    // Ananya: Electro-Katar Vortex
+    for(let i=0;i<18;i++){
+      particles.push({
+        x:assistHero.x+rand(-1.2,1.2),
+        z:assistHero.z+rand(-1.2,1.2),
+        y:rand(.4,1.8),
+        vy:rand(.2,1.5),
+        life:.6,
+        color:['#b08aff','#00f0ff','#ffffff'][i%3]
+      });
+    }
+    // Shock nearby roaches and draw them in
+    for(const e of enemies){
+      const dx=e.x-assistHero.x,dz=e.z-assistHero.z,d=Math.hypot(dx,dz);
+      if(d<4.2){
+        e.hp-=3.8*(1+(upgrades.damage||0)*0.3);
+        e.flash=0.35;
+        e.stunClock=1.4;
+        e.x+=-Math.sign(dx)*0.8;
+        e.z+=-Math.sign(dz)*0.8;
+        addPopup(e.x,1.8,e.z,'ELECTRO VORTEX! ⚡','#b08aff');
+        if(e.hp<=0){
+          enemies.splice(enemies.indexOf(e),1);
+          kills++;
+          score+=e.boss?3200:350;
+          rupees+=e.boss?320:50;
+          localStorage.setItem('lalhit_rupees',String(rupees));
+          $('bountyText').textContent='₹'+rupees;
+          dropPickup(e);
+        }
+      }
+    }
+    addHype(16);
+  }else{
+    // Kabir: Suppressive Pulse Barrage
+    for(let k=-2;k<=2;k++){
+      const a=aimAngle+k*0.12;
+      const dx=Math.sin(a),dz=-Math.cos(a);
+      shots.push({
+        x:assistHero.x+dx*0.6,
+        y:1.1,
+        z:assistHero.z+dz*0.6,
+        dx,
+        dz,
+        life:1.1,
+        speed:26,
+        damage:3.2*(1+(upgrades.damage||0)*0.3),
+        angle:a,
+        originX:assistHero.x,
+        originZ:assistHero.z,
+        isAssistShot:true
+      });
+    }
+    addHype(14);
+  }
 }
 
 function triggerDriveImpact(){
@@ -2530,6 +2729,23 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
   }
   if(bossDeathFlash>0)bossDeathFlash=Math.max(0,bossDeathFlash-dt*2.5);
 
+  /* Tag Team Partner Recoverable Red Health Regeneration & Cooldowns */
+  team[activeFighter].hp=hp;
+  const partnerIdx=1-activeFighter;
+  const partner=team[partnerIdx];
+  if(partner.hp>0&&(partner.recoverableHp||0)>0){
+    const regen=Math.min(partner.recoverableHp,dt*3.5);
+    partner.recoverableHp-=regen;
+    partner.hp=Math.min(partner.maxHp,partner.hp+regen);
+  }
+  if(tagCooldown>0)tagCooldown=Math.max(0,tagCooldown-dt);
+  if(assistCooldown>0)assistCooldown=Math.max(0,assistCooldown-dt);
+  if(assistHero&&assistHero.active){
+    assistHero.timer-=dt;
+    if(assistHero.timer<=0){assistHero.active=false;assistHero=null;}
+  }
+  updateTagHUD();
+
   /* Low-health danger pulse */
   if(hp<25){
     lowHealthPulse+=dt*4;
@@ -2656,7 +2872,10 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
           addPopup(player.x,1.8,player.z,'DRIVE ARMOR ABSORB! 🛡','#ff2a85');
           toast('DRIVE ARMOR · IMPACT ABSORBED');
         }else if((player.invulnerable||0)<=0){
-          hp-=dt*(e.boss?20:12);
+          const dmg=dt*(e.boss?20:12);
+          hp-=dmg;
+          team[activeFighter].hp=hp;
+          team[activeFighter].recoverableHp=Math.min(team[activeFighter].maxHp-hp,(team[activeFighter].recoverableHp||0)+dmg*0.45);
           shake=3;
           rumble(80,0.6,0.8);
         }else{
@@ -2665,7 +2884,11 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
       }
       e.z=-28;
       e.x=rand(-7,7);
-      if(hp<=0)gameOver();
+      if(hp<=0){
+        const pIdx=1-activeFighter;
+        if(team[pIdx].hp>0)triggerTagSwitch(true);
+        else gameOver();
+      }
     }
   }
 
@@ -2694,10 +2917,16 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
       if(Math.hypot(player.x-curX,player.z-curZ)<1.8){
         if((player.invulnerable||0)<=0){
           hp-=8;
+          team[activeFighter].hp=hp;
+          team[activeFighter].recoverableHp=Math.min(team[activeFighter].maxHp-hp,(team[activeFighter].recoverableHp||0)+8*0.45);
           shake=4;
           rumble(100,0.7,0.9);
           toast('ACID BURN!');
-          if(hp<=0)gameOver();
+          if(hp<=0){
+            const pIdx=1-activeFighter;
+            if(team[pIdx].hp>0)triggerTagSwitch(true);
+            else gameOver();
+          }
         }else{
           addPopup(player.x,1.8,player.z,'i-FRAME DODGE! 🛡','#6ff7ff');
         }
@@ -2712,11 +2941,18 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
     const d=Math.hypot(player.x-w.x,player.z-w.z);
     if(Math.abs(w.radius-d)<1.2&&dashCooldown<2.4){
       if((player.invulnerable||0)<=0){
-        hp-=dt*36;
+        const dmg=dt*36;
+        hp-=dmg;
+        team[activeFighter].hp=hp;
+        team[activeFighter].recoverableHp=Math.min(team[activeFighter].maxHp-hp,(team[activeFighter].recoverableHp||0)+dmg*0.45);
         shake=5;
         rumble(80,0.6,0.8);
         toast('SHOCKWAVE DAMAGE!');
-        if(hp<=0)gameOver();
+        if(hp<=0){
+          const pIdx=1-activeFighter;
+          if(team[pIdx].hp>0)triggerTagSwitch(true);
+          else gameOver();
+        }
       }
     }
     if(w.radius>=w.maxRadius)bossStompWaves.splice(bossStompWaves.indexOf(w),1);
@@ -3018,6 +3254,32 @@ function draw(){
   drawHero();
   drawGun();
 
+  /* Render Tag Assist Partner if active */
+  if(assistHero&&assistHero.active){
+    const ap=project(assistHero.x,0,assistHero.z);
+    const as=clamp(ap.s*0.052,.75,1.45);
+    const ay=roadY(assistHero.z);
+    ctx.save();
+    ctx.translate(ap.x,ay);
+    ctx.scale(as,as);
+    ctx.globalAlpha=clamp(assistHero.timer/0.2,0,0.92);
+    ctx.shadowColor=team[assistHero.fighter].color;
+    ctx.shadowBlur=16;
+    ctx.strokeStyle=team[assistHero.fighter].color;
+    ctx.lineWidth=2.5;
+    ctx.beginPath();
+    ctx.arc(0,-26,24,0,Math.PI*2);
+    ctx.stroke();
+    ctx.fillStyle=team[assistHero.fighter].color;
+    ctx.font='900 8px system-ui';
+    ctx.textAlign='center';
+    ctx.fillText('🤝 ASSIST · '+team[assistHero.fighter].name,0,-56);
+    ctx.fillStyle=team[assistHero.fighter].color;
+    ctx.fillRect(-7,-24,14,22);
+    ctx.beginPath();ctx.arc(0,-30,6.5,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+
   /* Delhi Plasma Surge Beam */
   if(specialSurgeClock>0){
     ctx.save();
@@ -3301,6 +3563,14 @@ function showControls(e){
     <h1>COMBAT <span>GUIDE</span></h1>
     <div class="subtitle">TACTICAL ABILITIES &amp; KEYBINDS</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:16px 0;text-align:left">
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(176,138,255,0.35);border-radius:10px">
+        <b style="color:#b08aff;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">👥 TAG-TEAM SWITCH &amp; RED HEALTH (Q / TAB)</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>Q / TAB</b> to swap between <b>Kabir</b> (Delhi Vanguard) and <b>Ananya</b> (Cyber Valkyrie). While resting in reserve, your partner regenerates missing red health back into real HP over time.</p>
+      </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(0,255,102,0.35);border-radius:10px">
+        <b style="color:#00ff66;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">🤝 TAG ASSIST SUPPORT STRIKE (B)</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>B / ASSIST</b> to call your off-screen partner into battle for an instant support strike (Ananya's Electro-Katar Vortex or Kabir's Suppressive Pulse Spread) before leaping back out.</p>
+      </div>
       <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(77,245,255,0.25);border-radius:10px">
         <b style="color:var(--c-cyan);font-family:var(--font-display);font-size:11px;letter-spacing:.1em">⚡ PERFECT PARRY &amp; CLASH</b>
         <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>E / X / MELEE</b> as an enemy flashes <b>!</b> or right before an acid spit lands to parry, stagger with dizzy stars, deflect the projectile, and recharge Chai &amp; Ultimate.</p>
@@ -3413,6 +3683,8 @@ window.addEventListener('error',e=>console.error('LAL HIT runtime error',e.messa
 
 $('superBtn')?.addEventListener('click',triggerOverdrive);
 $('superTouchBtn')?.addEventListener('pointerdown',e=>{e.preventDefault();triggerOverdrive()});
+$('tagSwitchBtn')?.addEventListener('click',()=>triggerTagSwitch());
+$('tagAssistBtn')?.addEventListener('click',triggerTagAssist);
 $('impactBtn')?.addEventListener('click',triggerDriveImpact);
 $('hadokenBtn')?.addEventListener('click',triggerHadoken);
 $('shoryukenBtn')?.addEventListener('click',triggerShoryuken);
@@ -3526,6 +3798,8 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyY')triggerDriveImpact();
   if(e.code==='KeyG')triggerHadoken();
   if(e.code==='KeyZ')triggerShoryuken();
+  if(e.code==='Tab'){e.preventDefault();triggerTagSwitch();}
+  if(e.code==='KeyB')triggerTagAssist();
   if(e.code==='KeyT')triggerSpecialSurge();
   if(e.code==='KeyH')toggleScouterMode();
   if(e.code==='KeyC')toggleChrono();
@@ -3639,6 +3913,13 @@ window.__lhTest={
   triggerDriveImpact,
   triggerHadoken,
   triggerShoryuken,
+  triggerTagSwitch,
+  triggerTagAssist,
+  getActiveFighter:()=>activeFighter,
+  getTeam:()=>team,
+  getAssistHero:()=>assistHero,
+  setTagCooldown:v=>{tagCooldown=v},
+  setAssistCooldown:v=>{assistCooldown=v},
   triggerSpecialSurge,
   toggleScouterMode,
   isScouterActive:()=>scouterMode,
