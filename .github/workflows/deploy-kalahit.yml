@@ -1,32 +1,17 @@
-name: Deploy KALA HIT to Netlify
+name: KALA HIT deployment preflight (blocked until target is verified)
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "kala-hit-standalone/**"
-      - "netlify.toml"
-      - ".github/workflows/deploy-kalahit.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  deploy:
+  blocked-until-host-verified:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Publish KALA HIT to the existing Netlify site
-        uses: nwtgck/actions-netlify@v3
-        with:
-          publish-dir: "./kala-hit-standalone"
-          production-branch: main
-          production-deploy: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "KALA HIT Neon Rift from GitHub main"
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      - name: Explain why production deployment is blocked
+        run: |
+          echo "::notice title=Deployment intentionally blocked::lalhit.fun is served through Hostinger's CDN, but its authoritative publishing target has not been verified."
+          echo "No files were uploaded and no Netlify project was modified."
+          echo "Restore a deployment job only after the canonical lalhit.fun hosting target and exact site identity are verified."

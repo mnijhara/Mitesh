@@ -106,3 +106,40 @@ Confirm the hosting provider and deployment path for `lalhit.fun` (the live Canv
 - Route probe: `/lal-hit-3d.html` returns HTTP 404 and a “This Page Does Not Exist” page. Do not link to that path unless it is intentionally restored.
 - Deployment conclusion: the live root is currently in sync with GitHub source. The `hcdn` header identifies Hostinger's CDN edge, but the repeatable publish workflow itself remains unverified; repository automation still references Netlify and must be reviewed so it cannot accidentally publish this game over the separate ROACH RIOT project.
 - Next task: review the Netlify workflow for safe behavior and establish the correct deployment process without changing either unrelated Netlify project. Then continue mobile viewport verification.
+
+
+### Input reliability fix — 2026-10-18
+
+- Implemented on branch `fix/kalahit-input-loop`: remove duplicate Start/Controls event paths; add a single animation-frame scheduler guard; make controller pause toggle both ways; read controller input while paused so it can resume; keep keyboard/button resume paths on the guarded scheduler.
+- Validation: fetched the exact commit HTML from raw GitHub and passed JavaScript syntax compilation plus static assertions for all five intended changes.
+- Not yet verified: interactive browser regression across keyboard, touch, and physical gamepad. No live deployment performed; `lalhit.fun` remains unchanged until the correct Hostinger publish path and regression checks are established.
+- Pull request: https://github.com/mnijhara/Mitesh/pull/8
+- Next: run interactive controls regression, then merge/publish only after confirming no new input regressions and the actual Hostinger publishing process.
+
+
+### Regression test harness — 2026-10-18
+
+- Added `kala-hit-standalone/test-game.js` using Node's built-in assertions; no third-party dependencies added.
+- Added `npm test` and a dedicated GitHub Actions workflow `.github/workflows/kalahit-tests.yml` to run the regression suite and static build on relevant pull requests and main-branch changes.
+- Executed the test file against the exact source fetched from commit `0115d1abc96404abda7a118bf1fbba05a0ef8603`; result: `KALA HIT regression checks passed.` (exit code 0).
+- These tests cover JavaScript parse validity, guarded animation scheduling, removal of duplicate Start/Controls handlers, controller input while paused, controller pause toggle, Escape/HUD synchronization, and required touch/desktop controls.
+- Limitation: static regression tests do not replace interactive browser testing on touch devices or with a physical gamepad. No production deployment performed.
+- Current review: https://github.com/mnijhara/Mitesh/pull/8
+
+
+### Live UI inspection and follow-up — 2026-10-18
+
+- Inspected `https://lalhit.fun/` in a browser session: Start Solo Mission closed the menu and displayed the Rajiv Chowk mission HUD; Pause changed to Resume and back; no JavaScript errors were reported in that interaction.
+- Found a visible UI defect during the inspection: the desktop help panel repeated `WASD / ARROWS · MOVE` twice. Corrected the second line to `MOUSE / RIGHT STICK · AIM` on the review branch.
+- Added a regression assertion to prevent the duplicated movement hint from returning.
+- Re-ran the Node regression suite against the branch source: PASS (exit code 0). Ran the static build command: PASS (exit code 0).
+- Live site remains unchanged; fixes are still in PR #8 pending review/merge and the publishing path remains unverified.
+
+
+### Deployment safety gate — 2026-10-18
+
+- Read-only Netlify inspection confirms the connected project named `kalahit` publishes at `kalahit.netlify.app`; this is not proof that it owns `lalhit.fun`.
+- Because the existing workflow auto-published the game to an unverified `NETLIFY_SITE_ID` on main pushes, replaced that workflow on this review branch with a manual preflight-only workflow. It performs no upload and makes no Netlify changes.
+- This prevents merging the gameplay fix from accidentally triggering an unverified Netlify production deploy. It is a temporary safety gate, not a deployment solution.
+- Hostinger tools available in this workspace are mail-only; the authoritative website publishing route for `lalhit.fun` is still not established.
+- Restore deployment only after the exact canonical site/hosting target is identified and tested. Do not touch the separate ROACH RIOT or SANJEEVANI QUEST sites.
