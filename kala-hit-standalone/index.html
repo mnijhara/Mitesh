@@ -563,6 +563,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   <div class="metrics">
     <div class="metric"><label>LOCATION</label><b id="locationText">RAJIV CHOWK</b></div>
     <div class="metric"><label>THREAT</label><b id="threat" data-level="HIGH">HIGH</b></div>
+    <div class="metric"><label>BOUNTY</label><b id="bountyText" style="color:var(--c-gold)">₹0</b></div>
     <div class="metric"><label>SCORE</label><b id="score">000000</b></div>
     <div class="metric wave-metric"><label>WAVE</label><b id="waveText">01</b></div>
     <div class="metric" id="streakMetric" style="display:none"><label>STREAK</label><b id="streakText">x1</b></div>
@@ -572,6 +573,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   <div class="bars">
     <div class="barrow"><span class="bar-label">VITALS</span><div class="bar"><i id="healthBar"></i></div></div>
     <div class="barrow"><span class="bar-label">CHAI</span><div class="bar"><i id="energyBar"></i></div></div>
+    <div class="barrow" id="chronoRow"><span class="bar-label">4D TIME</span><div class="bar"><i id="chronoBar" style="background:linear-gradient(90deg,var(--c-cyan),#b08aff);width:100%"></i></div></div>
     <div class="barrow" id="dashRow" style="display:none"><span class="bar-label">DASH</span><div class="bar"><i id="dashBar"></i></div></div>
   </div>
 
@@ -585,7 +587,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   </div>
 
   <!-- Desktop keybinds -->
-  <div class="help">WASD / ARROWS · MOVE<br>MOUSE / RIGHT STICK · AIM<br>SPACE / J / F · FIRE · 1/2/3 OR Q · WEAPON · E/X · MELEE<br>SHIFT / K · DASH · P / ESC · PAUSE · R · RESTART</div>
+  <div class="help">WASD / ARROWS · MOVE<br>MOUSE / RIGHT STICK · AIM<br>SPACE / J / F · FIRE · 1/2/3 OR Q · WEAPON · E/X · MELEE<br>SHIFT / K · DASH · C · 4D CHRONO · V · 3D CAM · P / ESC · PAUSE · R · RESTART</div>
 
   <!-- Objective panel -->
   <div class="mission">
@@ -595,6 +597,9 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
 
   <!-- Action bar — bottom right -->
   <div class="actions">
+    <button id="chronoBtn" style="border-color:rgba(77,245,255,.5);color:var(--c-cyan)">⏱ 4D CHRONO</button>
+    <button id="photoBtn" style="border-color:rgba(255,204,85,.5);color:var(--c-gold)">📷 3D CAM</button>
+    <button id="armoryBtn">⚔ ARMORY</button>
     <button id="soundBtn">♫ SOUND OFF</button>
     <button id="fullBtn">⛶ FULLSCREEN</button>
     <button id="pauseBtn">Ⅱ PAUSE</button>
@@ -617,22 +622,24 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   <div class="menu" id="menuModal">
     <div class="kicker">DELHI IS UNDER ATTACK · ZONE 01</div>
     <h1>LAL <em>HIT</em></h1>
-    <div class="subtitle">DELHI UPRISING</div>
+    <div class="subtitle">DELHI UPRISING · 4D CHRONO EDITION</div>
     <div class="location-tag">✦ RAJIV CHOWK · CONNAUGHT PLACE · NEW DELHI</div>
-    <p>The heart of Delhi is overrun by mutant human-sized cockroaches. Lead the extermination, rescue trapped Connaught Place civilians, and secure the capital.</p>
+    <p>The heart of Delhi is overrun by mutant human-sized cockroaches. Lead the extermination, manipulate spacetime with 4D Chrono-Chai, and secure the capital.</p>
     <div class="menu-buttons">
       <button id="startBtn" class="hot">▶ START SOLO MISSION</button>
+      <button id="armoryMenuBtn" style="border-color:rgba(255,204,85,.4);color:var(--c-gold)">⚔ DELHI ARMORY &amp; UPGRADES (दुकान)</button>
       <button id="coopBtn">👥 CO-OP SQUAD — ONLINE ROOM</button>
       <button id="controlsBtn">⌘ CONTROLS &amp; ABILITIES</button>
     </div>
     <div class="chips">
-      <span>OVER-THE-SHOULDER</span>
-      <span>RESCUE CIVILIANS</span>
-      <span>BOSS ENCOUNTERS</span>
-      <span>TACTICAL WEAPONS</span>
+      <span>4D CHRONO TIME DILATION</span>
+      <span>3D SPATIAL PARALLAX</span>
+      <span>ROGUE BOUNTY UPGRADES</span>
+      <span>DYNAMIC CYBERPUNK SYNTH</span>
       <span>CO-OP MULTIPLAYER</span>
     </div>
   </div>
+  <div class="menu" id="armoryModal" style="display:none;width:min(580px,94vw)"></div>
 </div>
 
 <script>
@@ -646,6 +653,13 @@ let player={x:0,z:5,aimX:0,aimZ:-1};
 let enemies=[],shots=[],particles=[],pickups=[],civilians=[],buildings=[],popups=[],hazards=[];
 let touch={x:0,y:0,id:null},aimPointer={x:.5,y:.4,id:null},aimAngle=0,aimScreenX=.5,aimScreenY=.42;
 let movePointer=null;
+
+/* 4D Spacetime & 3D Interactive Spatial Engine */
+let chronoActive=false,chronoEnergy=100,chronoMax=100,timeScale=1.0;
+let camRoll=0,camYaw=0,camPitch=0,camOffsetX=0,camOffsetY=0;
+let photoMode=false,photoYaw=0,photoPitch=0,photoZoom=1.0;
+let rupees=parseInt(localStorage.getItem('lalhit_rupees')||'0',10);
+let upgrades=JSON.parse(localStorage.getItem('lalhit_upgrades')||'{"damage":0,"energy":0,"chrono":0,"health":0}');
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a);
 
@@ -704,16 +718,24 @@ function syncZone(notify=false){
   return changed;
 }
 
-/* 3D Perspective Projection */
+/* 3D Interactive Spatial Perspective Projection */
 function perspectiveDepth(z){return clamp((z+32)/42,.04,1.2)}
 function perspectiveScale(z,height=H){const depth=perspectiveDepth(z);return height*(.004+.025*depth)}
 function project(x,y,z){
-  const horizon=H*(H>W?.31:.34),depth=perspectiveDepth(z),scale=perspectiveScale(z),xScale=W*.035*depth/(37/42);
-  return{x:W*.5+x*xScale,y:horizon+(H-horizon)*depth,s:scale}
+  const depth=perspectiveDepth(z),scale=perspectiveScale(z);
+  const horizon=H*(H>W?.31:.34)+(photoMode?photoPitch*120:0);
+  const rotX=photoMode?(x*Math.cos(photoYaw)-z*Math.sin(photoYaw)):x;
+  const rotZ=photoMode?(x*Math.sin(photoYaw)+z*Math.cos(photoYaw)):z;
+  const effDepth=photoMode?perspectiveDepth(rotZ):depth;
+  const effScale=scale*(photoMode?photoZoom:1.0);
+  const xScale=W*.035*effDepth/(37/42)*(photoMode?photoZoom:1.0);
+  const effCamX=photoMode?0:camOffsetX*(1-depth);
+  return{x:W*.5+rotX*xScale+effCamX,y:horizon+(H-horizon)*effDepth,s:effScale};
 }
 function roadY(z){
-  const horizon=H*(H>W?.31:.34);
-  return horizon+(H-horizon)*clamp((z+32)/42,0,1.2);
+  const horizon=H*(H>W?.31:.34)+(photoMode?photoPitch*120:0);
+  const rotZ=photoMode?z*Math.cos(photoYaw):z;
+  return horizon+(H-horizon)*clamp((rotZ+32)/42,0,1.2);
 }
 
 function rounded(x,y,w,h,r,fill,stroke){
@@ -749,6 +771,7 @@ function initAudio(){
     masterComp.attack.setValueAtTime(0.003,actx.currentTime);
     masterComp.release.setValueAtTime(0.25,actx.currentTime);
     masterComp.connect(actx.destination);
+    initMusicEngine();
   }catch(e){}
 }
 
@@ -852,6 +875,187 @@ function rumble(duration=60,weak=0.3,strong=0.6){
       }).catch(()=>{});
     }
   }catch(e){}
+}
+
+/* =========================================================
+   DELHI CYBERPUNK 4D DYNAMIC MUSIC ENGINE
+   ========================================================= */
+let musicFilter=null,musicGain=null,musicTimer=null,musicStep=0;
+const BASS_PITCHES=[73.4,73.4,87.3,73.4,98.0,73.4,110.0,98.0];
+function initMusicEngine(){
+  if(musicFilter||!actx)return;
+  try{
+    musicFilter=actx.createBiquadFilter();
+    musicFilter.type='lowpass';
+    musicFilter.frequency.setValueAtTime(1600,actx.currentTime);
+    musicFilter.Q.setValueAtTime(3.5,actx.currentTime);
+    musicGain=actx.createGain();
+    musicGain.gain.setValueAtTime(0.12,actx.currentTime);
+    musicFilter.connect(musicGain);
+    musicGain.connect(masterComp||actx.destination);
+    startMusicLoop();
+  }catch(e){}
+}
+
+function startMusicLoop(){
+  if(musicTimer)return;
+  musicTimer=setInterval(()=>{
+    if(!sound||!playing||paused||!actx||photoMode)return;
+    if(actx.state==='suspended')return;
+    const t=actx.currentTime;
+    const isChrono=chronoActive;
+    const pitch=BASS_PITCHES[musicStep%BASS_PITCHES.length]*(isChrono?0.5:1.0);
+    const o=actx.createOscillator(),g=actx.createGain();
+    o.type='sawtooth';
+    o.frequency.setValueAtTime(pitch,t);
+    g.gain.setValueAtTime(0.045,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+(isChrono?0.28:0.11));
+    o.connect(g);g.connect(musicFilter);
+    o.start(t);o.stop(t+(isChrono?0.28:0.11));
+    if(musicStep%4===0){
+      const ko=actx.createOscillator(),kg=actx.createGain();
+      ko.type='sine';
+      ko.frequency.setValueAtTime(isChrono?70:115,t);
+      ko.frequency.exponentialRampToValueAtTime(32,t+0.1);
+      kg.gain.setValueAtTime(0.12,t);
+      kg.gain.exponentialRampToValueAtTime(0.001,t+0.1);
+      ko.connect(kg);kg.connect(musicFilter);
+      ko.start(t);ko.stop(t+0.1);
+    }
+    if(musicStep%4===2){
+      const ho=actx.createOscillator(),hg=actx.createGain();
+      ho.type='triangle';
+      ho.frequency.setValueAtTime(isChrono?350:750,t);
+      hg.gain.setValueAtTime(0.025,t);
+      hg.gain.exponentialRampToValueAtTime(0.001,t+0.04);
+      ho.connect(hg);hg.connect(musicFilter);
+      ho.start(t);ho.stop(t+0.04);
+    }
+    musicStep++;
+  },125);
+}
+
+function toggleChrono(){
+  if(!playing||paused||photoMode)return;
+  if(chronoActive){
+    chronoActive=false;
+    timeScale=1.0;
+    toast('4D CHRONO · TIME NORMAL');
+    rumble(40,0.2,0.2);
+    if(musicFilter)musicFilter.frequency.setTargetAtTime(wave>2?2200:1600,actx.currentTime,0.08);
+  }else{
+    if(chronoEnergy<20){toast('4D CHRONO · DEPLETED');soundImpact(false);return;}
+    chronoActive=true;
+    timeScale=0.22;
+    toast('4D CHRONO · BULLET TIME ENGAGED');
+    rumble(100,0.7,0.4);
+    playTone(180,0.3,'sine',0.15);
+    if(musicFilter)musicFilter.frequency.setTargetAtTime(420,actx.currentTime,0.08);
+  }
+}
+
+function togglePhotoMode(){
+  if(!playing)return;
+  photoMode=!photoMode;
+  if(photoMode){
+    toast('3D SPATIAL INSPECT · DRAG TO ROTATE');
+    $('photoBtn').textContent='▶ RESUME 4D';
+    $('photoBtn').style.background='var(--c-cyan)';
+    $('photoBtn').style.color='#000';
+  }else{
+    toast('TIMELINE RESUMED');
+    photoYaw=0;photoPitch=0;photoZoom=1.0;
+    $('photoBtn').textContent='📷 3D CAM';
+    $('photoBtn').style.background='';
+    $('photoBtn').style.color='';
+  }
+}
+
+function openArmory(){
+  const ov=$('overlay'),mm=$('menuModal'),am=$('armoryModal');
+  if(!ov||!am)return;
+  if(mm)mm.style.display='none';
+  am.style.display='block';
+  ov.classList.remove('hide');
+  renderArmory();
+}
+
+function closeArmory(){
+  const ov=$('overlay'),mm=$('menuModal'),am=$('armoryModal');
+  if(am)am.style.display='none';
+  if(playing){
+    if(ov)ov.classList.add('hide');
+  }else{
+    if(mm)mm.style.display='block';
+    if(ov)ov.classList.remove('hide');
+  }
+}
+
+function renderArmory(){
+  const am=$('armoryModal');
+  if(!am)return;
+  am.innerHTML=`
+    <div class="kicker" style="color:var(--c-gold)">DELHI DEFENCE FORCE · ORDNANCE</div>
+    <h1 style="font-size:clamp(44px,7vw,72px)">DELHI <em>ARMORY</em></h1>
+    <div class="subtitle">UPGRADES &amp; BOUNTIES (दुकान)</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,204,85,.1);border:1px solid rgba(255,204,85,.3);border-radius:10px;padding:12px 18px;margin:16px 0">
+      <span style="font-family:var(--font-display);font-size:12px;letter-spacing:.15em;color:#ffdf80">TOTAL BOUNTY EARNED:</span>
+      <strong style="font-family:var(--font-display);font-size:24px;font-weight:900;color:var(--c-gold)">₹${rupees}</strong>
+    </div>
+    <div style="display:grid;gap:10px;margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(8,20,36,.85);border:1px solid rgba(255,255,255,.1);border-radius:8px">
+        <div>
+          <b style="color:#fff;font-size:12px;font-family:var(--font-display);letter-spacing:.1em">PLASMA CORE OVERCHARGE</b>
+          <small style="display:block;color:#8ca9c2;font-size:9.5px">+30% Blaster Velocity &amp; Kinetic Damage (Lvl ${upgrades.damage||0}/3)</small>
+        </div>
+        <button id="upDmgBtn" class="${(upgrades.damage||0)>=3?'':'hot'}" style="padding:7px 12px;font-size:10px">${(upgrades.damage||0)>=3?'MAXED':'BUY ₹300'}</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(8,20,36,.85);border:1px solid rgba(255,255,255,.1);border-radius:8px">
+        <div>
+          <b style="color:#fff;font-size:12px;font-family:var(--font-display);letter-spacing:.1em">ADRAK MASALA CHAI BREW</b>
+          <small style="display:block;color:#8ca9c2;font-size:9.5px">+40% Faster Chai Recovery &amp; Dash Regen (Lvl ${upgrades.energy||0}/3)</small>
+        </div>
+        <button id="upEngBtn" class="${(upgrades.energy||0)>=3?'':'hot'}" style="padding:7px 12px;font-size:10px">${(upgrades.energy||0)>=3?'MAXED':'BUY ₹400'}</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(8,20,36,.85);border:1px solid rgba(255,255,255,.1);border-radius:8px">
+        <div>
+          <b style="color:#fff;font-size:12px;font-family:var(--font-display);letter-spacing:.1em">4D CHRONO-TESSERACT</b>
+          <small style="display:block;color:#8ca9c2;font-size:9.5px">+50% 4D Bullet-Time Duration &amp; Dilated Dash (Lvl ${upgrades.chrono||0}/3)</small>
+        </div>
+        <button id="upChrBtn" class="${(upgrades.chrono||0)>=3?'':'hot'}" style="padding:7px 12px;font-size:10px">${(upgrades.chrono||0)>=3?'MAXED':'BUY ₹500'}</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(8,20,36,.85);border:1px solid rgba(255,255,255,.1);border-radius:8px">
+        <div>
+          <b style="color:#fff;font-size:12px;font-family:var(--font-display);letter-spacing:.1em">KEVLAR COMMANDO KURTA</b>
+          <small style="display:block;color:#8ca9c2;font-size:9.5px">+30 Max Vitals &amp; Kinetic Impact Shielding (Lvl ${upgrades.health||0}/3)</small>
+        </div>
+        <button id="upHpBtn" class="${(upgrades.health||0)>=3?'':'hot'}" style="padding:7px 12px;font-size:10px">${(upgrades.health||0)>=3?'MAXED':'BUY ₹600'}</button>
+      </div>
+    </div>
+    <div class="menu-buttons">
+      <button id="closeArmoryBtn" class="hot">← RETURN TO BATTLE</button>
+    </div>
+  `;
+  const bindBuy=(btnId,field,cost)=>{
+    const b=$(btnId);if(!b)return;
+    b.addEventListener('click',()=>{
+      if((upgrades[field]||0)>=3){toast('UPGRADE ALREADY MAXED');return;}
+      if(rupees<cost){toast('INSUFFICIENT BOUNTY · NEED ₹'+cost);soundImpact(false);return;}
+      rupees-=cost;
+      upgrades[field]=(upgrades[field]||0)+1;
+      localStorage.setItem('lalhit_rupees',String(rupees));
+      localStorage.setItem('lalhit_upgrades',JSON.stringify(upgrades));
+      soundPickup('energy');
+      toast('UPGRADE ACQUIRED · '+field.toUpperCase());
+      $('bountyText').textContent='₹'+rupees;
+      renderArmory();
+    });
+  };
+  bindBuy('upDmgBtn','damage',300);
+  bindBuy('upEngBtn','energy',400);
+  bindBuy('upChrBtn','chrono',500);
+  bindBuy('upHpBtn','health',600);
+  $('closeArmoryBtn').addEventListener('click',closeArmory);
 }
 
 /* Connaught Place & Delhi Environment */
@@ -1442,8 +1646,13 @@ let frameRunning=false;function ensureFrame(){if(frameRunning)return;frameRunnin
 function resetGame(){
   playing=true;
   paused=false;
+  photoMode=false;photoYaw=0;photoPitch=0;photoZoom=1.0;
+  chronoActive=false;timeScale=1.0;
+  chronoMax=100*(1+(upgrades.chrono||0)*0.5);
+  chronoEnergy=chronoMax;
+  const maxHp=100+(upgrades.health||0)*30;
+  hp=maxHp;
   score=0;
-  hp=100;
   energy=100;
   kills=0;
   rescued=0;
@@ -1478,6 +1687,8 @@ function resetGame(){
   $('bossBar').style.width='100%';
   $('healthBar').style.width='100%';
   $('energyBar').style.width='100%';
+  const cb=$('chronoBar');if(cb)cb.style.width='100%';
+  $('bountyText').textContent='₹'+rupees;
   syncZone(false);
   toast('MISSION LIVE · '+zones[zoneIndex].short);
   last=performance.now();
@@ -1555,7 +1766,9 @@ function fire(){
   const angle=aimAngle,dx=Math.sin(angle),dz=-Math.cos(angle);
   const mx=player.x+dx*.65,mz=player.z+dz*.65;
   const pellets=mode===1?5:1,spread=mode===1?.16:mode===2?.012:0;
-  const speed=mode===2?24:20,damage=mode===2?2:1;
+  const dmgMult=1+(upgrades.damage||0)*0.3;
+  const speed=(mode===2?24:20)*(1+(upgrades.damage||0)*0.1);
+  const damage=(mode===2?2:1)*dmgMult;
 
   for(let i=0;i<pellets;i++){
     const a=angle+(pellets===1?rand(-spread,spread):(i-(pellets-1)/2)*spread);
@@ -1600,6 +1813,10 @@ function melee(){
         streakClock=3.5;
         scoreMultiplier=killStreak>=7?5:killStreak>=5?3:killStreak>=3?2:1;
         score+=Math.round((e.boss?2500:200)*scoreMultiplier);
+        rupees+=(e.boss?250:35);
+        localStorage.setItem('lalhit_rupees',String(rupees));
+        $('bountyText').textContent='₹'+rupees;
+        addPopup(e.x,2.0,e.z,e.boss?'+₹250':'+₹35','#ffdf80');
         kills++;
         dropPickup(e);
         if(killStreak===3){showStreakPopup('TRIPLE KILL! x2','#ffd27a');$('streakMetric').style.display='';$('streakText').textContent='x2';}
@@ -1681,6 +1898,17 @@ function readGamepad(){
 }
 
 function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
+  if(photoMode)return;
+
+  /* 4D Chrono Bullet-Time Energy Dilation */
+  if(chronoActive){
+    chronoEnergy=Math.max(0,chronoEnergy-dt*24);
+    if(chronoEnergy<=0)toggleChrono();
+  }else{
+    chronoEnergy=Math.min(chronoMax,chronoEnergy+dt*10);
+  }
+  const cb=$('chronoBar');if(cb)cb.style.width=(chronoEnergy/chronoMax*100)+'%';
+  const simDt=dt*timeScale;
 
   updateDynamicResolution(dt);
 
@@ -1729,6 +1957,10 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
     az+=dy/m*mag;
   }
 
+  /* 3D Camera Roll & Perspective Shift */
+  camRoll=clamp(camRoll+(ax*-0.035-camRoll)*dt*8,-0.08,0.08);
+  camOffsetX=clamp(camOffsetX+(player.x*12-camOffsetX)*dt*6,-140,140);
+
   const isMoving=Math.hypot(ax,az)>0.05;
   if(isMoving)runCycle+=dt*14;
   else runCycle=0;
@@ -1737,7 +1969,7 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
   player.x=clamp(player.x+ax/len*dt*5.2,-7.3,7.3);
   player.z=clamp(player.z+az/len*dt*4.3,-1,9);
   if(!gamepadAim&&Math.abs(ax)+Math.abs(az)>.01)aimAngle=Math.atan2(ax,-az);
-  energy=Math.min(100,energy+dt*7);
+  energy=Math.min(100,energy+dt*7*(1+(upgrades.energy||0)*0.4));
 
   if(fireHeld||gamepadFire||keys.Space||keys.KeyJ||keys.Enter){
     if(elapsed-(update.lastFire||0)>.16){
@@ -1752,14 +1984,14 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
   }
 
   for(const e of [...enemies]){
-    e.phase+=dt*5;
+    e.phase+=simDt*5;
     e.flash=Math.max(0,(e.flash||0)-dt);
-    e.x=clamp(e.x+Math.sin(elapsed*1.7+e.phase)*dt*(e.boss?.25:.55)*(e.strafe||1),-8,8);
-    e.z+=e.speed*dt*.38;
+    e.x=clamp(e.x+Math.sin(elapsed*1.7+e.phase)*simDt*(e.boss?.25:.55)*(e.strafe||1),-8,8);
+    e.z+=e.speed*simDt*.38;
 
     /* Spitter acid attack */
     if(e.type==='spitter'){
-      e.spitTimer-=dt;
+      e.spitTimer-=simDt;
       if(e.spitTimer<=0){
         e.spitTimer=rand(2.5,4.5);
         hazards.push({x:e.x,z:e.z,tx:player.x+rand(-0.8,0.8),tz:player.z,progress:0,speed:1.5});
@@ -1780,7 +2012,7 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
 
   /* Hazards / Acid Spit Projectiles */
   for(const h of [...hazards]){
-    h.progress+=dt*h.speed;
+    h.progress+=simDt*h.speed;
     const curX=h.x+(h.tx-h.x)*h.progress;
     const curZ=h.z+(h.tz-h.z)*h.progress;
     if(h.progress>=1){
@@ -1816,6 +2048,10 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
           streakClock=3.5;
           scoreMultiplier=killStreak>=7?5:killStreak>=5?3:killStreak>=3?2:1;
           score+=Math.round((e.boss?2500:150)*scoreMultiplier);
+          rupees+=(e.boss?250:35);
+          localStorage.setItem('lalhit_rupees',String(rupees));
+          $('bountyText').textContent='₹'+rupees;
+          addPopup(e.x,2.0,e.z,e.boss?'+₹250':'+₹35','#ffdf80');
           kills++;
           dropPickup(e);
           if(killStreak===3){showStreakPopup('TRIPLE KILL! x2','#ffd27a');$('streakMetric').style.display='';$('streakText').textContent='x2';}
@@ -1936,6 +2172,11 @@ function draw(){
     ctx.translate(rand(-shake,shake),rand(-shake,shake));
     shake=Math.max(0,shake-.4);
   }
+  if(camRoll!==0&&!photoMode){
+    ctx.translate(W*.5,H*.5);
+    ctx.rotate(camRoll);
+    ctx.translate(-W*.5,-H*.5);
+  }
   drawCity();
 
   /* Acid spit hazards */
@@ -2020,6 +2261,48 @@ function draw(){
     ctx.shadowColor=pop.color;
     ctx.shadowBlur=6;
     ctx.fillText(pop.text,q.x,q.y-q.s*0.45);
+    ctx.restore();
+  }
+
+  /* 4D Chrono Spacetime Ripple Rings */
+  if(chronoActive){
+    const pp=project(player.x,0,player.z);
+    const ringPhase=(elapsed*2.5)%1;
+    ctx.save();
+    ctx.strokeStyle='rgba(77,245,255,'+((1-ringPhase)*0.7)+')';
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.ellipse(pp.x,pp.y-pp.s*0.1,ringPhase*180,ringPhase*70,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.strokeStyle='rgba(176,138,255,'+((1-ringPhase)*0.4)+')';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.ellipse(pp.x,pp.y-pp.s*0.1,ringPhase*120,ringPhase*45,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.strokeStyle='rgba(77,245,255,0.45)';
+    ctx.lineWidth=5;
+    ctx.strokeRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  /* 3D Photo / Inspect Mode Visual Overlay */
+  if(photoMode){
+    ctx.save();
+    ctx.strokeStyle='rgba(255,204,85,0.45)';
+    ctx.lineWidth=1.5;
+    ctx.setLineDash([8,8]);
+    ctx.beginPath();
+    ctx.moveTo(W/3,0);ctx.lineTo(W/3,H);
+    ctx.moveTo(W*2/3,0);ctx.lineTo(W*2/3,H);
+    ctx.moveTo(0,H/3);ctx.lineTo(W,H/3);
+    ctx.moveTo(0,H*2/3);ctx.lineTo(W,H*2/3);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#ffcc55';
+    ctx.font='900 13px system-ui';
+    ctx.textAlign='center';
+    ctx.shadowColor='#000';ctx.shadowBlur=8;
+    ctx.fillText('📷 3D SPATIAL ORBIT MODE · DRAG TO ROTATE · WHEEL TO ZOOM',W/2,36);
     ctx.restore();
   }
 
@@ -2134,6 +2417,11 @@ if(coopButton)coopButton.addEventListener('click',showCoopModal);
 
 window.addEventListener('error',e=>console.error('LAL HIT runtime error',e.message,e.filename,e.lineno));
 
+$('chronoBtn')?.addEventListener('click',toggleChrono);
+$('photoBtn')?.addEventListener('click',togglePhotoMode);
+$('armoryBtn')?.addEventListener('click',openArmory);
+$('armoryMenuBtn')?.addEventListener('click',openArmory);
+
 $('pauseBtn').addEventListener('click',()=>{
   if(!playing)return;
   paused=!paused;
@@ -2234,6 +2522,8 @@ addEventListener('keydown',e=>{
     if(!paused){last=performance.now();ensureFrame()}else toast('MISSION PAUSED');
     $('pauseBtn').textContent=paused?'▶ RESUME':'Ⅱ PAUSE';
   }
+  if(e.code==='KeyC')toggleChrono();
+  if(e.code==='KeyV')togglePhotoMode();
   if(e.code==='KeyF')fire();
   if(e.code==='KeyE'||e.code==='KeyX')melee();
   if(['Digit1','Digit2','Digit3'].includes(e.code)){
@@ -2252,7 +2542,12 @@ addEventListener('keyup',e=>{
 });
 
 /* Canvas Pointer Controls */
+let photoDrag={x:0,y:0,active:false};
 canvas.addEventListener('pointerdown',e=>{
+  if(photoMode){
+    photoDrag={x:e.clientX,y:e.clientY,active:true};
+    return;
+  }
   aimPointer={x:e.clientX/W,y:e.clientY/H,id:e.pointerId};
   aimScreenX=aimPointer.x;
   aimScreenY=aimPointer.y;
@@ -2267,6 +2562,14 @@ canvas.addEventListener('pointerdown',e=>{
   }
 });
 canvas.addEventListener('pointermove',e=>{
+  if(photoMode&&photoDrag.active){
+    const dx=e.clientX-photoDrag.x,dy=e.clientY-photoDrag.y;
+    photoYaw+=dx*0.008;
+    photoPitch=clamp(photoPitch+dy*0.005,-0.6,0.6);
+    photoDrag.x=e.clientX;
+    photoDrag.y=e.clientY;
+    return;
+  }
   if(touch.id===e.pointerId){
     touch.x=e.clientX;
     touch.y=e.clientY;
@@ -2279,7 +2582,13 @@ canvas.addEventListener('pointermove',e=>{
     }
   }
 });
+canvas.addEventListener('wheel',e=>{
+  if(!photoMode)return;
+  e.preventDefault();
+  photoZoom=clamp(photoZoom-e.deltaY*0.0012,0.5,2.5);
+},{passive:false});
 ['pointerup','pointercancel','pointerleave'].forEach(n=>canvas.addEventListener(n,e=>{
+  if(photoDrag)photoDrag.active=false;
   if(touch.id===e.pointerId){
     touch.id=null;
     aimPointer.id=null;

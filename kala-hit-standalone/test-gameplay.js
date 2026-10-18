@@ -103,7 +103,34 @@ const puppeteer = require('/tmp/node_modules/puppeteer-core');
     assert.ok(pauseText.includes('PAUSE'), 'Keyboard P must resume the game');
     console.log('✓ Pause and resume toggling tested');
 
-    // Test 10: Sound toggle
+    // Test 10: 4D Chrono Bullet-Time toggle via button and KeyC
+    await page.click('#chronoBtn');
+    await new Promise(r => setTimeout(r, 200));
+    await page.keyboard.press('KeyC');
+    await new Promise(r => setTimeout(r, 200));
+    console.log('✓ 4D Chrono bullet-time toggling tested');
+
+    // Test 11: 3D Spatial Inspect Mode via button and KeyV
+    await page.click('#photoBtn');
+    await new Promise(r => setTimeout(r, 200));
+    let photoBtnText = await page.$eval('#photoBtn', el => el.textContent);
+    assert.ok(photoBtnText.includes('RESUME'), 'Photo button must show RESUME in photo mode');
+    await page.keyboard.press('KeyV');
+    await new Promise(r => setTimeout(r, 200));
+    photoBtnText = await page.$eval('#photoBtn', el => el.textContent);
+    assert.ok(photoBtnText.includes('3D CAM'), 'Photo button must revert to 3D CAM');
+    console.log('✓ 3D Spatial Inspect mode tested');
+
+    // Test 12: In-game Delhi Armory modal
+    await page.click('#armoryBtn');
+    await new Promise(r => setTimeout(r, 200));
+    const armoryTitle = await page.$eval('#armoryModal h1', el => el.textContent);
+    assert.ok(armoryTitle.includes('ARMORY'), 'Armory modal must open');
+    await page.click('#closeArmoryBtn');
+    await new Promise(r => setTimeout(r, 200));
+    console.log('✓ Delhi Armory modal tested');
+
+    // Test 13: Sound toggle
     await page.click('#soundBtn');
     const soundText = await page.$eval('#soundBtn', el => el.textContent);
     assert.ok(soundText.includes('ON'), 'Sound button must toggle to SOUND ON');
