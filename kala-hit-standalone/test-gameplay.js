@@ -176,6 +176,47 @@ const puppeteer = require('/tmp/node_modules/puppeteer-core');
     await mPage.tap('#aimBtn');
     console.log('✓ Mobile touch buttons tested and responsive');
 
+    // Test 15: Perfect Parry & Clash Counter and Projectile Deflection
+    const parryResult = await page.evaluate(() => {
+      const t = window.__lhTest;
+      t.spawnEnemy();
+      const enemies = t.getEnemies();
+      const e = enemies[enemies.length - 1];
+      const player = t.getPlayer();
+      e.x = player.x;
+      e.z = player.z - 2.0;
+      e.windingUp = true;
+      e.stunClock = 0;
+      const initialMeter = t.getSuperMeter();
+
+      const hazards = t.getHazards();
+      hazards.push({ x: player.x, z: player.z - 1.5, tx: player.x, tz: player.z, progress: 0.8, speed: 1.5 });
+      const initialShots = t.getShots().length;
+
+      t.setMeleeClock(0);
+      t.setEnergy(100);
+      t.melee();
+
+      return {
+        stunned: e.stunClock > 0,
+        windingUpCleared: !e.windingUp,
+        superMeterGained: t.getSuperMeter() > initialMeter,
+        hazardDeflected: hazards.length === 0,
+        projectileCreated: t.getShots().length > initialShots
+      };
+    });
+
+    assert.ok(parryResult.stunned, 'Parried enemy must enter stun state with stunClock > 0');
+    assert.ok(parryResult.windingUpCleared, 'Parried enemy windup must be cancelled');
+    assert.ok(parryResult.superMeterGained, 'Successful parry must reward super meter');
+    assert.ok(parryResult.hazardDeflected, 'Parry must deflect incoming acid projectiles');
+    assert.ok(parryResult.projectileCreated, 'Deflected projectile must convert into a reflected counter shot');
+    console.log('✓ Perfect Parry & Projectile Deflection counter verified');
+
+    await new Promise(r => setTimeout(r, 100));
+    await page.screenshot({ path: '/Users/miteshnijhara/.gemini/antigravity/brain/6ae184f6-c178-4e69-bc60-fd07fb28bb9e/live_parry_clash.png' });
+    console.log('✓ Captured live parry clash screenshot artifact');
+
     // Check for runtime errors
     assert.equal(errors.length, 0, 'No runtime errors permitted: ' + errors.join('; '));
     console.log('✓ Zero runtime or console errors');

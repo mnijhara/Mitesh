@@ -1407,6 +1407,35 @@ function drawRoach(e){
     ctx.textAlign='center';
     ctx.fillText('ARMOURED',0,-2.22);
   }
+
+  /* Telegraphed Attack Windup Cue */
+  if(e.windingUp){
+    ctx.save();
+    const pulse=Math.abs(Math.sin(elapsed*14));
+    ctx.fillStyle='rgba(255,71,87,'+(0.75+0.25*pulse)+')';
+    ctx.shadowColor='#ff4757';ctx.shadowBlur=8;
+    ctx.beginPath();
+    ctx.arc(0,-2.45+bob,0.22,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle='#ffffff';
+    ctx.font='bold .26px system-ui';
+    ctx.textAlign='center';
+    ctx.fillText('!',0,-2.37+bob);
+    ctx.restore();
+  }
+
+  /* Stun State Orbiting Stars */
+  if(e.stunClock>0){
+    ctx.save();
+    ctx.font='bold .24px system-ui';
+    ctx.fillStyle='#ffd27a';
+    ctx.shadowColor='#ffd27a';ctx.shadowBlur=6;
+    ctx.textAlign='center';
+    const starAngle=elapsed*8;
+    ctx.fillText('★',Math.cos(starAngle)*0.35,-2.2+Math.sin(starAngle)*0.1);
+    ctx.fillText('★',Math.cos(starAngle+Math.PI)*0.35,-2.2+Math.sin(starAngle+Math.PI)*0.1);
+    ctx.restore();
+  }
   ctx.restore();
 
   /* Health bar */
@@ -1646,7 +1675,9 @@ function spawnEnemy(boss=false){
     attack:0,
     flash:0,
     spitTimer:rand(1.5,3.5),
-    strafe:rand(-1,1)
+    strafe:rand(-1,1),
+    stunClock:0,
+    windingUp:false
   };
   enemies.push(e);
 }
@@ -1862,6 +1893,52 @@ function melee(){
   const range=combo===3?3.5:2.5;
   const reachAngle=aimAngle;
   let hitCount=0;
+  let parryClash=false;
+
+  /* Perfect Parry & Clash Counter (itch.io fighting game combat) */
+  for(const e of enemies){
+    const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz);
+    if(d<3.4&&e.windingUp){
+      parryClash=true;
+      e.windingUp=false;
+      e.stunClock=1.8;
+      e.z-=3.8;
+      e.flash=0.45;
+      e.hp-=combo===3?3.8:2.6;
+      for(let i=0;i<16;i++)particles.push({x:e.x+rand(-.6,.6),z:e.z+rand(-.5,.5),y:rand(.4,2),vy:rand(.3,2.2),life:.6,color:['#ffffff','#6ff7ff','#ffd27a'][i%3]});
+    }
+  }
+
+  /* Deflect incoming acid spit projectiles back at enemies */
+  for(let i=hazards.length-1;i>=0;i--){
+    const h=hazards[i];
+    const curX=h.x+(h.tx-h.x)*h.progress;
+    const curZ=h.z+(h.tz-h.z)*h.progress;
+    if(Math.hypot(player.x-curX,player.z-curZ)<2.8){
+      parryClash=true;
+      hazards.splice(i,1);
+      shots.push({x:curX,y:1.1,z:curZ,dx:0,dz:-1,life:1.2,speed:28,damage:5,angle:0,originX:curX,originZ:curZ});
+      for(let k=0;k<12;k++)particles.push({x:curX+rand(-.4,.4),z:curZ+rand(-.4,.4),y:rand(.4,1.8),vy:rand(.2,1.8),life:.5,color:'#6ff7ff'});
+      addPopup(player.x,1.8,player.z,'PROJECTILE DEFLECTED!','#6ff7ff');
+    }
+  }
+
+  if(parryClash){
+    hitStop=0.14; // High impact freeze frame
+    shake=10;
+    energy=Math.min(100,energy+35);
+    superMeter=Math.min(100,superMeter+25);
+    const sb=$('superBar'),sbtn=$('superBtn'),stb=$('superTouchBtn');
+    if(sb)sb.style.width=superMeter+'%';
+    if(sbtn)sbtn.style.display=superMeter>=100?'inline-block':'none';
+    if(stb)stb.style.display=superMeter>=100?'block':'none';
+    playTone(1320,0.22,'triangle',0.28);
+    playTone(880,0.18,'sine',0.32);
+    rumble(150,0.85,0.95);
+    addPopup(player.x,1.9,player.z,'⚡ PERFECT PARRY!','#ffffff');
+    toast('⚡ PERFECT PARRY · CLASH COUNTER (वार रोका)');
+    speakAnnouncer('PERFECT PARRY!');
+  }
 
   for(const e of [...enemies]){
     const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz);
@@ -2069,6 +2146,16 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
   }
 
   for(const e of [...enemies]){
+    /* Enemy Stun Recovery (itch.io fighting games hitstun & star dizzy) */
+    if(e.stunClock>0){
+      e.stunClock-=simDt;
+      e.windingUp=false;
+      e.flash=Math.max(0,(e.flash||0)-dt);
+      continue;
+    }
+
+    /* Attack Telegraph Windup Indicator */
+    e.windingUp=(e.z>player.z-3.4&&Math.abs(e.x-player.x)<2.8);
     e.phase+=simDt*5;
     e.flash=Math.max(0,(e.flash||0)-dt);
     e.x=clamp(e.x+Math.sin(elapsed*1.7+e.phase)*simDt*(e.boss?.25:.55)*(e.strafe||1),-8,8);
@@ -2789,6 +2876,18 @@ function drawMenuPreview(){
 }
 menuLast=performance.now();
 drawMenuPreview();
+
+window.__lhTest={
+  spawnEnemy,
+  getEnemies:()=>enemies,
+  melee,
+  getPlayer:()=>player,
+  getShots:()=>shots,
+  getHazards:()=>hazards,
+  getSuperMeter:()=>superMeter,
+  setEnergy:v=>{energy=v},
+  setMeleeClock:v=>{meleeClock=v}
+};
 
 })();
 </script>
