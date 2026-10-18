@@ -1,0 +1,33 @@
+name: KALA HIT checks
+
+on:
+  pull_request:
+    paths:
+      - "kala-hit-standalone/**"
+      - ".github/workflows/kalahit-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "kala-hit-standalone/**"
+      - ".github/workflows/kalahit-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: kala-hit-standalone
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run regression tests
+        run: npm test
+      - name: Check static build
+        run: npm run build
