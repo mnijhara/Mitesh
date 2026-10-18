@@ -323,6 +323,83 @@ const puppeteer = require('/tmp/node_modules/puppeteer-core');
     await page.screenshot({ path: '/Users/miteshnijhara/.gemini/antigravity/brain/6ae184f6-c178-4e69-bc60-fd07fb28bb9e/live_github_scouter_combat.png' });
     console.log('✓ Captured live GitHub Scouter and Plasma Surge screenshot artifact');
 
+    // Test 18: Street Fighter Mechanics (SF6 Drive Impact & Crumple, Agni Hadoken, Agni Shoryuken, Drive Rush)
+    const sfResult = await page.evaluate(() => {
+      const t = window.__lhTest;
+      const player = t.getPlayer();
+
+      // 1. Drive Impact & Crumple Stun
+      t.setEnergy(100);
+      t.spawnEnemy();
+      const enemies = t.getEnemies();
+      const e = enemies[enemies.length - 1];
+      e.x = player.x;
+      e.z = player.z - 2.0;
+      const initialHp = e.hp;
+
+      t.triggerDriveImpact();
+      const impactActive = t.isImpactActive();
+      const hasArmorHits = (player.armorHits > 0);
+      const enemyCrumpled = (e.crumpleClock > 0);
+      const enemyDamagedByImpact = (e.hp < initialHp);
+
+      // 2. Agni Hadoken
+      t.setEnergy(100);
+      const initialShotCount = t.getShots().length;
+      t.triggerHadoken();
+      const shots = t.getShots();
+      const hadokenShot = shots.find(s => s.isHadoken);
+      const hadokenFired = Boolean(hadokenShot && shots.length > initialShotCount);
+
+      // 3. Agni Shoryuken Anti-Air
+      t.setEnergy(100);
+      t.spawnEnemy();
+      const roach2 = enemies[enemies.length - 1];
+      roach2.x = player.x;
+      roach2.z = player.z - 1.5;
+      roach2.y = 0.5; // airborne enemy
+      t.triggerShoryuken();
+      const shoryukenActive = t.isShoryukenActive();
+      const playerLeaped = (player.vy > 0 || player.y > 0);
+      const enemyAntiAired = (roach2.vy > 0);
+
+      // 4. Drive Rush Cancel
+      t.setEnergy(100);
+      t.setDashCooldown(0);
+      t.setMeleeClock(0.2); // attack recovery frames
+      const preDashZ = player.z;
+      t.dash();
+      const driveRushDelta = preDashZ - player.z;
+      const driveRushTriggered = (driveRushDelta > 2.0); // 2.4 reach vs 1.5 standard
+
+      return {
+        impactActive,
+        hasArmorHits,
+        enemyCrumpled,
+        enemyDamagedByImpact,
+        hadokenFired,
+        shoryukenActive,
+        playerLeaped,
+        enemyAntiAired,
+        driveRushTriggered
+      };
+    });
+
+    assert.ok(sfResult.impactActive, 'Drive Impact must activate');
+    assert.ok(sfResult.hasArmorHits, 'Drive Impact must grant 2 hits of hyper-armor');
+    assert.ok(sfResult.enemyDamagedByImpact, 'Drive Impact must damage target');
+    assert.ok(sfResult.enemyCrumpled, 'Drive Impact strike must inflict Crumple Stun on target');
+    assert.ok(sfResult.hadokenFired, 'Agni Hadoken must spawn ki plasma energy projectile');
+    assert.ok(sfResult.shoryukenActive, 'Agni Shoryuken must activate rising dragon punch');
+    assert.ok(sfResult.playerLeaped, 'Agni Shoryuken must propel player into aerial leap');
+    assert.ok(sfResult.enemyAntiAired, 'Agni Shoryuken must swat enemy skyward');
+    assert.ok(sfResult.driveRushTriggered, 'Canceling attack recovery with Dash must trigger Drive Rush Cancel');
+    console.log('✓ Street Fighter Combat Systems: Drive Impact, Crumple Stun, Hadoken, Shoryuken, and Drive Rush Cancel verified');
+
+    await new Promise(r => setTimeout(r, 120));
+    await page.screenshot({ path: '/Users/miteshnijhara/.gemini/antigravity/brain/6ae184f6-c178-4e69-bc60-fd07fb28bb9e/live_street_fighter_combat.png' });
+    console.log('✓ Captured live Street Fighter combat screenshot artifact');
+
     // Check for runtime errors
     assert.equal(errors.length, 0, 'No runtime errors permitted: ' + errors.join('; '));
     console.log('✓ Zero runtime or console errors');

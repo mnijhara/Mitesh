@@ -100,6 +100,19 @@ const path = require('path');
   await page.keyboard.press('KeyE');
   await page.waitForTimeout(200);
 
+  // Street Fighter Competitive Mechanics Live Test
+  await page.keyboard.press('KeyY'); // Drive Impact
+  await page.waitForTimeout(200);
+  await page.keyboard.press('KeyG'); // Hadoken
+  await page.waitForTimeout(200);
+  await page.keyboard.press('KeyZ'); // Shoryuken
+  await page.waitForTimeout(250);
+  await page.keyboard.press('KeyH'); // Scouter Mode with SF6 Frame Meter
+
+  // Capture Street Fighter combat screenshot
+  await page.screenshot({ path: path.join(artifactDir, 'live_playwright_street_fighter.png') });
+  console.log('✓ Captured desktop Street Fighter combat screenshot');
+
   // Activate 4D Chrono
   await page.keyboard.press('KeyC');
   await page.waitForTimeout(300);

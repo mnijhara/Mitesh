@@ -589,7 +589,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   </div>
 
   <!-- Desktop keybinds -->
-  <div class="help">WASD / ARROWS · MOVE<br>MOUSE / RIGHT STICK · AIM<br>SPACE / J / F · FIRE · 1/2/3 OR Q · WEAPON · E/X · MELEE<br>SHIFT / K · DASH (i-FRAMES) · T · SURGE · H · SCOUTER · U · OVERDRIVE · C · 4D CHRONO · V · 3D CAM · P / ESC · PAUSE · R · RESTART</div>
+  <div class="help">WASD / ARROWS · MOVE<br>MOUSE / RIGHT STICK · AIM<br>SPACE / J / F · FIRE · 1/2/3 OR Q · WEAPON · E/X · MELEE<br>Y · IMPACT · G · HADOKEN · Z · SHORYUKEN · SHIFT/K · DASH (i-FRAMES) · T · SURGE · H · SCOUTER · U · OVERDRIVE · C · 4D CHRONO · V · 3D CAM · P / ESC · PAUSE · R · RESTART</div>
 
   <!-- Objective panel -->
   <div class="mission">
@@ -600,6 +600,9 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   <!-- Action bar — bottom right -->
   <div class="actions">
     <button id="superBtn" style="border-color:rgba(255,71,87,.8);color:#ff4757;display:none;background:rgba(255,71,87,.2)">⚡ OVERDRIVE (U)</button>
+    <button id="impactBtn" style="border-color:rgba(255,42,133,.6);color:#ff2a85">💥 IMPACT (Y)</button>
+    <button id="hadokenBtn" style="border-color:rgba(77,245,255,.6);color:var(--c-cyan)">🔥 HADOKEN (G)</button>
+    <button id="shoryukenBtn" style="border-color:rgba(255,204,85,.7);color:var(--c-gold)">🐉 SHORYUKEN (Z)</button>
     <button id="specialBtn" style="border-color:rgba(77,245,255,.5);color:var(--c-cyan)">⚡ SURGE (T)</button>
     <button id="scouterBtn" style="border-color:rgba(255,204,85,.5);color:var(--c-gold)">🎯 SCOUTER (H)</button>
     <button id="chronoBtn" style="border-color:rgba(77,245,255,.5);color:var(--c-cyan)">⏱ 4D CHRONO</button>
@@ -640,12 +643,13 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
     <div class="chips">
       <span>4D CHRONO BULLET-TIME</span>
       <span>3D SPATIAL PARALLAX</span>
+      <span>SF6 DRIVE IMPACT &amp; CRUMPLE</span>
+      <span>AGNI HADOKEN &amp; SHORYUKEN</span>
+      <span>SF6 FRAME METER &amp; SCOUTER</span>
+      <span>DRIVE RUSH CANCEL</span>
       <span>PERFECT PARRY &amp; DEFLECTION</span>
       <span>AERIAL JUGGLES &amp; WALL SPLAT</span>
       <span>CROWD ON FIRE HYPE</span>
-      <span>SCOUTER HITBOXES &amp; FRAME DATA</span>
-      <span>PLASMA SURGE SPECIAL</span>
-      <span>DASH i-FRAMES</span>
       <span>DELHI ARMORY ROGUELITE</span>
       <span>BRAHMASTRA OVERDRIVE</span>
       <span>CO-OP MULTIPLAYER</span>
@@ -675,7 +679,7 @@ let rupees=parseInt(localStorage.getItem('lalhit_rupees')||'0',10);
 let upgrades=JSON.parse(localStorage.getItem('lalhit_upgrades')||'{"damage":0,"energy":0,"chrono":0,"health":0}');
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a);
 let superMeter=0,superActive=false,bossStompWaves=[];
-let scouterMode=false,specialSurgeClock=0;
+let scouterMode=false,specialSurgeClock=0,driveImpactClock=0,shoryukenClock=0;
 const cyberRain=Array.from({length:55},()=>({x:rand(-14,14),y:rand(1,10),z:rand(-34,10),speed:rand(18,28)}));
 
 /* CrazyGames Fighting Mechanics: Momentum & Crowd Hype Meter */
@@ -1482,6 +1486,20 @@ function drawRoach(e){
     ctx.fillText('★',Math.cos(starAngle+Math.PI)*0.35,-2.2+Math.sin(starAngle+Math.PI)*0.1);
     ctx.restore();
   }
+
+  /* Street Fighter Crumple Stun state */
+  if(e.crumpleClock>0){
+    ctx.save();
+    ctx.font='bold .22px system-ui';
+    ctx.fillStyle='#ff2a85';
+    ctx.shadowColor='#ff2a85';ctx.shadowBlur=8;
+    ctx.textAlign='center';
+    ctx.fillText('CRUMPLE STUN!',0,-2.5+bob);
+    const starAngle=elapsed*10;
+    ctx.fillStyle='#ffe600';
+    ctx.fillText('💫',Math.cos(starAngle)*0.38,-2.25);
+    ctx.restore();
+  }
   ctx.restore();
 
   /* Health bar */
@@ -1538,6 +1556,40 @@ function drawHero(){
     ctx.font='900 7px system-ui';
     ctx.textAlign='center';
     ctx.fillText('⚡ RAGE',0,-56);
+    ctx.restore();
+  }
+
+  /* Street Fighter 6 Drive Impact Ink Splatter Aura */
+  if(driveImpactClock>0){
+    ctx.save();
+    ctx.shadowColor='#ff2a85';ctx.shadowBlur=22;
+    ctx.strokeStyle='rgba(255,42,133,'+(0.6+0.4*Math.sin(elapsed*18))+')';
+    ctx.lineWidth=3.5;
+    ctx.beginPath();
+    ctx.ellipse(0,-26,24,38,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.strokeStyle='rgba(0,240,255,0.7)';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.ellipse(0,-26,28,42,0,0,Math.PI*2);
+    ctx.stroke();
+    ctx.fillStyle='#ff2a85';
+    ctx.font='900 8px system-ui';
+    ctx.textAlign='center';
+    ctx.fillText('💥 IMPACT ARMOR',0,-62);
+    ctx.restore();
+  }else if(shoryukenClock>0){
+    ctx.save();
+    ctx.shadowColor='#ffd27a';ctx.shadowBlur=20;
+    ctx.strokeStyle='rgba(255,210,122,0.9)';
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.arc(0,-28,30,0,Math.PI*2);
+    ctx.stroke();
+    ctx.fillStyle='#ffd27a';
+    ctx.font='900 8px system-ui';
+    ctx.textAlign='center';
+    ctx.fillText('🐉 SHORYUKEN',0,-62);
     ctx.restore();
   }
 
@@ -1846,7 +1898,7 @@ function resetGame(){
   lowHealthPulse=0;
   dashCooldown=0;
   bossDeathFlash=0;
-  player={x:0,z:5,aimX:0,aimZ:-1};
+  player={x:0,y:0,vy:0,z:5,aimX:0,aimZ:-1,armorHits:0,invulnerable:0};
   enemies=[];
   shots=[];
   particles=[];
@@ -1856,6 +1908,8 @@ function resetGame(){
   hazards=[];
   superMeter=0;superActive=false;bossStompWaves=[];
   specialSurgeClock=0;
+  driveImpactClock=0;
+  shoryukenClock=0;
   hypeMeter=0;hypeActive=false;hypeTimer=0;
   const hm=$('hypeMetric');if(hm)hm.style.display='none';
   for(let i=0;i<5;i++)spawnEnemy();
@@ -2135,18 +2189,194 @@ function dash(){
   if(!playing||paused||energy<20||dashCooldown>0)return;
   energy-=20;
   dashCooldown=3.0; // 3-second cooldown
+  const isDriveRush=(comboClock>0||meleeClock>0);
   meleeClock=0; // Dash-canceling: cancel any attack recovery frames!
-  player.z-=1.5;
+  player.z-=isDriveRush?2.4:1.5;
   player.invulnerable=0.45; // GitHub fighting game i-Frames!
   shake=5;
   soundDash();
   rumble(70,0.5,0.3);
-  for(let i=0;i<16;i++)particles.push({x:player.x+rand(-.5,.5),z:player.z+rand(-.4,.8),y:rand(.1,1.8),vy:rand(.1,1),life:.45,color:'#6ff7ff'});
+  if(isDriveRush){
+    addPopup(player.x,1.9,player.z,'DRIVE RUSH CANCEL! ⏩','#00ff66');
+    toast('DRIVE RUSH CANCEL · +4F ADVANTAGE');
+    playTone(740,0.14,'triangle',0.28);
+    for(let i=0;i<14;i++)particles.push({x:player.x+rand(-.5,.5),z:player.z+1.2+i*.15,y:rand(.2,1.6),vy:rand(.1,.6),life:.55,color:'#00ff66'});
+    addHype(12);
+  }else{
+    addPopup(player.x,1.8,player.z,'i-FRAME EVADE! 🛡','#6ff7ff');
+    toast('DASH · i-FRAME INVULNERABILITY');
+  }
+  for(let i=0;i<16;i++)particles.push({x:player.x+rand(-.5,.5),z:player.z+rand(-.4,.8),y:rand(.1,1.8),vy:rand(.1,1),life:.45,color:isDriveRush?'#00ff66':'#6ff7ff'});
   // Dash afterimage particles trail
   for(let i=0;i<8;i++)particles.push({x:player.x+rand(-.3,.3),z:player.z+1.5+i*.2,y:rand(.3,1.4),vy:rand(.05,.3),life:.6,color:'#ffffff66'});
   $('dashRow').style.display='';
-  addPopup(player.x,1.8,player.z,'i-FRAME EVADE! 🛡','#6ff7ff');
-  toast('DASH · i-FRAME INVULNERABILITY');
+}
+
+function triggerDriveImpact(){
+  if(!playing||paused||energy<15||driveImpactClock>0)return;
+  energy-=15;
+  driveImpactClock=0.55;
+  player.armorHits=2; // 2 hits of hyper-armor!
+  player.z-=0.9;
+  shake=11;
+  hitStop=0.10;
+  playTone(90,0.22,'square',0.38);
+  playTone(55,0.32,'sawtooth',0.42);
+  rumble(160,0.85,0.95);
+  toast('💥 DRIVE IMPACT · KALARIPAYATTU FOCUS');
+  speakAnnouncer('DRIVE IMPACT!');
+  addPopup(player.x,2.1,player.z,'DRIVE IMPACT! 💥','#ff2a85');
+
+  // Paint splatter ink particles (SF6 / SF4 style)
+  for(let i=0;i<24;i++){
+    particles.push({
+      x:player.x+rand(-.8,.8),
+      z:player.z-1.2+rand(-.6,.6),
+      y:rand(.3,2.2),
+      vy:rand(.3,2.5),
+      life:.6,
+      color:['#ff2a85','#00f0ff','#ffe600','#ffffff'][i%4]
+    });
+  }
+
+  // Hit detection in front
+  for(const e of [...enemies]){
+    const dx=e.x-player.x,dz=e.z-player.z;
+    if(Math.abs(dx)<2.6&&dz<0&&dz>-3.6){
+      const isWallSplatted=(Math.abs(e.x)>=5.8);
+      e.hp-=5.0*(1+(upgrades.damage||0)*0.3);
+      e.flash=0.4;
+      e.z-=2.2;
+      e.x+=Math.sign(dx||1)*0.8;
+      addHype(25);
+      if(isWallSplatted){
+        e.crumpleClock=2.5;
+        e.x=Math.sign(e.x)*6.7;
+        addPopup(e.x,1.9,e.z,'WALL BOUNCE CRUMPLE! 💥','#ff2a85');
+        toast('💥 WALL BOUNCE CRUMPLE · DRIVE IMPACT!');
+        speakAnnouncer('WALL BOUNCE!');
+      }else{
+        e.crumpleClock=2.0;
+        addPopup(e.x,1.8,e.z,'CRUMPLE STUN! 💫','#ff2a85');
+        toast('💫 CRUMPLE STUN · ENEMY HELPLESS!');
+        speakAnnouncer('CRUMPLE STUN!');
+      }
+      if(e.hp<=0){
+        enemies.splice(enemies.indexOf(e),1);
+        kills++;
+        score+=e.boss?3200:350;
+        rupees+=e.boss?320:50;
+        localStorage.setItem('lalhit_rupees',String(rupees));
+        $('bountyText').textContent='₹'+rupees;
+        dropPickup(e);
+        toast(e.boss?'MEGA ROACH OBLITERATED!':'COCKROACH CRUSHED!');
+        if(e.boss){
+          bossDeathFlash=1.0;
+          wave++;
+          $('waveText').textContent=String(wave).padStart(2,'0');
+          syncZone(true);
+          if(wave>=4&&rescued>=4)missionVictory();
+        }
+      }
+    }
+  }
+}
+
+function triggerHadoken(){
+  if(!playing||paused||energy<12)return;
+  energy-=12;
+  fireKick=Math.min(5,fireKick+3.2);
+  muzzleFlash=0.1;
+  shake=6;
+  playTone(440,0.15,'sine',0.35);
+  setTimeout(()=>playTone(660,0.22,'triangle',0.38),80);
+  rumble(90,0.5,0.7);
+  toast('🔥 HADOKEN! (प्लाज़्मा तरंग)');
+  speakAnnouncer('HADOKEN!');
+  addPopup(player.x,1.9,player.z,'HADOKEN! 🔥','#00f0ff');
+
+  const angle=aimAngle,dx=Math.sin(angle),dz=-Math.cos(angle);
+  const mx=player.x+dx*0.7,mz=player.z+dz*0.7;
+  shots.push({
+    x:mx,
+    y:1.1,
+    z:mz,
+    dx,
+    dz,
+    life:1.6,
+    speed:22,
+    damage:3.6*(1+(upgrades.damage||0)*0.3),
+    angle,
+    originX:mx,
+    originZ:mz,
+    isHadoken:true
+  });
+  addHype(15);
+}
+
+function triggerShoryuken(){
+  if(!playing||paused||energy<18||shoryukenClock>0)return;
+  energy-=18;
+  shoryukenClock=0.65;
+  player.invulnerable=0.55; // Invincible startup!
+  player.y=0.25;
+  player.vy=5.4; // Soar high into the air!
+  shake=9;
+  hitStop=0.08;
+  playTone(260,0.08,'sawtooth',0.3);
+  setTimeout(()=>playTone(520,0.1,'sawtooth',0.35),60);
+  setTimeout(()=>playTone(880,0.22,'triangle',0.4),130);
+  rumble(180,0.8,0.9);
+  toast('🐉 SHORYUKEN! (ड्रैगन मुक्का)');
+  speakAnnouncer('SHORYUKEN!');
+  addPopup(player.x,2.3,player.z,'SHORYUKEN! 🐉','#ffd27a');
+
+  // Rising fiery dragon particles
+  for(let i=0;i<20;i++){
+    particles.push({
+      x:player.x+rand(-.5,.5),
+      z:player.z+rand(-.5,.5),
+      y:rand(.2,2.4),
+      vy:rand(1.5,4.5),
+      life:.6,
+      color:['#ffd27a','#ff4757','#ffffff','#ff9b45'][i%4]
+    });
+  }
+
+  // Swat enemies and air-juggle
+  for(const e of [...enemies]){
+    const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz);
+    if(d<3.2&&Math.abs(dz)<2.8){
+      e.hp-=4.2*(1+(upgrades.damage||0)*0.3);
+      e.flash=0.35;
+      e.y=0.5;
+      e.vy=5.2; // Launch roach high into air!
+      e.z+=dz/(d||1)*1.2;
+      addHype(20);
+      if((e.y||0)>0.1){
+        addPopup(e.x,2.0,e.z,'AIRBORNE SWATTED! 🐉','#ffd27a');
+      }else{
+        addPopup(e.x,1.8,e.z,'RISING DRAGON PUNCH!','#ffcc55');
+      }
+      if(e.hp<=0){
+        enemies.splice(enemies.indexOf(e),1);
+        kills++;
+        score+=e.boss?3200:350;
+        rupees+=e.boss?320:50;
+        localStorage.setItem('lalhit_rupees',String(rupees));
+        $('bountyText').textContent='₹'+rupees;
+        dropPickup(e);
+        toast(e.boss?'MEGA ROACH EXTERMINATED!':'COCKROACH DRAGON SWATTED!');
+        if(e.boss){
+          bossDeathFlash=1.0;
+          wave++;
+          $('waveText').textContent=String(wave).padStart(2,'0');
+          syncZone(true);
+          if(wave>=4&&rescued>=4)missionVictory();
+        }
+      }
+    }
+  }
 }
 
 function triggerSpecialSurge(){
@@ -2278,6 +2508,19 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
     specialSurgeClock-=dt;
     if(specialSurgeClock<0)specialSurgeClock=0;
   }
+  if(driveImpactClock>0){
+    driveImpactClock-=dt;
+    if(driveImpactClock<=0){driveImpactClock=0;player.armorHits=0;}
+  }
+  if(shoryukenClock>0){
+    shoryukenClock-=dt;
+    if(shoryukenClock<=0)shoryukenClock=0;
+  }
+  if((player.y||0)>0||(player.vy||0)!==0){
+    player.vy=(player.vy||0)-dt*14;
+    player.y=Math.max(0,(player.y||0)+player.vy*dt);
+    if(player.y<=0){player.y=0;player.vy=0;}
+  }
   if(streakClock>0){streakClock-=dt;}else{killStreak=0;scoreMultiplier=1;}
   if(dashCooldown>0){
     dashCooldown=Math.max(0,dashCooldown-dt);
@@ -2345,6 +2588,14 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
       continue;
     }
 
+    /* Street Fighter Crumple Stun Incapacitation */
+    if(e.crumpleClock>0){
+      e.crumpleClock-=simDt;
+      e.windingUp=false;
+      e.flash=Math.max(0,(e.flash||0)-dt);
+      continue;
+    }
+
     /* Attack Telegraph Windup Indicator */
     e.windingUp=(e.z>player.z-3.4&&Math.abs(e.x-player.x)<2.8);
     e.phase+=simDt*5;
@@ -2398,7 +2649,13 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
 
     if(e.z>player.z-1.4){
       if(Math.abs(e.x-player.x)<2.4){
-        if((player.invulnerable||0)<=0){
+        if(player.armorHits>0){
+          player.armorHits--;
+          shake=5;
+          playTone(180,0.15,'sawtooth',0.3);
+          addPopup(player.x,1.8,player.z,'DRIVE ARMOR ABSORB! 🛡','#ff2a85');
+          toast('DRIVE ARMOR · IMPACT ABSORBED');
+        }else if((player.invulnerable||0)<=0){
           hp-=dt*(e.boss?20:12);
           shake=3;
           rumble(80,0.6,0.8);
@@ -2409,6 +2666,22 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
       e.z=-28;
       e.x=rand(-7,7);
       if(hp<=0)gameOver();
+    }
+  }
+
+  /* Clashing Hadoken with Acid Hazards */
+  for(let i=hazards.length-1;i>=0;i--){
+    const h=hazards[i];
+    const curX=h.x+(h.tx-h.x)*h.progress;
+    const curZ=h.z+(h.tz-h.z)*h.progress;
+    for(const s of shots){
+      if(s.isHadoken&&Math.hypot(s.x-curX,s.z-curZ)<1.4){
+        hazards.splice(i,1);
+        for(let k=0;k<10;k++)particles.push({x:curX,y:1.2,z:curZ,vy:rand(.3,1.8),life:.45,color:'#00f0ff'});
+        addPopup(curX,1.5,curZ,'HAZARD CLASH! 🔥','#00f0ff');
+        toast('HADOKEN · HAZARD NEUTRALIZED');
+        break;
+      }
     }
   }
 
@@ -2688,6 +2961,25 @@ function draw(){
     const tail=project(shot.x-shot.dx*.20,0,shot.z-shot.dz*.20);
     const ty=roadY(shot.z-shot.dz*.20)-tail.s*.35;
     const radius=clamp(p.s*.025,1.2,2.6);
+    if(shot.isHadoken){
+      ctx.save();
+      ctx.shadowColor='#00f0ff';ctx.shadowBlur=18;
+      ctx.fillStyle='#00f0ff';
+      ctx.beginPath();
+      ctx.arc(p.x,yy,radius*3.2,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle='#ffffff';
+      ctx.beginPath();
+      ctx.arc(p.x,yy,radius*1.6,0,Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle='rgba(0,240,255,0.85)';
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.ellipse(p.x,yy,radius*4.2,radius*2.2,elapsed*12,0,Math.PI*2);
+      ctx.stroke();
+      ctx.restore();
+      continue;
+    }
     ctx.save();
     ctx.lineCap='round';
     ctx.strokeStyle=shot.isSuper?'#ffd27a':'#ff9b45';
@@ -2900,8 +3192,8 @@ function draw(){
     ctx.fillStyle='rgba(5,15,25,0.92)';
     ctx.strokeStyle='rgba(0,255,102,0.7)';
     ctx.lineWidth=1;
-    ctx.fillRect(20,204,244,96);
-    ctx.strokeRect(20,204,244,96);
+    ctx.fillRect(20,204,256,128);
+    ctx.strokeRect(20,204,256,128);
     ctx.textAlign='left';
     ctx.textBaseline='alphabetic';
     ctx.fillStyle='#00ff66';
@@ -2915,6 +3207,27 @@ function draw(){
     ctx.fillText('i-FRAMES: '+((player.invulnerable||0)>0?(player.invulnerable).toFixed(2)+'s (INVULNERABLE)':'0.00s'),28,251);
     ctx.fillText('HURTBOXES: '+(1+civilians.filter(c=>!c.rescued).length)+' · HITBOXES: '+enemies.length,28,266);
     ctx.fillText('EST COMBAT DPS: '+(Math.round((weaponMode===2?38:weaponMode===1?48:30)*(1+(upgrades.damage||0)*0.3))),28,281);
+
+    // SF6 Training Mode Frame Meter Bar Strip (4F Startup, 3F Active, 15F Recovery)
+    ctx.fillStyle='#ffd27a';
+    ctx.fillText('SF6 FRAME METER [4F 🟩 | 3F 🟥 | 15F 🟦]:',28,297);
+    const meterStartX=28,meterY=304;
+    for(let f=0;f<22;f++){
+      if(f<4)ctx.fillStyle='#00ff66'; // 4F Startup (green)
+      else if(f<7)ctx.fillStyle='#ff3b4e'; // 3F Active (red)
+      else ctx.fillStyle='#3b82f6'; // 15F Recovery (blue)
+      ctx.fillRect(meterStartX+f*10,meterY,8,12);
+      ctx.strokeStyle='rgba(0,0,0,0.5)';
+      ctx.lineWidth=1;
+      ctx.strokeRect(meterStartX+f*10,meterY,8,12);
+    }
+    // Active action indicator tick
+    const activeFrame=shoryukenClock>0?Math.floor((1-shoryukenClock/0.65)*22):driveImpactClock>0?Math.floor((1-driveImpactClock/0.55)*22):meleeClock>0?Math.floor((1-meleeClock/0.25)*22):-1;
+    if(activeFrame>=0&&activeFrame<22){
+      ctx.fillStyle='#ffffff';
+      ctx.fillRect(meterStartX+activeFrame*10,meterY-2,8,2);
+      ctx.fillRect(meterStartX+activeFrame*10,meterY+12,8,2);
+    }
     ctx.restore();
   }
 
@@ -2995,6 +3308,22 @@ function showControls(e){
       <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(255,204,85,0.25);border-radius:10px">
         <b style="color:var(--c-gold);font-family:var(--font-display);font-size:11px;letter-spacing:.1em">🤹 UPPERCUT &amp; AIR JUGGLE</b>
         <p style="font-size:11px;color:#a0b8cf;margin:4px 0">The 3rd hit of your melee combo launches enemies airborne. Strike them while airborne to trigger escalating <b>Air Juggles</b> for massive score and Hype.</p>
+      </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(255,42,133,0.35);border-radius:10px">
+        <b style="color:#ff2a85;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">💥 SF6 DRIVE IMPACT &amp; CRUMPLE (Y)</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>Y / IMPACT</b> to absorb 2 incoming hits with hyper-armor and strike forward with an ink splatter aura. Induces helpless <b>Crumple Stun</b> or slams enemies into road barriers for a devastating <b>Wall Bounce</b>.</p>
+      </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(77,245,255,0.35);border-radius:10px">
+        <b style="color:var(--c-cyan);font-family:var(--font-display);font-size:11px;letter-spacing:.1em">🔥 AGNI HADOKEN (G)</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>G / HADOKEN</b> to project an iconic ki energy plasma sphere. Clashes with and incinerates incoming acid hazard projectiles while detonating enemies on contact.</p>
+      </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(255,204,85,0.35);border-radius:10px">
+        <b style="color:var(--c-gold);font-family:var(--font-display);font-size:11px;letter-spacing:.1em">🐉 AGNI SHORYUKEN (Z)</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>Z / SHORYUKEN</b> for an invincible rising dragon fist anti-air uppercut. Leaps vertically into the sky, swatting airborne roaches and initiating high-altitude juggle chains.</p>
+      </div>
+      <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(0,255,102,0.35);border-radius:10px">
+        <b style="color:#00ff66;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">⏩ DRIVE RUSH CANCEL (SHIFT / K)</b>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Dash while in melee recovery or combo strike to cancel recovery frames into a green neon Drive Rush (+4F frame advantage bonus &amp; extended reach).</p>
       </div>
       <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(255,71,87,0.25);border-radius:10px">
         <b style="color:#ff4757;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">💥 WALL SPLAT &amp; BARRIER CRUSH</b>
@@ -3084,6 +3413,9 @@ window.addEventListener('error',e=>console.error('LAL HIT runtime error',e.messa
 
 $('superBtn')?.addEventListener('click',triggerOverdrive);
 $('superTouchBtn')?.addEventListener('pointerdown',e=>{e.preventDefault();triggerOverdrive()});
+$('impactBtn')?.addEventListener('click',triggerDriveImpact);
+$('hadokenBtn')?.addEventListener('click',triggerHadoken);
+$('shoryukenBtn')?.addEventListener('click',triggerShoryuken);
 $('specialBtn')?.addEventListener('click',triggerSpecialSurge);
 $('scouterBtn')?.addEventListener('click',toggleScouterMode);
 $('chronoBtn')?.addEventListener('click',toggleChrono);
@@ -3191,6 +3523,9 @@ addEventListener('keydown',e=>{
     if(!paused){last=performance.now();ensureFrame()}else toast('MISSION PAUSED');
     $('pauseBtn').textContent=paused?'▶ RESUME':'Ⅱ PAUSE';
   }
+  if(e.code==='KeyY')triggerDriveImpact();
+  if(e.code==='KeyG')triggerHadoken();
+  if(e.code==='KeyZ')triggerShoryuken();
   if(e.code==='KeyT')triggerSpecialSurge();
   if(e.code==='KeyH')toggleScouterMode();
   if(e.code==='KeyC')toggleChrono();
@@ -3301,16 +3636,22 @@ window.__lhTest={
   getEnemies:()=>enemies,
   melee,
   dash,
+  triggerDriveImpact,
+  triggerHadoken,
+  triggerShoryuken,
   triggerSpecialSurge,
   toggleScouterMode,
   isScouterActive:()=>scouterMode,
   isSpecialSurgeActive:()=>specialSurgeClock>0,
+  isImpactActive:()=>driveImpactClock>0,
+  isShoryukenActive:()=>shoryukenClock>0,
   getPlayer:()=>player,
   getShots:()=>shots,
   getHazards:()=>hazards,
   getSuperMeter:()=>superMeter,
   setEnergy:v=>{energy=v},
   setMeleeClock:v=>{meleeClock=v},
+  setDashCooldown:v=>{dashCooldown=v},
   addHype,
   getHypeMeter:()=>hypeMeter,
   isHypeActive:()=>hypeActive
