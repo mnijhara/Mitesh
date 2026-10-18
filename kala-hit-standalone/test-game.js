@@ -26,6 +26,10 @@ assert.ok(script.includes("if(e.code==='Escape'&&playing){paused=!paused;") &&
   'keyboard pause must keep the HUD in sync');
 assert.ok(html.includes('WASD / ARROWS · MOVE<br>MOUSE / RIGHT STICK · AIM'), 'desktop help must show movement and aim once each');
 assert.ok(!html.includes('WASD / ARROWS · MOVE<br>WASD / ARROWS · MOVE'), 'desktop help must not duplicate the movement hint');
+assert.ok(html.includes('.mobile-controls{display:block;left:0;right:0;bottom:90px;height:142px;gap:0;pointer-events:none}'), 'mobile controls must use a full-width positioning layer');
+assert.ok(html.includes('.mobile-controls .move-pad{position:absolute;left:13px;bottom:0;width:124px;height:124px;flex:none;pointer-events:auto}'), 'mobile movement joystick must keep a stable touch target');
+assert.ok(html.includes('.mobile-controls .fire-control{right:13px;bottom:70px}'), 'mobile fire button must be anchored inside the viewport');
+assert.ok(html.includes('@media(max-width:380px){.mobile-controls .move-pad{left:8px;width:106px;height:106px}'), 'small phones must receive a compact control layout');
 for (const id of ['startBtn', 'controlsBtn', 'pauseBtn', 'movePad', 'fireBtn', 'meleeBtn', 'dashBtn', 'aimBtn']) {
   assert.ok(html.includes('id="' + id + '"'), 'required control missing: ' + id);
 }
