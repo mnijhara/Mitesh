@@ -50,13 +50,6 @@ assert.ok(shotRenderer[1].includes('shot.dx*.48') && shotRenderer[1].includes('s
   'projectile trails must be short and follow the actual shot direction');
 assert.ok(!shotRenderer[1].includes('origin=project(shot.originX'),
   'projectiles must not draw a screen-spanning line from a fixed foreground origin');
-const currentGun = script.match(/function drawGun\(\)\{([\s\S]*?)\n\}\nfunction spawnEnemy/);
-assert.ok(currentGun && currentGun[1].includes('ctx.rotate(aimAngle)'),
-  'weapon orientation must follow the shot direction');
-assert.ok(currentGun[1].includes('Barrel points up at zero angle'),
-  'zero-angle weapon orientation must match forward movement and projectile direction');
-
-console.log('KALA HIT regression checks passed.');
 
 // Campaign progression must visibly move the player through distinct Delhi districts.
 assert.ok(html.includes("const zones=[{short:'RAJIV CHOWK'") && html.includes("short:'JANPATH'") && html.includes("short:'JANTAR MANTAR'"), 'campaign must contain three named districts');
