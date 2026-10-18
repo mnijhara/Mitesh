@@ -35,3 +35,10 @@ for (const id of ['startBtn', 'controlsBtn', 'pauseBtn', 'movePad', 'fireBtn', '
   assert.ok(html.includes('id="' + id + '"'), 'required control missing: ' + id);
 }
 console.log('KALA HIT regression checks passed.');
+
+// Campaign progression must visibly move the player through distinct Delhi districts.
+assert.ok(html.includes("const zones=[{short:'RAJIV CHOWK'") && html.includes("short:'JANPATH'") && html.includes("short:'JANTAR MANTAR'"), 'campaign must contain three named districts');
+assert.ok(html.includes("function syncZone(notify=false)") && html.includes("$('locationText').textContent=z.short"), 'district transitions must update the visible location HUD');
+assert.ok(html.includes("ctx.fillStyle=zones[zoneIndex].tint"), 'district transitions must affect the game world palette');
+assert.ok(html.includes("Math.min(.65,(wave-1)*.07)"), 'enemy difficulty must scale with campaign waves');
+assert.ok(html.includes("if(e.boss){wave++;$('waveText').textContent=String(wave).padStart(2,'0');syncZone(true);"), 'melee boss defeats must advance the campaign district just like ranged boss defeats');
