@@ -7,7 +7,7 @@ Goal: ship a stable, polished, mobile-friendly browser action game at https://la
 - [x] Existing standalone Canvas game retained.
 - [x] Weapon firing feedback: recoil and muzzle flash committed.
 - [x] Enemy hit flash, lateral movement, and boss-wave progression committed.
-- [ ] Live domain confirmed to serve the latest GitHub source. Latest checks found the live HTML response does not expose the newest source changes; deployment path must be identified and reconciled.
+- [x] Live root page confirmed to serve the exact current GitHub `main` version of `kala-hit-standalone/index.html` (HTTP 200; 39,942 bytes; SHA-256 `4f0faeed64722c69ccab48ae4e66946001c5476d1118c5c38cd612f75773679d` matched the raw GitHub file byte-for-byte on 2026-10-18).
 - [ ] Full control and gameplay regression test completed.
 - [ ] All shared repositories audited and compatible assets/mechanics selected.
 - [ ] Final release smoke test and deployment record.
@@ -16,13 +16,16 @@ Goal: ship a stable, polished, mobile-friendly browser action game at https://la
 
 - [x] Record current GitHub source and latest commit.
 - [x] Compare live domain response with the source; note deployment mismatch.
-- [ ] Identify the actual production host/deploy target for lalhit.fun and determine why the live response differs.
-- [ ] Confirm correct document route and mobile viewport behaviour.
+- [x] Identify the serving edge and canonical route: `https://lalhit.fun/` returns HTTP 200 with `server: hcdn` (Hostinger CDN edge); the root page is the current game entry point.
+- [x] Verify the live root document matches the raw GitHub `main` source byte-for-byte (39,942 bytes; SHA-256 recorded above).
+- [x] Confirm route status: `/lal-hit-3d.html` currently returns HTTP 404, so it is not a valid current entry route.
+- [ ] Confirm mobile viewport behaviour on a mobile browser/device.
+- [ ] Establish and document a repeatable publish workflow to the Hostinger-served domain. The repository currently contains a Netlify deployment workflow, but no verified Hostinger deployment workflow or credentials are available in this run.
 - Exit criteria: one documented source of truth and a repeatable publish path.
 
 ## Phase 1 — Core reliability (P0)
 
-- [ ] Fix/verify Start Solo Mission and menu-to-game transition.
+- [x] Verify Start Solo Mission and menu-to-game transition: live browser test closed the menu overlay and displayed `MISSION LIVE · RAJIV CHOWK` with the gameplay HUD.
 - [ ] Verify pause/resume, restart, and game-over/revive behavior.
 - [ ] Verify keyboard: WASD/arrows, Space/J/Enter fire, E/X melee, Shift dash, P/Esc pause, R restart, 1/2/3 and Q weapon selection.
 - [ ] Verify touch joystick, aim/fire controls, and touch target sizes.
@@ -93,3 +96,13 @@ Priority: browser-compatible references and mechanics first; avoid pasting whole
 ### Next task
 
 Confirm the hosting provider and deployment path for `lalhit.fun` (the live Canvas game). Keep both Netlify projects unchanged: `kalahit.netlify.app` is a different ROACH RIOT build, while `kala-hit-delhi.netlify.app` is SANJEEVANI QUEST. Determine whether `lalhit.fun` is managed through Hostinger or another provider, then correct only that site's source/deployment path. Do not overwrite either unrelated live project.
+
+
+### Run log — 2026-10-18: production source parity verified
+
+- Canonical root `https://lalhit.fun/`: HTTP 200, `Content-Type: text/html`, response header `Server: hcdn`.
+- Fetched live root and `https://raw.githubusercontent.com/mnijhara/Mitesh/main/kala-hit-standalone/index.html` with cache disabled. Both returned 39,942 bytes and SHA-256 `4f0faeed64722c69ccab48ae4e66946001c5476d1118c5c38cd612f75773679d`; exact byte-for-byte match.
+- Browser smoke test: clicked Start Solo Mission; menu overlay closed and gameplay HUD appeared with `MISSION LIVE · RAJIV CHOWK`, Wave 01, score, vitals and rescue objective.
+- Route probe: `/lal-hit-3d.html` returns HTTP 404 and a “This Page Does Not Exist” page. Do not link to that path unless it is intentionally restored.
+- Deployment conclusion: the live root is currently in sync with GitHub source. The `hcdn` header identifies Hostinger's CDN edge, but the repeatable publish workflow itself remains unverified; repository automation still references Netlify and must be reviewed so it cannot accidentally publish this game over the separate ROACH RIOT project.
+- Next task: review the Netlify workflow for safe behavior and establish the correct deployment process without changing either unrelated Netlify project. Then continue mobile viewport verification.
