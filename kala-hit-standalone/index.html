@@ -68,36 +68,39 @@ function drawHero(){const x=project(player.x,0,player.z).x,y=H*(H>W? .735:.77),s
  ctx.fillStyle='#bd8c6b';ctx.beginPath();ctx.arc(0,-93,13,0,7);ctx.fill();ctx.fillStyle='#101725';ctx.beginPath();ctx.arc(0,-98,14,Math.PI,Math.PI*2);ctx.fill();ctx.fillStyle='#070c16';rounded(-12,-95,24,6,2,'#101a29');ctx.fillStyle='#6ff7ff';ctx.fillRect(-9,-94,7,2);ctx.fillRect(3,-94,7,2);ctx.fillStyle='#ff4e61';ctx.beginPath();ctx.moveTo(-9,-82);ctx.lineTo(9,-82);ctx.lineTo(23,-40);ctx.lineTo(9,-47);ctx.closePath();ctx.fill();
  ctx.restore()}
 function drawGun(){
- /* Foreground, over-the-shoulder LAL HIT rifle. Keep it separate from the hero's head and torso. */
- const s=clamp(H*.0011,.72,1.12);
- const x=project(player.x,0,player.z).x-30*s;
- const y=H*(H>W?.765:.79);
- ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.translate(30,-14);ctx.rotate(aimAngle);ctx.translate(-30,14);ctx.translate(0,fireKick);
- /* stock and grip */
- ctx.shadowColor='#000';ctx.shadowBlur=9;
- rounded(-15,-5,20,15,3,'#111c2b','#49657a');
- rounded(-8,7,10,19,3,'#172638','#607b8d');
- ctx.fillStyle='#0b1522';ctx.beginPath();ctx.moveTo(-3,18);ctx.lineTo(8,17);ctx.lineTo(13,32);ctx.lineTo(2,35);ctx.closePath();ctx.fill();
- /* angular receiver with dark metal facets */
- rounded(0,-10,38,22,4,'#17283b','#91a9b9');
+ /* Compact, readable foreground blaster. Clamp rotation so aiming can never turn
+    the weapon into a screen-filling shape on portrait/mobile displays. */
+ const mobile=H>W;
+ const scale=clamp(H*.00078,mobile?.52:.62,mobile?.78:.9);
+ const x=mobile?W*.69:W*.72;
+ const y=mobile?H*.835:H*.82;
+ const angle=clamp(aimAngle,-.72,.72);
+ ctx.save();
+ ctx.translate(x,y+clamp(fireKick,-2,3)*.45);
+ ctx.scale(scale,scale);
+ ctx.rotate(angle);
+ ctx.shadowColor='#000';ctx.shadowBlur=6;
+ /* short stock and grip */
+ rounded(-24,-2,16,11,3,'#111c2b','#49657a');
+ rounded(-13,5,8,15,2,'#172638','#607b8d');
+ /* compact receiver */
+ rounded(-10,-8,31,17,4,'#17283b','#91a9b9');
  ctx.shadowBlur=0;
- ctx.fillStyle='#263e52';ctx.beginPath();ctx.moveTo(5,-9);ctx.lineTo(30,-8);ctx.lineTo(36,-2);ctx.lineTo(32,9);ctx.lineTo(7,9);ctx.closePath();ctx.fill();
- /* signature red LAL rail and cyan power cell */
- ctx.fillStyle='#ff535b';ctx.beginPath();ctx.moveTo(4,-9);ctx.lineTo(13,-9);ctx.lineTo(23,9);ctx.lineTo(14,9);ctx.closePath();ctx.fill();
- rounded(16,-6,14,12,2,'#39dbea','#a3ffff');
- ctx.fillStyle='#092033';ctx.font='1000 7px system-ui';ctx.textAlign='center';ctx.fillText('LH',23,2);
- /* top rail and long barrel */
- rounded(10,-18,20,8,2,'#26394a','#69859a');
- rounded(25,-39,10,25,2,'#26394a','#9bb5c7');
- rounded(27,-47,7,10,2,'#101c2b','#6ff7ff');
-  if(muzzleFlash>0){const f=clamp(muzzleFlash/.095,0,1);ctx.save();ctx.globalAlpha=f;ctx.shadowColor='#6ff7ff';ctx.shadowBlur=24;ctx.fillStyle='#fff6c7';ctx.beginPath();ctx.moveTo(30,-49);ctx.lineTo(24,-61-f*9);ctx.lineTo(30,-57-f*18);ctx.lineTo(36,-61-f*9);ctx.lineTo(33,-49);ctx.closePath();ctx.fill();ctx.fillStyle='#6ff7ff';ctx.beginPath();ctx.ellipse(30,-55-f*5,4+f*5,8+f*7,0,0,Math.PI*2);ctx.fill();ctx.restore()}
- ctx.fillStyle='#ffcf78';ctx.shadowColor='#6ff7ff';ctx.shadowBlur=13;ctx.beginPath();ctx.ellipse(30,-47,3,5,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
- /* cyan energy conduit and tiny sight */
- ctx.fillStyle='#6ff7ff';ctx.fillRect(31,-35,2,17);
- rounded(28,-24,4,4,1,'#ffe08a');
- /* visible weapon highlights */
- ctx.strokeStyle='#d8f7ff';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(5,-5);ctx.lineTo(12,-5);ctx.moveTo(19,5);ctx.lineTo(27,5);ctx.stroke();
- ctx.restore()
+ ctx.fillStyle='#263e52';ctx.fillRect(-6,-6,22,12);
+ ctx.fillStyle='#ff535b';ctx.beginPath();ctx.moveTo(-5,-6);ctx.lineTo(2,-6);ctx.lineTo(11,6);ctx.lineTo(4,6);ctx.closePath();ctx.fill();
+ rounded(8,-5,9,10,2,'#39dbea','#a3ffff');
+ ctx.fillStyle='#092033';ctx.font='1000 5px system-ui';ctx.textAlign='center';ctx.fillText('LH',12,2);
+ /* barrel and muzzle point forward, with no oversized glow */
+ rounded(14,-5,22,8,2,'#26394a','#9bb5c7');
+ rounded(33,-4,5,6,1,'#101c2b','#6ff7ff');
+ ctx.fillStyle='#6ff7ff';ctx.fillRect(19,4,2,7);
+ if(muzzleFlash>0){
+   const f=clamp(muzzleFlash/.095,0,1);
+   ctx.save();ctx.globalAlpha=f;ctx.shadowColor='#6ff7ff';ctx.shadowBlur=7;
+   ctx.fillStyle='#fff6c7';ctx.beginPath();ctx.moveTo(38,-1);ctx.lineTo(44,-5-f*3);ctx.lineTo(43,1);ctx.lineTo(44,5+f*2);ctx.lineTo(38,3);ctx.closePath();ctx.fill();
+   ctx.restore();
+ }
+ ctx.restore();
 }
 function spawnEnemy(boss=false){const e={x:rand(-7,7),z:rand(-31,-18),scale:boss?rand(1.45,1.7):rand(.9,1.15),hp:boss?12:2,maxHp:boss?12:2,speed:(boss?rand(1.1,1.45):rand(1.7,2.5))*(1+Math.min(.65,(wave-1)*.07)),phase:rand(0,7),boss,attack:0,flash:0,strafe:rand(-1,1)};enemies.push(e)}
 function dropPickup(e){if(!e.boss&&Math.random()>.32)return;const type=e.boss?(hp<65?'med':'energy'):(Math.random()<.5?'med':'energy');pickups.push({x:e.x,z:e.z,type,life:12,phase:rand(0,7)});}
