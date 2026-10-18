@@ -44,6 +44,13 @@ assert.ok(gunFn[1].includes('compact sidearm in the hero\'s hand'),
 assert.ok(!gunFn[1].includes('H*(H>W?.765:.79)'),
   'weapon must not be rendered as a large independent foreground overlay');
 
+
+assert.ok(script.includes('aim at the nearest live threat') && script.includes('aimAngle=clamp(Math.atan2(dx,-dz),-1.15,1.15)'),
+  'mobile firing must auto-aim at the nearest enemy when gamepad manual aim is not active');
+const currentGun = script.match(/function drawGun\(\)\{([\s\S]*?)\n\}\nfunction spawnEnemy/);
+assert.ok(currentGun && currentGun[1].includes('ctx.rotate(aimAngle)'),
+  'the visible weapon must rotate with the actual shot direction');
+
 console.log('KALA HIT regression checks passed.');
 
 // Campaign progression must visibly move the player through distinct Delhi districts.
