@@ -163,3 +163,9 @@ Confirm the hosting provider and deployment path for `lalhit.fun` (the live Canv
 - GitHub Actions regression/build run passed on commit `b4208806dc158a2e6a0adc2bf36aefc8ccce97cf`: https://github.com/mnijhara/Mitesh/actions/runs/39130169154
 - Still outstanding: verify actual touch hitboxes and overlap on a physical phone and landscape orientation. Static CSS assertions do not replace device testing.
 - Production parity after this specific mobile-layout commit has not yet been independently hash-verified. Do not claim the mobile layout is fully released until checked.
+
+
+### Mobile release check — 2026-10-18
+
+- A fresh raw-HTML scrape of `lalhit.fun` still showed the previous mobile flex-row CSS and did not contain the new compact-screen rule. Therefore the mobile layout adjustment is **in GitHub main but not verified live** (likely not published yet; exact mechanism remains unknown).
+- Do not mark the mobile controls task complete for production. Next task is to establish the authorized publishing path for the Hostinger-served site and then verify the live CSS against the current main source.
