@@ -169,3 +169,12 @@ Confirm the hosting provider and deployment path for `lalhit.fun` (the live Canv
 
 - A fresh raw-HTML scrape of `lalhit.fun` still showed the previous mobile flex-row CSS and did not contain the new compact-screen rule. Therefore the mobile layout adjustment is **in GitHub main but not verified live** (likely not published yet; exact mechanism remains unknown).
 - Do not mark the mobile controls task complete for production. Next task is to establish the authorized publishing path for the Hostinger-served site and then verify the live CSS against the current main source.
+
+
+### Pause-key reliability and fresh production spot-check — 2026-10-18
+
+- Updated the keyboard pause handlers so held/repeating Escape or P keydown events cannot repeatedly flip pause/resume. This matches the gamepad's existing edge-triggered pause behavior.
+- Added regression assertions for both keyboard pause keys in `test-game.js`; source and test commits are on `main` (game: `29cf02022b3ea88238d6addb9937fed7dc88cc51`; tests: `cc9cadfb804931bff3da46b5dc78acbf4315dfab`).
+- A fresh HTTP 200 production scrape now contains the new pause-key guards and the mobile control layout markers: anchored 124px joystick, 142px controls layer, and the compact-screen media query at 380px. This supersedes the earlier scrape that showed the previous mobile CSS.
+- The edge transforms/minifies CSS during delivery, so this is a feature-marker spot-check rather than a byte-for-byte hash comparison. Physical phone touch testing, landscape overlap checks, and controller hardware testing remain outstanding.
+- Deployment mechanism is still not proven; do not infer that Hostinger auto-deployment is configured solely from the live markers.
