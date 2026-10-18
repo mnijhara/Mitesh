@@ -21,9 +21,10 @@ assert.ok(script.includes('function update(dt){if(!playing)return;const gp=readG
   'gamepad input must still be read while paused so the controller can resume');
 assert.ok(script.includes('if(pausePressed&&!gamepadPrev.pause){paused=!paused;'),
   'gamepad pause must toggle both pause and resume');
-assert.ok(script.includes("if(e.code==='Escape'&&playing){paused=!paused;") &&
+assert.ok(script.includes("if(e.code==='Escape'&&playing&&!e.repeat){paused=!paused;") &&
+  script.includes("if(e.code==='KeyP'&&playing&&!e.repeat){paused=!paused;") &&
   script.includes("$('pauseBtn').textContent=paused?'▶ RESUME':'Ⅱ PAUSE'"),
-  'keyboard pause must keep the HUD in sync');
+  'keyboard pause must ignore key-repeat and keep the HUD in sync');
 assert.ok(html.includes('WASD / ARROWS · MOVE<br>MOUSE / RIGHT STICK · AIM'), 'desktop help must show movement and aim once each');
 assert.ok(!html.includes('WASD / ARROWS · MOVE<br>WASD / ARROWS · MOVE'), 'desktop help must not duplicate the movement hint');
 assert.ok(html.includes('.mobile-controls{display:block;left:0;right:0;bottom:90px;height:142px;gap:0;pointer-events:none}'), 'mobile controls must use a full-width positioning layer');
