@@ -431,24 +431,28 @@ body:not(.in-game) .etched-deck{display:none!important}
   z-index:100!important;display:flex!important;gap:6px!important;pointer-events:auto!important;
 }
 @media(max-width:768px){
+  :root{
+    --mobile-nav-lift: calc(max(env(safe-area-inset-bottom, 0px), var(--v-bottom, 0px)) + 58px);
+  }
   .etched-deck{
     display:block!important;
-    height:152px!important;
+    height:calc(152px + var(--mobile-nav-lift))!important;
     bottom:0!important;
     padding:0!important;
-    background:linear-gradient(180deg,rgba(11,20,32,0.96) 0%,rgba(6,10,18,0.98) 100%)!important;
+    background:linear-gradient(180deg,rgba(11,20,32,0.95) 0%,rgba(6,10,18,0.98) 100%)!important;
     border-top:1.5px solid rgba(77,245,255,0.35)!important;
     box-shadow:0 -6px 28px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.15)!important;
+    pointer-events:none!important;
   }
   .etched-deck .deck-group{display:contents!important}
-  .etched-deck button,.etched-deck .etched-btn{position:absolute!important}
+  .etched-deck button,.etched-deck .etched-btn,.etched-deck .move-pad{position:absolute!important;pointer-events:auto!important}
   #deckParryBtn,#deckWepBtn{display:none!important}
   
   /* Left Stick (Movement) */
   .etched-deck .move-pad{
     position:absolute!important;
     left:10px!important;
-    bottom:14px!important;
+    bottom:calc(14px + var(--mobile-nav-lift))!important;
     width:110px!important;
     height:110px!important;
     border:2px solid rgba(0,255,102,0.4)!important;
@@ -456,18 +460,18 @@ body:not(.in-game) .etched-deck{display:none!important}
   }
 
   /* Left Tactical Bumpers: LB (Tag), LT (4D Chrono) */
-  #tagSwitchBtn, #deckTagBtn{position:absolute!important;left:126px!important;bottom:76px!important;width:50px!important;height:50px!important}
-  #deckChronoBtn{position:absolute!important;left:126px!important;bottom:14px!important;width:50px!important;height:50px!important}
+  #tagSwitchBtn, #deckTagBtn{position:absolute!important;left:126px!important;bottom:calc(76px + var(--mobile-nav-lift))!important;width:50px!important;height:50px!important}
+  #deckChronoBtn{position:absolute!important;left:126px!important;bottom:calc(14px + var(--mobile-nav-lift))!important;width:50px!important;height:50px!important}
 
   /* Right Tactical Bumpers: RB (Assist), RT (Aim Lock) */
-  #tagAssistBtn, #deckAssistBtn{position:absolute!important;right:138px!important;bottom:76px!important;width:50px!important;height:50px!important}
-  .etched-deck .aim-pad{position:absolute!important;right:138px!important;bottom:14px!important;width:50px!important;height:50px!important}
+  #tagAssistBtn, #deckAssistBtn{position:absolute!important;right:138px!important;bottom:calc(76px + var(--mobile-nav-lift))!important;width:50px!important;height:50px!important}
+  .etched-deck .aim-pad{position:absolute!important;right:138px!important;bottom:calc(14px + var(--mobile-nav-lift))!important;width:50px!important;height:50px!important}
 
   /* Xbox Diamond Cluster: Y (Super/Hyper), X (Melee), B (Fire), A (Dash) */
-  #superTouchBtn{position:absolute!important;right:42px!important;bottom:88px!important;width:48px!important;height:48px!important}
-  .etched-deck .melee-control{position:absolute!important;right:76px!important;bottom:50px!important;width:48px!important;height:48px!important}
-  .etched-deck .fire-control{position:absolute!important;right:8px!important;bottom:50px!important;width:52px!important;height:52px!important}
-  .etched-deck .dash-control{position:absolute!important;right:42px!important;bottom:12px!important;width:48px!important;height:48px!important}
+  #superTouchBtn{position:absolute!important;right:42px!important;bottom:calc(88px + var(--mobile-nav-lift))!important;width:48px!important;height:48px!important}
+  .etched-deck .melee-control{position:absolute!important;right:76px!important;bottom:calc(50px + var(--mobile-nav-lift))!important;width:48px!important;height:48px!important}
+  .etched-deck .fire-control{position:absolute!important;right:8px!important;bottom:calc(50px + var(--mobile-nav-lift))!important;width:52px!important;height:52px!important}
+  .etched-deck .dash-control{position:absolute!important;right:42px!important;bottom:calc(12px + var(--mobile-nav-lift))!important;width:48px!important;height:48px!important}
 }
 
 /* ─── MAIN MENU / OVERLAY ────────────────────────────── */
@@ -958,8 +962,14 @@ function resize(){
   canvas.style.width=W+'px';
   canvas.style.height=H+'px';
   ctx.setTransform(dpr,0,0,dpr,0,0);
+  if(window.visualViewport){
+    const vOffset=Math.max(0,H-window.visualViewport.height);
+    document.documentElement.style.setProperty('--v-bottom',vOffset+'px');
+  }
 }
 addEventListener('resize',resize);
+window.visualViewport?.addEventListener('resize',resize);
+window.visualViewport?.addEventListener('scroll',resize);
 resize();
 
 function toast(msg){
@@ -998,13 +1008,13 @@ function project(x,y,z){
   const effScale=scale*(photoMode?photoZoom:1.0);
   const xScale=W*.035*effDepth/(37/42)*(photoMode?photoZoom:1.0);
   const effCamX=photoMode?0:camOffsetX*(1-depth);
-  const baseH=H>W?(H-148):H;
+  const baseH=H>W?(H-210):H;
   return{x:W*.5+rotX*xScale+effCamX,y:horizon+(baseH-horizon)*effDepth,s:effScale};
 }
 function roadY(z){
   const horizon=H*(H>W?.31:.34)+(photoMode?photoPitch*120:0);
   const rotZ=photoMode?z*Math.cos(photoYaw):z;
-  const baseH=H>W?(H-148):H;
+  const baseH=H>W?(H-210):H;
   return horizon+(baseH-horizon)*clamp((rotZ+32)/42,0,1.2);
 }
 
