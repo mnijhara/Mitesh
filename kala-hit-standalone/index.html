@@ -872,7 +872,7 @@ let movePointer=null;
 
 /* 4D Spacetime & 3D Interactive Spatial Engine */
 let chronoActive=false,chronoEnergy=100,chronoMax=100,timeScale=1.0;
-let camRoll=0,camYaw=0,camPitch=0,camOffsetX=0,camOffsetY=0;
+let camRoll=0,camYaw=0,camPitch=0,camOffsetX=0,camOffsetY=0,camZoom=1.0;
 let photoMode=false,photoYaw=0,photoPitch=0,photoZoom=1.0;
 let rupees=parseInt(localStorage.getItem('lalhit_rupees')||'0',10);
 let upgrades=JSON.parse(localStorage.getItem('lalhit_upgrades')||'{"damage":0,"energy":0,"chrono":0,"health":0}');
@@ -1119,12 +1119,19 @@ function soundImpact(isHeavy=false){
   const t=actx.currentTime;
   const sub=actx.createOscillator(),g=actx.createGain();
   sub.type='sine';
-  sub.frequency.setValueAtTime(isHeavy?90:130,t);
-  sub.frequency.exponentialRampToValueAtTime(30,t+0.1);
-  g.gain.setValueAtTime(isHeavy?0.18:0.1,t);
-  g.gain.exponentialRampToValueAtTime(0.001,t+0.1);
+  sub.frequency.setValueAtTime(isHeavy?95:135,t);
+  sub.frequency.exponentialRampToValueAtTime(22,t+0.16);
+  g.gain.setValueAtTime(isHeavy?0.26:0.12,t);
+  g.gain.exponentialRampToValueAtTime(0.001,t+0.16);
   sub.connect(g);g.connect(masterComp||actx.destination);
-  sub.start(t);sub.stop(t+0.1);
+  sub.start(t);sub.stop(t+0.16);
+}
+
+function soundParry(){
+  if(!sound)return;
+  playTone(1650,0.18,'triangle',0.32);
+  playTone(2200,0.12,'square',0.18);
+  setTimeout(()=>playTone(980,0.25,'sine',0.28),40);
 }
 
 function soundDash(){
@@ -1294,6 +1301,7 @@ function triggerOverdrive(){
   superActive=true;
   hitStop=0.24;
   shake=24;
+  camZoom=1.18;
   bossDeathFlash=1.0;
   rumble(450,1.0,1.0);
 
@@ -1568,7 +1576,7 @@ function drawCity(){
   }
 
   /* Road surface */
-  const baseH=H>W?(H-148):H;
+  const baseH=H>W?(H-210):H;
   ctx.beginPath();
   ctx.moveTo(W*.42,horizon);
   ctx.lineTo(W*.58,horizon);
@@ -1581,6 +1589,71 @@ function drawCity(){
   road.addColorStop(1,'#080e17');
   ctx.fillStyle=road;
   ctx.fill();
+
+  /* Wet asphalt specular puddles reflecting cyan/magenta neon */
+  const puddleSeeds=[{f:0.25,x:0.46,w:0.18,h:0.025},{f:0.52,x:0.54,w:0.26,h:0.038},{f:0.78,x:0.42,w:0.35,h:0.052}];
+  ctx.save();
+  for(const pd of puddleSeeds){
+    const py=horizon+(baseH-horizon)*pd.f*pd.f;
+    const px=W*pd.x;
+    const pw=W*pd.w;
+    const ph=H*pd.h;
+    const pGrad=ctx.createRadialGradient(px,py,0,px,py,pw*0.5);
+    pGrad.addColorStop(0,'rgba(0,240,255,0.18)');
+    pGrad.addColorStop(0.4,'rgba(255,42,133,0.12)');
+    pGrad.addColorStop(1,'rgba(8,14,23,0)');
+    ctx.fillStyle=pGrad;
+    ctx.beginPath();
+    ctx.ellipse(px,py,pw*0.5,ph*0.5,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.22)';
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.ellipse(px+Math.sin(elapsed*2+pd.f)*pw*0.1,py,pw*0.35,ph*0.2,0,0,Math.PI);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  /* Connaught Place Neoclassical White Marble Colonnade Columns */
+  for(let side of [-1,1]){
+    for(let i=0;i<6;i++){
+      const z=-6+i*6.5;
+      const x=side*7.8;
+      const p=project(x,0,z);
+      const base=roadY(z);
+      const s=p.s;
+      if(s>0.05){
+        const colW=Math.max(3,s*0.9);
+        const colH=s*6.2;
+        ctx.fillStyle='rgba(0,0,0,0.5)';
+        ctx.beginPath();
+        ctx.ellipse(p.x,base,colW*1.4,colW*0.4,0,0,Math.PI*2);
+        ctx.fill();
+        const colGrad=ctx.createLinearGradient(p.x-colW/2,0,p.x+colW/2,0);
+        colGrad.addColorStop(0,'#e2e8f0');
+        colGrad.addColorStop(0.35,'#ffffff');
+        colGrad.addColorStop(0.7,'#cbd5e1');
+        colGrad.addColorStop(1,'#64748b');
+        ctx.fillStyle=colGrad;
+        ctx.fillRect(p.x-colW/2,base-colH,colW,colH);
+        ctx.strokeStyle='rgba(0,0,0,0.15)';
+        ctx.lineWidth=Math.max(0.5,s*0.12);
+        ctx.beginPath();
+        ctx.moveTo(p.x-colW*0.2,base-colH);ctx.lineTo(p.x-colW*0.2,base);
+        ctx.moveTo(p.x+colW*0.2,base-colH);ctx.lineTo(p.x+colW*0.2,base);
+        ctx.stroke();
+        ctx.fillStyle='#f8fafc';
+        ctx.fillRect(p.x-colW*0.75,base-colH,colW*1.5,Math.max(2,s*0.6));
+        ctx.fillRect(p.x-colW*0.75,base-Math.max(2,s*0.6),colW*1.5,Math.max(2,s*0.6));
+        ctx.save();
+        ctx.shadowBlur=8*s;
+        ctx.shadowColor=side<0?'#00f0ff':'#ff2a85';
+        ctx.fillStyle=side<0?'rgba(0,240,255,0.25)':'rgba(255,42,133,0.25)';
+        ctx.fillRect(p.x-colW*0.6,base-Math.max(3,s*0.8),colW*1.2,Math.max(3,s*0.8));
+        ctx.restore();
+      }
+    }
+  }
 
   /* Curbs & Xbox Cyberpunk Neon Rails */
   line(W*.42,horizon,W*.02,baseH,'#c2ad88',2);
@@ -1668,6 +1741,16 @@ function drawPerson(x,z,scale,shirt,pose=0){
   ctx.save();
   ctx.translate(p.x,base);
   ctx.scale(s,s);
+
+  // Waving distress callout badge
+  ctx.save();
+  ctx.shadowColor='#00ff66';ctx.shadowBlur=8;
+  ctx.fillStyle='#00ff66';
+  ctx.font='900 6px system-ui';
+  ctx.textAlign='center';
+  ctx.fillText('🆘 RESCUE',0,-2.3+Math.sin(elapsed*5+pose)*0.15);
+  ctx.restore();
+
   ctx.fillStyle='#0008';
   ctx.beginPath();
   ctx.ellipse(0,0,.42,.1,0,0,7);
@@ -1688,10 +1771,11 @@ function drawPerson(x,z,scale,shirt,pose=0){
   ctx.strokeStyle=shirt;
   ctx.lineWidth=.13;
   ctx.beginPath();
+  const waveAngle=Math.sin(elapsed*6+pose)*0.35;
   ctx.moveTo(-.25,-1.3);
-  ctx.lineTo(-.46,-.75+Math.sin(elapsed*3+pose)*.05);
+  ctx.lineTo(-.46-waveAngle*.2,-1.9+waveAngle);
   ctx.moveTo(.25,-1.3);
-  ctx.lineTo(.42,-.86);
+  ctx.lineTo(.46+waveAngle*.2,-1.9-waveAngle);
   ctx.stroke();
   ctx.restore();
 }
@@ -2255,12 +2339,16 @@ function drawPickup(p){
   ctx.restore();
 }
 
-function spawnCivilian(){
+function spawnCivilian(idx=0){
+  // Civilians are trapped along the side colonnade sidewalks (x: -6.8 or +6.8)
+  // so the central highway remains 100% clear for player firing and combat!
+  const side=(idx%2===0)?-6.8:6.8;
   const c={
-    x:rand(-6,6),
-    z:rand(-8,-1),
-    shirt:['#b46d43','#537b91','#8b668c','#8c8853'][Math.floor(Math.random()*4)],
-    rescued:false
+    x:side+rand(-0.3,0.3),
+    z:-5-idx*5.2+rand(-0.8,0.8),
+    shirt:['#b46d43','#537b91','#8b668c','#8c8853'][idx%4],
+    rescued:false,
+    waveClock:rand(0,5)
   };
   civilians.push(c);
 }
@@ -2313,7 +2401,7 @@ function resetGame(){
   hypeMeter=0;hypeActive=false;hypeTimer=0;
   const hm=$('hypeMetric');if(hm)hm.style.display='none';
   for(let i=0;i<5;i++)spawnEnemy();
-  for(let i=0;i<4;i++)spawnCivilian();
+  for(let i=0;i<4;i++)spawnCivilian(i);
 
   document.body.classList.add('in-game');
   $('overlay').classList.add('hide');
@@ -2463,6 +2551,7 @@ function melee(){
   if(parryClash){
     hitStop=0.14; // High impact freeze frame
     shake=10;
+    camZoom=1.12;
     energy=Math.min(100,energy+35);
     superMeter=Math.min(100,superMeter+25);
     addHype(30);
@@ -2470,8 +2559,7 @@ function melee(){
     if(sb)sb.style.width=superMeter+'%';
     if(sbtn)sbtn.style.display=superMeter>=100?'inline-block':'none';
     if(stb)stb.style.display=superMeter>=100?'block':'none';
-    playTone(1320,0.22,'triangle',0.28);
-    playTone(880,0.18,'sine',0.32);
+    soundParry();
     rumble(150,0.85,0.95);
     addPopup(player.x,1.9,player.z,'⚡ PERFECT PARRY!','#ffffff');
     toast('⚡ PERFECT PARRY · CLASH COUNTER (वार रोका)');
@@ -2858,6 +2946,7 @@ function triggerDriveImpact(){
   player.armorHits=2; // 2 hits of hyper-armor!
   player.z-=0.9;
   shake=11;
+  camZoom=1.14;
   hitStop=0.10;
   playTone(90,0.22,'square',0.38);
   playTone(55,0.32,'sawtooth',0.42);
@@ -3204,14 +3293,21 @@ function update(dt){if(!playing)return;const gp=readGamepad();if(paused)return;
 
   const pad=document.getElementById('movePad');
   if(touch.id!==null&&pad){
-    const r=pad.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=touch.x-cx,dy=touch.y-cy,m=Math.max(1,Math.hypot(dx,dy)),mag=Math.min(1,m/(r.width*.38));
-    ax+=dx/m*mag;
-    az+=dy/m*mag;
+    if(!padCenter.x)updatePadGeometry();
+    const dx=touch.x-padCenter.x,dy=touch.y-padCenter.y;
+    const dist=Math.hypot(dx,dy);
+    const limit=padCenter.radius||42;
+    if(dist>3){
+      const mag=Math.min(1,dist/limit);
+      ax+=(dx/dist)*mag;
+      az+=(dy/dist)*mag;
+    }
   }
 
-  /* 3D Camera Roll & Perspective Shift */
+  /* 3D Camera Roll, Perspective Shift & Dynamic Impact Punch */
   camRoll=clamp(camRoll+(ax*-0.035-camRoll)*dt*8,-0.08,0.08);
   camOffsetX=clamp(camOffsetX+(player.x*12-camOffsetX)*dt*6,-140,140);
+  camZoom+=(1.0-camZoom)*dt*7;
 
   const isMoving=Math.hypot(ax,az)>0.05;
   if(isMoving)runCycle+=dt*14;
@@ -3584,10 +3680,11 @@ function draw(){
     ctx.translate(rand(-shake,shake),rand(-shake,shake));
     shake=Math.max(0,shake-.4);
   }
-  if(camRoll!==0&&!photoMode){
-    ctx.translate(W*.5,H*.5);
-    ctx.rotate(camRoll);
-    ctx.translate(-W*.5,-H*.5);
+  if((camRoll!==0||camZoom!==1.0)&&!photoMode){
+    ctx.translate(W*.5,H*.55);
+    if(camRoll!==0)ctx.rotate(camRoll);
+    if(camZoom!==1.0)ctx.scale(camZoom,camZoom);
+    ctx.translate(-W*.5,-H*.55);
   }
   drawCity();
 
@@ -4303,35 +4400,91 @@ $('aimBtn')?.addEventListener('pointerdown',e=>{
 }));
 
 const movePad=$('movePad'),moveKnob=$('moveKnob');
+let padCenter={x:0,y:0,radius:45};
+
+function updatePadGeometry(){
+  if(!movePad)return;
+  const r=movePad.getBoundingClientRect();
+  padCenter={x:r.left+r.width/2,y:r.top+r.height/2,radius:r.width*.38};
+}
+
+function handlePadDrag(clientX,clientY){
+  if(!padCenter.x)updatePadGeometry();
+  const dx=clientX-padCenter.x,dy=clientY-padCenter.y;
+  const dist=Math.hypot(dx,dy);
+  const limit=padCenter.radius||42;
+  const m=Math.max(1,dist);
+  const x=(dx/m)*Math.min(limit,dist);
+  const y=(dy/m)*Math.min(limit,dist);
+  if(moveKnob)moveKnob.style.transform='translate(calc(-50% + '+x.toFixed(1)+'px),calc(-50% + '+y.toFixed(1)+'px))';
+  touch.x=clientX;
+  touch.y=clientY;
+}
+
 function movePadStart(e){
   e.preventDefault();
-  movePointer=e.pointerId;
-  movePad.setPointerCapture?.(e.pointerId);
-  touch.id=e.pointerId;
-  touch.x=e.clientX;
-  touch.y=e.clientY;
-  movePadMove(e);
+  e.stopPropagation();
+  updatePadGeometry();
+  movePointer=e.pointerId??1;
+  touch.id=movePointer;
+  handlePadDrag(e.clientX,e.clientY);
 }
+
 function movePadMove(e){
-  if(movePointer!==e.pointerId)return;
-  const r=movePad.getBoundingClientRect();
-  const dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
-  const limit=r.width*.3;
-  const m=Math.max(1,Math.hypot(dx,dy)),mag=Math.min(1,m/(r.width*.38));
-  const x=dx/m*Math.min(limit,m),y=dy/m*Math.min(limit,m);
-  moveKnob.style.transform='translate(calc(-50% + '+x+'px),calc(-50% + '+y+'px))';
-  touch.x=e.clientX;
-  touch.y=e.clientY;
+  if(movePointer===null)return;
+  if(e.pointerId!==undefined&&e.pointerId!==movePointer)return;
+  handlePadDrag(e.clientX,e.clientY);
 }
+
 function movePadEnd(e){
-  if(movePointer!==e.pointerId)return;
+  if(movePointer===null)return;
   movePointer=null;
   touch.id=null;
-  moveKnob.style.transform='translate(-50%,-50%)';
+  if(moveKnob)moveKnob.style.transform='translate(-50%,-50%)';
 }
-movePad.addEventListener('pointerdown',movePadStart);
-movePad.addEventListener('pointermove',movePadMove);
-['pointerup','pointercancel','lostpointercapture'].forEach(n=>movePad.addEventListener(n,movePadEnd));
+
+function movePadTouchStart(e){
+  e.preventDefault();
+  e.stopPropagation();
+  updatePadGeometry();
+  const t=e.changedTouches[0];
+  if(!t)return;
+  movePointer=t.identifier;
+  touch.id=t.identifier;
+  handlePadDrag(t.clientX,t.clientY);
+}
+
+function movePadTouchMove(e){
+  if(movePointer===null)return;
+  for(let i=0;i<e.changedTouches.length;i++){
+    const t=e.changedTouches[i];
+    if(t.identifier===movePointer){
+      handlePadDrag(t.clientX,t.clientY);
+      break;
+    }
+  }
+}
+
+function movePadTouchEnd(e){
+  if(movePointer===null)return;
+  for(let i=0;i<e.changedTouches.length;i++){
+    if(e.changedTouches[i].identifier===movePointer){
+      movePointer=null;
+      touch.id=null;
+      if(moveKnob)moveKnob.style.transform='translate(-50%,-50%)';
+      break;
+    }
+  }
+}
+
+movePad?.addEventListener('pointerdown',movePadStart);
+movePad?.addEventListener('touchstart',movePadTouchStart,{passive:false});
+window.addEventListener('pointermove',movePadMove,{passive:true});
+window.addEventListener('pointerup',movePadEnd);
+window.addEventListener('pointercancel',movePadEnd);
+window.addEventListener('touchmove',movePadTouchMove,{passive:false});
+window.addEventListener('touchend',movePadTouchEnd);
+window.addEventListener('touchcancel',movePadTouchEnd);
 
 $('aimBtn').addEventListener('click',()=>{
   soundMicroClick();
