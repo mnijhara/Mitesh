@@ -424,19 +424,19 @@ body:not(.in-game) .etched-deck{display:none!important}
   z-index:100!important;display:flex!important;gap:6px!important;pointer-events:auto!important;
 }
 @media(max-width:768px){
-  .etched-deck{display:block!important;height:142px!important;bottom:0!important;padding:0!important}
+  .etched-deck{display:block!important;height:144px!important;bottom:0!important;padding:0!important}
   .etched-deck .deck-group{display:contents!important}
   .etched-deck button,.etched-deck .etched-btn{position:absolute!important}
-  .etched-deck .move-pad{position:absolute!important;left:13px!important;bottom:8px!important;width:116px!important;height:116px!important}
-  .etched-deck .fire-control{right:13px!important;bottom:70px!important;width:64px!important;height:64px!important}
-  .etched-deck .melee-control{right:83px!important;bottom:70px!important;width:58px!important;height:58px!important}
-  .etched-deck .dash-control{right:83px!important;bottom:8px!important;width:58px!important;height:58px!important}
-  .etched-deck .aim-pad{right:148px!important;bottom:8px!important;width:48px!important;height:48px!important}
-  #tagSwitchBtn{left:140px!important;bottom:64px!important}
-  #superTouchBtn{left:140px!important;bottom:8px!important}
-  #tagAssistBtn{left:206px!important;bottom:64px!important}
-  #deckChronoBtn{left:206px!important;bottom:8px!important}
-  .in-game .mission{bottom:150px!important}
+  #deckParryBtn,#deckWepBtn{display:none!important}
+  .etched-deck .move-pad{position:absolute!important;left:12px!important;bottom:12px!important;width:110px!important;height:110px!important}
+  .etched-deck .fire-control{right:12px!important;bottom:72px!important;width:62px!important;height:62px!important}
+  .etched-deck .melee-control{right:80px!important;bottom:72px!important;width:56px!important;height:56px!important}
+  .etched-deck .dash-control{right:80px!important;bottom:12px!important;width:56px!important;height:56px!important}
+  .etched-deck .aim-pad{right:14px!important;bottom:12px!important;width:58px!important;height:52px!important}
+  #tagSwitchBtn{left:128px!important;bottom:72px!important;width:54px!important;height:50px!important}
+  #tagAssistBtn{left:188px!important;bottom:72px!important;width:54px!important;height:50px!important}
+  #deckChronoBtn{left:128px!important;bottom:12px!important;width:54px!important;height:50px!important}
+  #superTouchBtn{left:188px!important;bottom:12px!important;width:54px!important;height:50px!important}
 }
 
 /* ─── MAIN MENU / OVERLAY ────────────────────────────── */
@@ -582,12 +582,14 @@ body:not(.in-game) .etched-deck{display:none!important}
 }
 
 /* ─── RESPONSIVE — MOBILE & DESKTOP CONTROLS ────────── */
-@media(min-width:769px){.mobile-controls:not(.etched-deck){display:none!important}}
+@media(min-width:769px){
+  .mobile-controls:not(.etched-deck){display:none!important}
+  .in-game .actions{bottom:88px!important}
+  .in-game .mission{bottom:88px!important}
+  .in-game #weaponHud{bottom:88px!important}
+}
 body:not(.in-game) .mobile-controls{display:none!important}
 body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
-.in-game .actions{bottom:88px!important}
-.in-game .mission{bottom:88px!important}
-.in-game #weaponHud{bottom:88px!important}
 
 @media(max-width:768px){
   .wave-metric,.help{display:none}
@@ -618,7 +620,14 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
   }
   .actions button{padding:5px 7px!important;font-size:7.5px!important;border-radius:6px!important}
   #impactBtn,#hadokenBtn,#shoryukenBtn,#specialBtn,#scouterBtn,#chronoBtn,#photoBtn{display:none!important}
-  .mission{left:10px;right:10px;top:80px;bottom:auto!important;height:auto;width:auto;max-width:none;padding:7px 12px;border-left-width:2px}
+  .mission, .in-game .mission{
+    left:10px!important;right:10px!important;
+    top:80px!important;bottom:auto!important;
+    width:auto!important;max-width:none!important;
+    height:auto!important;max-height:56px!important;
+    padding:6px 10px!important;border-left-width:2px!important;
+    overflow:hidden!important;
+  }
   .mission b{font-size:8px;letter-spacing:.1em}
   .mission span{font-size:9px;line-height:1.35}
   .mobile-controls{bottom:0;height:170px}
@@ -961,12 +970,14 @@ function project(x,y,z){
   const effScale=scale*(photoMode?photoZoom:1.0);
   const xScale=W*.035*effDepth/(37/42)*(photoMode?photoZoom:1.0);
   const effCamX=photoMode?0:camOffsetX*(1-depth);
-  return{x:W*.5+rotX*xScale+effCamX,y:horizon+(H-horizon)*effDepth,s:effScale};
+  const baseH=H>W?(H-148):H;
+  return{x:W*.5+rotX*xScale+effCamX,y:horizon+(baseH-horizon)*effDepth,s:effScale};
 }
 function roadY(z){
   const horizon=H*(H>W?.31:.34)+(photoMode?photoPitch*120:0);
   const rotZ=photoMode?z*Math.cos(photoYaw):z;
-  return horizon+(H-horizon)*clamp((rotZ+32)/42,0,1.2);
+  const baseH=H>W?(H-148):H;
+  return horizon+(baseH-horizon)*clamp((rotZ+32)/42,0,1.2);
 }
 
 function rounded(x,y,w,h,r,fill,stroke){
@@ -1519,13 +1530,14 @@ function drawCity(){
   }
 
   /* Road surface */
+  const baseH=H>W?(H-148):H;
   ctx.beginPath();
   ctx.moveTo(W*.42,horizon);
   ctx.lineTo(W*.58,horizon);
-  ctx.lineTo(W*1.18,H);
-  ctx.lineTo(-W*.18,H);
+  ctx.lineTo(W*1.18,baseH);
+  ctx.lineTo(-W*.18,baseH);
   ctx.closePath();
-  let road=ctx.createLinearGradient(0,horizon,0,H);
+  let road=ctx.createLinearGradient(0,horizon,0,baseH);
   road.addColorStop(0,'#202a35');
   road.addColorStop(.45,'#121d29');
   road.addColorStop(1,'#080e17');
@@ -1533,12 +1545,12 @@ function drawCity(){
   ctx.fill();
 
   /* Curbs */
-  line(W*.42,horizon,W*.02,H,'#c2ad88',2);
-  line(W*.58,horizon,W*.98,H,'#c2ad88',2);
+  line(W*.42,horizon,W*.02,baseH,'#c2ad88',2);
+  line(W*.58,horizon,W*.98,baseH,'#c2ad88',2);
 
   /* Crosswalk markings */
   for(let z=0;z<9;z++){
-    const f=(z+1)/10,y=horizon+(H-horizon)*f*f;
+    const f=(z+1)/10,y=horizon+(baseH-horizon)*f*f;
     const span=(W*.08)+(W*.46*f);
     ctx.fillStyle='#d6c5a1';
     ctx.globalAlpha=.22;
@@ -1549,7 +1561,7 @@ function drawCity(){
   /* Centre road dashed line */
   ctx.setLineDash([H*.025,H*.035]);
   ctx.lineDashOffset=-elapsed*35;
-  line(W*.5,horizon,W*.5,H,'#dfc98c88',Math.max(1,W*.002));
+  line(W*.5,horizon,W*.5,baseH,'#dfc98c88',Math.max(1,W*.002));
   ctx.setLineDash([]);
   ctx.lineDashOffset=0;
 
