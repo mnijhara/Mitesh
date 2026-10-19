@@ -1,14 +1,12 @@
-<!doctype html>
-<html lang="en">
+<html lang="en" prefix="og: https://ogp.me/ns#">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#040c16">
 <meta name="description" content="LAL HIT: DELHI UPRISING — Console-quality browser action game set in Connaught Place, New Delhi. Defend Rajiv Chowk from the cockroach riot.">
-<title>LAL HIT — Delhi Uprising</title>
+<title>LAL HIT — Delhi Uprising | Play Free in Browser</title>
 
 <!-- Open Graph / WhatsApp / Facebook Preview -->
 <meta property="og:type" content="website">
@@ -21,7 +19,16 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="LAL HIT — Delhi Uprising Game Preview">
+
+<!-- WhatsApp Mobile Square Thumbnail -->
+<meta property="og:image" content="https://lalhit.fun/og-square.jpg">
+<meta property="og:image:secure_url" content="https://lalhit.fun/og-square.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="600">
+<meta property="og:image:height" content="600">
+
 <meta property="og:url" content="https://lalhit.fun/">
+<link rel="image_src" href="https://lalhit.fun/og-square.jpg">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
@@ -970,9 +977,9 @@ function updateDynamicResolution(dt){
 }
 
 const zones=[
-  {short:'RAJIV CHOWK',sign:'RAJIV CHOWK  ·  CONNAUGHT PLACE',hindi:'राजीव चौक  /  RAJIV CHOWK',objective:'OBJECTIVE · SECURE RAJIV CHOWK',tint:'#42d9ff'},
-  {short:'JANPATH',sign:'JANPATH  ·  CENTRAL DELHI',hindi:'जनपथ  /  JANPATH',objective:'OBJECTIVE · PUSH THROUGH JANPATH',tint:'#ff9d45'},
-  {short:'JANTAR MANTAR',sign:'JANTAR MANTAR  ·  FINAL ZONE',hindi:'जंतर मंतर  /  JANTAR MANTAR',objective:'OBJECTIVE · HOLD JANTAR MANTAR',tint:'#b08aff'}
+  {short:'RAJIV CHOWK',sign:'RAJIV CHOWK · CONNAUGHT PLACE',hindi:'राजीव चौक',sub:'CONNAUGHT PLACE · NEW DELHI',objective:'OBJECTIVE · SECURE RAJIV CHOWK',tint:'#42d9ff'},
+  {short:'JANPATH',sign:'JANPATH · CENTRAL DELHI',hindi:'जनपथ',sub:'CENTRAL DELHI · ZONE 02',objective:'OBJECTIVE · PUSH THROUGH JANPATH',tint:'#ff9d45'},
+  {short:'JANTAR MANTAR',sign:'JANTAR MANTAR · FINAL ZONE',hindi:'जंतर मंतर',sub:'CONNAUGHT PLACE BORDER · ZONE 03',objective:'OBJECTIVE · HOLD JANTAR MANTAR',tint:'#b08aff'}
 ];
 
 function resize(){
@@ -1675,18 +1682,44 @@ function drawCity(){
   ctx.setLineDash([]);
   ctx.lineDashOffset=0;
 
-  /* Metro & Connaught Place signs */
-  rounded(W*.5-W*.14,horizon+H*.045,W*.28,H*.035,5,'#071d2c','#56dff0aa');
-  ctx.fillStyle='#c6f8ff';
-  ctx.textAlign='center';
-  ctx.font='900 '+Math.max(10,W*.014)+'px system-ui';
-  ctx.fillText(zones[zoneIndex].sign,W*.5,horizon+H*.068);
+  /* Delhi Metro Station Overhead Gantry (Auto-sized, zero overflow) */
+  const metroTitle = zones[zoneIndex].short + '  ·  ' + (zones[zoneIndex].hindi || 'राजीव चौक');
+  const metroSub = zones[zoneIndex].sub || 'CONNAUGHT PLACE';
+  const fontSize = clamp(Math.round(W * (H > W ? 0.026 : 0.012)), 11, 15);
+  ctx.save();
+  ctx.font = '900 ' + fontSize + 'px var(--font-display), system-ui';
+  const titleW = ctx.measureText(metroTitle).width;
+  ctx.font = '700 ' + Math.max(9, Math.round(fontSize * 0.72)) + 'px system-ui';
+  const subW = ctx.measureText(metroSub).width;
+  const contentW = Math.max(titleW, subW);
+  const padX = 18, padY = 5;
+  const gantryW = Math.min(W * 0.85, contentW + padX * 2);
+  const gantryH = fontSize * 2.1 + padY * 2;
+  const gantryX = W * 0.5 - gantryW * 0.5;
+  const gantryY = horizon - gantryH - (H > W ? 12 : 18);
 
-  rounded(W*.07,horizon-H*.03,W*.22,H*.052,4,'#07334a','#58e7ff');
-  ctx.fillStyle='#eaffff';
-  ctx.textAlign='center';
-  ctx.font='900 '+Math.max(10,W*.012)+'px system-ui';
-  ctx.fillText(zones[zoneIndex].hindi,W*.18,horizon+.002*H);
+  // Modern Metro dark-glass signboard with cyan glowing border
+  rounded(gantryX, gantryY, gantryW, gantryH, 6, 'rgba(5, 17, 31, 0.92)', '#4df5ff');
+
+  // Gantry suspension brackets
+  ctx.strokeStyle = '#22384e';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(gantryX + 16, gantryY); ctx.lineTo(gantryX + 16, gantryY - 12);
+  ctx.moveTo(gantryX + gantryW - 16, gantryY); ctx.lineTo(gantryX + gantryW - 16, gantryY - 12);
+  ctx.stroke();
+
+  // Metro station title (English + Hindi)
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.font = '900 ' + fontSize + 'px var(--font-display), system-ui';
+  ctx.fillText(metroTitle, W * 0.5, gantryY + padY + fontSize * 0.88);
+
+  // Subtitle / landmark zone
+  ctx.fillStyle = '#4df5ff';
+  ctx.font = '700 ' + Math.max(9, Math.round(fontSize * 0.72)) + 'px system-ui';
+  ctx.fillText(metroSub, W * 0.5, gantryY + padY + fontSize * 1.88);
+  ctx.restore();
 
   /* Street lamps with glowing illumination along sidewalks */
   for(let side of [-1,1]){
