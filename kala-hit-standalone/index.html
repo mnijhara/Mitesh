@@ -1614,47 +1614,6 @@ function drawCity(){
   }
   ctx.restore();
 
-  /* Connaught Place Neoclassical White Marble Colonnade Columns */
-  for(let side of [-1,1]){
-    for(let i=0;i<6;i++){
-      const z=-6+i*6.5;
-      const x=side*7.8;
-      const p=project(x,0,z);
-      const base=roadY(z);
-      const s=p.s;
-      if(s>0.05){
-        const colW=Math.max(3,s*0.9);
-        const colH=s*6.2;
-        ctx.fillStyle='rgba(0,0,0,0.5)';
-        ctx.beginPath();
-        ctx.ellipse(p.x,base,colW*1.4,colW*0.4,0,0,Math.PI*2);
-        ctx.fill();
-        const colGrad=ctx.createLinearGradient(p.x-colW/2,0,p.x+colW/2,0);
-        colGrad.addColorStop(0,'#e2e8f0');
-        colGrad.addColorStop(0.35,'#ffffff');
-        colGrad.addColorStop(0.7,'#cbd5e1');
-        colGrad.addColorStop(1,'#64748b');
-        ctx.fillStyle=colGrad;
-        ctx.fillRect(p.x-colW/2,base-colH,colW,colH);
-        ctx.strokeStyle='rgba(0,0,0,0.15)';
-        ctx.lineWidth=Math.max(0.5,s*0.12);
-        ctx.beginPath();
-        ctx.moveTo(p.x-colW*0.2,base-colH);ctx.lineTo(p.x-colW*0.2,base);
-        ctx.moveTo(p.x+colW*0.2,base-colH);ctx.lineTo(p.x+colW*0.2,base);
-        ctx.stroke();
-        ctx.fillStyle='#f8fafc';
-        ctx.fillRect(p.x-colW*0.75,base-colH,colW*1.5,Math.max(2,s*0.6));
-        ctx.fillRect(p.x-colW*0.75,base-Math.max(2,s*0.6),colW*1.5,Math.max(2,s*0.6));
-        ctx.save();
-        ctx.shadowBlur=8*s;
-        ctx.shadowColor=side<0?'#00f0ff':'#ff2a85';
-        ctx.fillStyle=side<0?'rgba(0,240,255,0.25)':'rgba(255,42,133,0.25)';
-        ctx.fillRect(p.x-colW*0.6,base-Math.max(3,s*0.8),colW*1.2,Math.max(3,s*0.8));
-        ctx.restore();
-      }
-    }
-  }
-
   /* Curbs & Xbox Cyberpunk Neon Rails */
   line(W*.42,horizon,W*.02,baseH,'#c2ad88',2);
   line(W*.58,horizon,W*.98,baseH,'#c2ad88',2);
@@ -1707,18 +1666,20 @@ function drawCity(){
   ctx.font='900 '+Math.max(10,W*.012)+'px system-ui';
   ctx.fillText(zones[zoneIndex].hindi,W*.18,horizon+.002*H);
 
-  /* Street lamps with glowing illumination */
+  /* Street lamps with glowing illumination along sidewalks */
   for(let side of [-1,1]){
     for(let i=0;i<3;i++){
-      let z=-2+i*9,p=project(side*7,0,z),base=roadY(z),s=p.s;
-      line(p.x,base,p.x,base-4*s,'#172a3a',Math.max(2,3*s));
-      ctx.fillStyle='#ffda91';
-      ctx.shadowBlur=16*s;
-      ctx.shadowColor='#ffb84f';
-      ctx.beginPath();
-      ctx.ellipse(p.x,base-4*s,Math.max(2,1.3*s),Math.max(2,.35*s),0,0,Math.PI*2);
-      ctx.fill();
-      ctx.shadowBlur=0;
+      let z=-6+i*6,p=project(side*8.6,0,z),base=roadY(z),s=p.s;
+      if(s>0.04){
+        line(p.x,base,p.x,base-9*s,'#2a3b4c',Math.max(1.5,s*0.12));
+        ctx.fillStyle='#ffda91';
+        ctx.shadowBlur=12*s;
+        ctx.shadowColor='#ffb84f';
+        ctx.beginPath();
+        ctx.arc(p.x,base-9*s,Math.max(2,s*0.25),0,Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur=0;
+      }
     }
   }
 
@@ -1741,15 +1702,6 @@ function drawPerson(x,z,scale,shirt,pose=0){
   ctx.save();
   ctx.translate(p.x,base);
   ctx.scale(s,s);
-
-  // Waving distress callout badge
-  ctx.save();
-  ctx.shadowColor='#00ff66';ctx.shadowBlur=8;
-  ctx.fillStyle='#00ff66';
-  ctx.font='900 6px system-ui';
-  ctx.textAlign='center';
-  ctx.fillText('🆘 RESCUE',0,-2.3+Math.sin(elapsed*5+pose)*0.15);
-  ctx.restore();
 
   ctx.fillStyle='#0008';
   ctx.beginPath();
