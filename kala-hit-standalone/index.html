@@ -427,7 +427,7 @@ body:not(.in-game) .etched-deck{display:none!important}
   width:62px!important;height:62px!important;
 }
 .actions{
-  position:fixed!important;right:16px!important;bottom:92px!important;
+  position:fixed!important;right:16px!important;bottom:16px!important;
   z-index:100!important;display:flex!important;gap:6px!important;pointer-events:auto!important;
 }
 @media(max-width:768px){
@@ -456,11 +456,11 @@ body:not(.in-game) .etched-deck{display:none!important}
   }
 
   /* Left Tactical Bumpers: LB (Tag), LT (4D Chrono) */
-  #tagSwitchBtn{position:absolute!important;left:126px!important;bottom:76px!important;width:50px!important;height:50px!important}
+  #tagSwitchBtn, #deckTagBtn{position:absolute!important;left:126px!important;bottom:76px!important;width:50px!important;height:50px!important}
   #deckChronoBtn{position:absolute!important;left:126px!important;bottom:14px!important;width:50px!important;height:50px!important}
 
   /* Right Tactical Bumpers: RB (Assist), RT (Aim Lock) */
-  #tagAssistBtn{position:absolute!important;right:138px!important;bottom:76px!important;width:50px!important;height:50px!important}
+  #tagAssistBtn, #deckAssistBtn{position:absolute!important;right:138px!important;bottom:76px!important;width:50px!important;height:50px!important}
   .etched-deck .aim-pad{position:absolute!important;right:138px!important;bottom:14px!important;width:50px!important;height:50px!important}
 
   /* Xbox Diamond Cluster: Y (Super/Hyper), X (Melee), B (Fire), A (Dash) */
@@ -614,10 +614,11 @@ body:not(.in-game) .etched-deck{display:none!important}
 
 /* ─── RESPONSIVE — MOBILE & DESKTOP CONTROLS ────────── */
 @media(min-width:769px){
-  .mobile-controls:not(.etched-deck){display:none!important}
-  .in-game .actions{bottom:88px!important}
-  .in-game .mission{bottom:88px!important}
-  .in-game #weaponHud{bottom:88px!important}
+  .mobile-controls{display:none!important}
+  .in-game .actions{bottom:16px!important}
+  .in-game .mission{bottom:16px!important}
+  .in-game #weaponHud{bottom:16px!important}
+  .toast{top:135px!important;bottom:auto!important}
 }
 body:not(.in-game) .mobile-controls{display:none!important}
 body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
@@ -650,7 +651,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
     z-index:90!important;
   }
   .actions button{padding:5px 7px!important;font-size:7.5px!important;border-radius:6px!important}
-  #impactBtn,#hadokenBtn,#shoryukenBtn,#specialBtn,#scouterBtn,#chronoBtn,#photoBtn{display:none!important}
+  #impactBtn,#hadokenBtn,#shoryukenBtn,#specialBtn,#scouterBtn,#chronoBtn,#photoBtn,#tagSwitchBtn,#tagAssistBtn{display:none!important}
   .mission{left:10px;right:10px;top:80px;bottom:auto!important;height:auto;width:auto;max-width:none;padding:6px 10px!important;border-left-width:2px!important;overflow:hidden!important}
   .in-game .mission{bottom:auto!important;top:80px!important;height:auto!important}
   .mission b{font-size:8px;letter-spacing:.1em}
@@ -742,6 +743,8 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
 
   <!-- Action bar — top/utility buttons -->
   <div class="actions">
+    <button id="tagSwitchBtn" style="border-color:rgba(176,138,255,.6);color:#c7a8ff">👥 TAG (TAB)</button>
+    <button id="tagAssistBtn" style="border-color:rgba(0,255,102,.6);color:#4df596">🤝 ASSIST (B)</button>
     <button id="superBtn" style="display:none">⚡ OVERDRIVE (U)</button>
     <button id="impactBtn" style="border-color:rgba(255,42,133,.6);color:#ff2a85">💥 IMPACT (Y)</button>
     <button id="hadokenBtn" style="border-color:rgba(77,245,255,.6);color:var(--c-cyan)">🔥 HADOKEN (G)</button>
@@ -777,7 +780,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
 
     <!-- Center Core: Tag Team Roster & Brahmastra Super -->
     <div class="deck-group deck-center">
-      <button id="tagSwitchBtn" class="etched-btn btn-tag" title="Tag-Team Switch / Cross-Rush (Tab)">
+      <button id="deckTagBtn" class="etched-btn btn-tag" title="Tag-Team Switch / Cross-Rush (Tab)">
         <span>👥 TAG IN</span>
         <span class="key-badge xbox-badge xbox-lb" id="deckTagBadge">LB</span>
       </button>
@@ -785,7 +788,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
         <span>⚡ HYPER</span>
         <span class="key-badge xbox-badge xbox-y">Y</span>
       </button>
-      <button id="tagAssistBtn" class="etched-btn btn-assist" title="Partner Assist Support Strike (B)">
+      <button id="deckAssistBtn" class="etched-btn btn-assist" title="Partner Assist Support Strike (B)">
         <span>🤝 ASSIST</span>
         <span class="key-badge xbox-badge xbox-rb" id="deckAssistBadge">RB</span>
       </button>
@@ -4114,8 +4117,8 @@ window.addEventListener('error',e=>console.error('LAL HIT runtime error',e.messa
 
 $('superBtn')?.addEventListener('click',triggerOverdrive);
 $('superTouchBtn')?.addEventListener('pointerdown',e=>{e.preventDefault();triggerOverdrive()});
-$('tagSwitchBtn')?.addEventListener('click',()=>triggerTagSwitch());
-$('tagAssistBtn')?.addEventListener('click',triggerTagAssist);
+['tagSwitchBtn','deckTagBtn'].forEach(id=>$(id)?.addEventListener('click',()=>triggerTagSwitch()));
+['tagAssistBtn','deckAssistBtn'].forEach(id=>$(id)?.addEventListener('click',triggerTagAssist));
 $('impactBtn')?.addEventListener('click',triggerDriveImpact);
 $('hadokenBtn')?.addEventListener('click',triggerHadoken);
 $('shoryukenBtn')?.addEventListener('click',triggerShoryuken);
@@ -4231,28 +4234,34 @@ $('deckWepBtn')?.addEventListener('pointerdown',e=>{
   e.stopPropagation();
   $('deckWepBtn')?.classList.remove('pressed');
 }));
-$('tagSwitchBtn')?.addEventListener('pointerdown',e=>{
-  e.preventDefault();
-  e.stopPropagation();
-  soundMicroClick();
-  $('tagSwitchBtn')?.classList.add('pressed');
-  triggerTagSwitch();
+['tagSwitchBtn','deckTagBtn'].forEach(id=>{
+  const b=$(id);if(!b)return;
+  b.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    soundMicroClick();
+    b.classList.add('pressed');
+    triggerTagSwitch();
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(n=>b.addEventListener(n,e=>{
+    e.stopPropagation();
+    b.classList.remove('pressed');
+  }));
 });
-['pointerup','pointercancel','pointerleave'].forEach(n=>$('tagSwitchBtn')?.addEventListener(n,e=>{
-  e.stopPropagation();
-  $('tagSwitchBtn')?.classList.remove('pressed');
-}));
-$('tagAssistBtn')?.addEventListener('pointerdown',e=>{
-  e.preventDefault();
-  e.stopPropagation();
-  soundMicroClick();
-  $('tagAssistBtn')?.classList.add('pressed');
-  triggerTagAssist();
+['tagAssistBtn','deckAssistBtn'].forEach(id=>{
+  const b=$(id);if(!b)return;
+  b.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    soundMicroClick();
+    b.classList.add('pressed');
+    triggerTagAssist();
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(n=>b.addEventListener(n,e=>{
+    e.stopPropagation();
+    b.classList.remove('pressed');
+  }));
 });
-['pointerup','pointercancel','pointerleave'].forEach(n=>$('tagAssistBtn')?.addEventListener(n,e=>{
-  e.stopPropagation();
-  $('tagAssistBtn')?.classList.remove('pressed');
-}));
 $('superTouchBtn')?.addEventListener('pointerdown',e=>{
   e.preventDefault();
   e.stopPropagation();
@@ -4345,10 +4354,12 @@ addEventListener('keydown',e=>{
   if(e.code==='Tab'){
     e.preventDefault();
     $('tagSwitchBtn')?.classList.add('pressed');
+    $('deckTagBtn')?.classList.add('pressed');
     triggerTagSwitch();
   }
   if(e.code==='KeyB'){
     $('tagAssistBtn')?.classList.add('pressed');
+    $('deckAssistBtn')?.classList.add('pressed');
     triggerTagAssist();
   }
   if(e.code==='KeyT')triggerSpecialSurge();
@@ -4405,8 +4416,8 @@ addEventListener('keyup',e=>{
   if(['KeyJ','KeyE','KeyX'].includes(e.code)) $('meleeBtn')?.classList.remove('pressed');
   if(['KeyK','KeyF','Space'].includes(e.code)) { $('fireBtn')?.classList.remove('pressed'); $('superTouchBtn')?.classList.remove('pressed'); }
   if(['KeyL','ShiftLeft','ShiftRight'].includes(e.code)) $('dashBtn')?.classList.remove('pressed');
-  if(e.code==='Tab') $('tagSwitchBtn')?.classList.remove('pressed');
-  if(e.code==='KeyB') $('tagAssistBtn')?.classList.remove('pressed');
+  if(e.code==='Tab') { $('tagSwitchBtn')?.classList.remove('pressed'); $('deckTagBtn')?.classList.remove('pressed'); }
+  if(e.code==='KeyB') { $('tagAssistBtn')?.classList.remove('pressed'); $('deckAssistBtn')?.classList.remove('pressed'); }
   if(e.code==='KeyC') $('deckChronoBtn')?.classList.remove('pressed');
   if(e.code==='KeyQ') $('deckWepBtn')?.classList.remove('pressed');
   if(e.code==='KeyU'||e.code==='Digit4') $('superTouchBtn')?.classList.remove('pressed');
