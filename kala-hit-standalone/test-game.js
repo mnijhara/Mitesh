@@ -31,6 +31,7 @@ assert.ok(html.includes('.mobile-controls{display:block;left:0;right:0;bottom:90
 assert.ok(html.includes('.mobile-controls .move-pad{position:absolute;left:13px;bottom:0;width:124px;height:124px;flex:none;pointer-events:auto}'), 'mobile movement joystick must keep a stable touch target');
 assert.ok(html.includes('.mobile-controls .fire-control{right:13px;bottom:70px}'), 'mobile fire button must be anchored inside the viewport');
 assert.ok(html.includes('@media(max-width:380px){.mobile-controls .move-pad{left:8px;width:106px;height:106px}'), 'small phones must receive a compact control layout');
+assert.ok(html.includes('.mission{left:10px;right:10px;top:80px;bottom:auto!important;height:auto;width:auto;max-width:none;'), 'mobile objective panel must not stretch over the gameplay canvas despite desktop in-game bottom overrides');
 for (const id of ['startBtn', 'controlsBtn', 'pauseBtn', 'movePad', 'fireBtn', 'meleeBtn', 'dashBtn', 'aimBtn']) {
   assert.ok(html.includes('id="' + id + '"'), 'required control missing: ' + id);
 }
