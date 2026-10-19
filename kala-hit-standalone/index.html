@@ -402,6 +402,13 @@ body:not(.in-game) .etched-deck{display:none!important}
   background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.12);
   color:rgba(180,210,240,0.75);
 }
+.xbox-badge{font-size:8px!important;font-weight:900!important;padding:1px 4px!important;border-radius:4px!important}
+.xbox-x{background:rgba(0,240,255,0.25)!important;color:#00f0ff!important;border:1px solid #00f0ff!important}
+.xbox-b{background:rgba(255,71,87,0.25)!important;color:#ff4757!important;border:1px solid #ff4757!important}
+.xbox-a{background:rgba(0,255,102,0.25)!important;color:#00ff66!important;border:1px solid #00ff66!important}
+.xbox-y{background:rgba(255,204,85,0.25)!important;color:#ffd27a!important;border:1px solid #ffd27a!important}
+.xbox-lb,.xbox-rb{background:rgba(176,138,255,0.25)!important;color:#c7a8ff!important;border:1px solid rgba(176,138,255,0.8)!important}
+.xbox-lt,.xbox-rt{background:rgba(77,245,255,0.25)!important;color:#7df5ff!important;border:1px solid rgba(77,245,255,0.8)!important}
 .etched-btn.btn-melee{border-color:rgba(77,245,255,0.5);color:#7df5ff}
 .etched-btn.btn-fire{background:linear-gradient(180deg,rgba(85,20,30,0.95) 0%,rgba(45,10,16,0.98) 100%);border-color:rgba(255,71,87,0.6);color:#ff6b7b}
 .etched-btn.btn-dash{border-color:rgba(255,204,85,0.5);color:#ffd27a}
@@ -424,19 +431,43 @@ body:not(.in-game) .etched-deck{display:none!important}
   z-index:100!important;display:flex!important;gap:6px!important;pointer-events:auto!important;
 }
 @media(max-width:768px){
-  .etched-deck{display:block!important;height:144px!important;bottom:0!important;padding:0!important}
+  .etched-deck{
+    display:block!important;
+    height:152px!important;
+    bottom:0!important;
+    padding:0!important;
+    background:linear-gradient(180deg,rgba(11,20,32,0.96) 0%,rgba(6,10,18,0.98) 100%)!important;
+    border-top:1.5px solid rgba(77,245,255,0.35)!important;
+    box-shadow:0 -6px 28px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.15)!important;
+  }
   .etched-deck .deck-group{display:contents!important}
   .etched-deck button,.etched-deck .etched-btn{position:absolute!important}
   #deckParryBtn,#deckWepBtn{display:none!important}
-  .etched-deck .move-pad{position:absolute!important;left:12px!important;bottom:12px!important;width:110px!important;height:110px!important}
-  .etched-deck .fire-control{right:12px!important;bottom:72px!important;width:62px!important;height:62px!important}
-  .etched-deck .melee-control{right:80px!important;bottom:72px!important;width:56px!important;height:56px!important}
-  .etched-deck .dash-control{right:80px!important;bottom:12px!important;width:56px!important;height:56px!important}
-  .etched-deck .aim-pad{right:14px!important;bottom:12px!important;width:58px!important;height:52px!important}
-  #tagSwitchBtn{left:128px!important;bottom:72px!important;width:54px!important;height:50px!important}
-  #tagAssistBtn{left:188px!important;bottom:72px!important;width:54px!important;height:50px!important}
-  #deckChronoBtn{left:128px!important;bottom:12px!important;width:54px!important;height:50px!important}
-  #superTouchBtn{left:188px!important;bottom:12px!important;width:54px!important;height:50px!important}
+  
+  /* Left Stick (Movement) */
+  .etched-deck .move-pad{
+    position:absolute!important;
+    left:10px!important;
+    bottom:14px!important;
+    width:110px!important;
+    height:110px!important;
+    border:2px solid rgba(0,255,102,0.4)!important;
+    box-shadow:0 0 18px rgba(0,255,102,0.18),inset 0 0 14px rgba(0,0,0,0.85)!important;
+  }
+
+  /* Left Tactical Bumpers: LB (Tag), LT (4D Chrono) */
+  #tagSwitchBtn{position:absolute!important;left:126px!important;bottom:76px!important;width:50px!important;height:50px!important}
+  #deckChronoBtn{position:absolute!important;left:126px!important;bottom:14px!important;width:50px!important;height:50px!important}
+
+  /* Right Tactical Bumpers: RB (Assist), RT (Aim Lock) */
+  #tagAssistBtn{position:absolute!important;right:138px!important;bottom:76px!important;width:50px!important;height:50px!important}
+  .etched-deck .aim-pad{position:absolute!important;right:138px!important;bottom:14px!important;width:50px!important;height:50px!important}
+
+  /* Xbox Diamond Cluster: Y (Super/Hyper), X (Melee), B (Fire), A (Dash) */
+  #superTouchBtn{position:absolute!important;right:42px!important;bottom:88px!important;width:48px!important;height:48px!important}
+  .etched-deck .melee-control{position:absolute!important;right:76px!important;bottom:50px!important;width:48px!important;height:48px!important}
+  .etched-deck .fire-control{position:absolute!important;right:8px!important;bottom:50px!important;width:52px!important;height:52px!important}
+  .etched-deck .dash-control{position:absolute!important;right:42px!important;bottom:12px!important;width:48px!important;height:48px!important}
 }
 
 /* ─── MAIN MENU / OVERLAY ────────────────────────────── */
@@ -732,7 +763,7 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
       <div id="movePad" class="move-pad" role="application" aria-label="Movement joystick"><span id="moveKnob"></span></div>
       <button id="deckChronoBtn" class="etched-btn" title="4D Chrono Bullet-Time (C / Q)">
         <span>⏱ 4D</span>
-        <span class="key-badge">C</span>
+        <span class="key-badge xbox-badge xbox-lt">LT</span>
       </button>
       <button id="deckParryBtn" class="etched-btn" title="Drive Parry & Deflection (E / X)">
         <span>🛡 PARRY</span>
@@ -748,15 +779,15 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
     <div class="deck-group deck-center">
       <button id="tagSwitchBtn" class="etched-btn btn-tag" title="Tag-Team Switch / Cross-Rush (Tab)">
         <span>👥 TAG IN</span>
-        <span class="key-badge" id="deckTagBadge">TAB</span>
+        <span class="key-badge xbox-badge xbox-lb" id="deckTagBadge">LB</span>
       </button>
       <button id="superTouchBtn" class="super-control etched-btn btn-super" title="Brahmastra Dual Hyper Combo (Space / U)">
         <span>⚡ HYPER</span>
-        <span class="key-badge">SPACE</span>
+        <span class="key-badge xbox-badge xbox-y">Y</span>
       </button>
       <button id="tagAssistBtn" class="etched-btn btn-assist" title="Partner Assist Support Strike (B)">
         <span>🤝 ASSIST</span>
-        <span class="key-badge" id="deckAssistBadge">B</span>
+        <span class="key-badge xbox-badge xbox-rb" id="deckAssistBadge">RB</span>
       </button>
     </div>
 
@@ -764,19 +795,19 @@ body:not(.in-game) #weaponHud{opacity:0;pointer-events:none}
     <div class="deck-group deck-right">
       <button id="aimBtn" class="etched-btn aim-pad" title="Aim Lock Scouter (H)">
         <span>🎯 AIM</span>
-        <span class="key-badge">LOCK</span>
+        <span class="key-badge xbox-badge xbox-rt">RT</span>
       </button>
       <button id="meleeBtn" class="etched-btn btn-melee melee-control" title="Melee Strike / Air Juggle (J / E)">
         <span>👊 MELEE</span>
-        <span class="key-badge">J</span>
+        <span class="key-badge xbox-badge xbox-x">X</span>
       </button>
       <button id="fireBtn" class="etched-btn btn-fire fire-control" title="Blaster Fire (K / Left-Click)">
         <span>🔫 FIRE</span>
-        <span class="key-badge">K</span>
+        <span class="key-badge xbox-badge xbox-b">B</span>
       </button>
       <button id="dashBtn" class="etched-btn btn-dash dash-control" title="Drive Dash / i-Frames (L / Shift)">
         <span>💨 DASH</span>
-        <span class="key-badge">L</span>
+        <span class="key-badge xbox-badge xbox-a">A</span>
       </button>
     </div>
   </div>
@@ -1538,9 +1569,27 @@ function drawCity(){
   ctx.fillStyle=road;
   ctx.fill();
 
-  /* Curbs */
+  /* Curbs & Xbox Cyberpunk Neon Rails */
   line(W*.42,horizon,W*.02,baseH,'#c2ad88',2);
   line(W*.58,horizon,W*.98,baseH,'#c2ad88',2);
+
+  ctx.save();
+  ctx.shadowBlur=10;ctx.shadowColor='#00f0ff';
+  line(W*.42,horizon,W*.02,baseH,'#00f0ff',Math.max(1.5,W*0.003));
+  ctx.shadowColor='#ff2a85';
+  line(W*.58,horizon,W*.98,baseH,'#ff2a85',Math.max(1.5,W*0.003));
+  for(let p=0;p<3;p++){
+    const pf=((elapsed*0.65+p*0.333)%1);
+    const py=horizon+(baseH-horizon)*pf*pf;
+    const plx=W*.42+(W*.02-W*.42)*pf;
+    const prx=W*.58+(W*.98-W*.58)*pf;
+    const ps=Math.max(2,6*pf);
+    ctx.fillStyle='#7df5ff';ctx.shadowColor='#00f0ff';ctx.shadowBlur=14;
+    ctx.beginPath();ctx.arc(plx,py,ps,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ff7aa8';ctx.shadowColor='#ff2a85';
+    ctx.beginPath();ctx.arc(prx,py,ps,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
 
   /* Crosswalk markings */
   for(let z=0;z<9;z++){
@@ -1826,6 +1875,32 @@ function drawHero(){
   const heroY=roadY(player.z);
   /* Character scale derived naturally from perspective depth */
   const heroScale=clamp(proj.s*0.052,.75,1.45);
+
+  /* Volumetric Hero Forward Headlights */
+  ctx.save();
+  const targetZ=Math.max(-32, player.z-12);
+  const pTarget=project(player.x, 0, targetZ);
+  const hlGrad=ctx.createLinearGradient(heroX, heroY-14, pTarget.x, pTarget.y);
+  hlGrad.addColorStop(0,'rgba(77,245,255,0.22)');
+  hlGrad.addColorStop(0.5,'rgba(77,245,255,0.06)');
+  hlGrad.addColorStop(1,'rgba(77,245,255,0)');
+  ctx.fillStyle=hlGrad;
+  ctx.beginPath();
+  ctx.moveTo(heroX-12*heroScale, heroY-8);
+  ctx.lineTo(pTarget.x-36, pTarget.y);
+  ctx.lineTo(pTarget.x+36, pTarget.y);
+  ctx.lineTo(heroX+12*heroScale, heroY-8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  /* Console Ground Contact Shadow */
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,0.55)';
+  ctx.beginPath();
+  ctx.ellipse(heroX, heroY, 24*heroScale, 7.5*heroScale, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
 
   ctx.save();
   ctx.translate(heroX,heroY);
@@ -4096,87 +4171,123 @@ $('fullBtn').addEventListener('click',async()=>{
 /* Mobile & Etched Arcade Controls */
 $('fireBtn')?.addEventListener('pointerdown',e=>{
   e.preventDefault();
+  e.stopPropagation();
   soundMicroClick();
   $('fireBtn')?.classList.add('pressed');
   fireHeld=true;
   fire();
 });
-['pointerup','pointercancel','pointerleave'].forEach(n=>$('fireBtn')?.addEventListener(n,()=>{
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('fireBtn')?.addEventListener(n,e=>{
+  e.stopPropagation();
   $('fireBtn')?.classList.remove('pressed');
   fireHeld=false;
 }));
 $('dashBtn')?.addEventListener('pointerdown',e=>{
   e.preventDefault();
+  e.stopPropagation();
   soundMicroClick();
   $('dashBtn')?.classList.add('pressed');
   dash();
 });
-['pointerup','pointercancel','pointerleave'].forEach(n=>$('dashBtn')?.addEventListener(n,()=>{
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('dashBtn')?.addEventListener(n,e=>{
+  e.stopPropagation();
   $('dashBtn')?.classList.remove('pressed');
 }));
 $('meleeBtn')?.addEventListener('pointerdown',e=>{
   e.preventDefault();
+  e.stopPropagation();
   soundMicroClick();
   $('meleeBtn')?.classList.add('pressed');
   melee();
 });
-['pointerup','pointercancel','pointerleave'].forEach(n=>$('meleeBtn')?.addEventListener(n,()=>{
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('meleeBtn')?.addEventListener(n,e=>{
+  e.stopPropagation();
   $('meleeBtn')?.classList.remove('pressed');
 }));
 $('deckChronoBtn')?.addEventListener('pointerdown',e=>{
   e.preventDefault();
+  e.stopPropagation();
   soundMicroClick();
   $('deckChronoBtn')?.classList.add('pressed');
   toggleChrono();
 });
-['pointerup','pointercancel','pointerleave'].forEach(n=>$('deckChronoBtn')?.addEventListener(n,()=>{
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('deckChronoBtn')?.addEventListener(n,e=>{
+  e.stopPropagation();
   $('deckChronoBtn')?.classList.remove('pressed');
 }));
 $('deckParryBtn')?.addEventListener('pointerdown',e=>{
   e.preventDefault();
+  e.stopPropagation();
   soundMicroClick();
   $('deckParryBtn')?.classList.add('pressed');
   melee();
 });
-['pointerup','pointercancel','pointerleave'].forEach(n=>$('deckParryBtn')?.addEventListener(n,()=>{
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('deckParryBtn')?.addEventListener(n,e=>{
+  e.stopPropagation();
   $('deckParryBtn')?.classList.remove('pressed');
 }));
 $('deckWepBtn')?.addEventListener('pointerdown',e=>{
   e.preventDefault();
+  e.stopPropagation();
   soundMicroClick();
   $('deckWepBtn')?.classList.add('pressed');
   weaponMode=(weaponMode+1)%3;
   toast(['PULSE BLASTER','SCATTER SHOT','HEAVY PULSE'][weaponMode]);
 });
-['pointerup','pointercancel','pointerleave'].forEach(n=>$('deckWepBtn')?.addEventListener(n,()=>{
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('deckWepBtn')?.addEventListener(n,e=>{
+  e.stopPropagation();
   $('deckWepBtn')?.classList.remove('pressed');
 }));
 $('tagSwitchBtn')?.addEventListener('pointerdown',e=>{
   e.preventDefault();
+  e.stopPropagation();
   soundMicroClick();
   $('tagSwitchBtn')?.classList.add('pressed');
   triggerTagSwitch();
 });
-['pointerup','pointercancel','pointerleave'].forEach(n=>$('tagSwitchBtn')?.addEventListener(n,()=>{
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('tagSwitchBtn')?.addEventListener(n,e=>{
+  e.stopPropagation();
   $('tagSwitchBtn')?.classList.remove('pressed');
 }));
 $('tagAssistBtn')?.addEventListener('pointerdown',e=>{
   e.preventDefault();
+  e.stopPropagation();
   soundMicroClick();
   $('tagAssistBtn')?.classList.add('pressed');
   triggerTagAssist();
 });
-['pointerup','pointercancel','pointerleave'].forEach(n=>$('tagAssistBtn')?.addEventListener(n,()=>{
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('tagAssistBtn')?.addEventListener(n,e=>{
+  e.stopPropagation();
   $('tagAssistBtn')?.classList.remove('pressed');
 }));
 $('superTouchBtn')?.addEventListener('pointerdown',e=>{
   e.preventDefault();
+  e.stopPropagation();
   soundMicroClick();
   $('superTouchBtn')?.classList.add('pressed');
   triggerOverdrive();
 });
-['pointerup','pointercancel','pointerleave'].forEach(n=>$('superTouchBtn')?.addEventListener(n,()=>{
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('superTouchBtn')?.addEventListener(n,e=>{
+  e.stopPropagation();
   $('superTouchBtn')?.classList.remove('pressed');
+}));
+$('aimBtn')?.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  e.stopPropagation();
+  soundMicroClick();
+  $('aimBtn')?.classList.add('pressed');
+  if(!gamepadAim&&enemies.length){
+    const target=enemies.reduce((best,en)=>{
+      const d=Math.hypot(en.x-player.x,en.z-player.z);
+      return d<best.d?{e:en,d}:best;
+    },{e:enemies[0],d:Infinity}).e;
+    aimAngle=Math.atan2(target.x-player.x,-(target.z-player.z));
+    toast('🎯 RETICLE LOCKED · '+target.hp+' HP');
+  }
+});
+['pointerup','pointercancel','pointerleave'].forEach(n=>$('aimBtn')?.addEventListener(n,e=>{
+  e.stopPropagation();
+  $('aimBtn')?.classList.remove('pressed');
 }));
 
 const movePad=$('movePad'),moveKnob=$('moveKnob');
@@ -4319,9 +4430,6 @@ canvas.addEventListener('pointerdown',e=>{
   aimScreenX=aimPointer.x;
   aimScreenY=aimPointer.y;
   aimAngle=clamp(Math.atan2((aimPointer.x-.5)*W,(.77-aimPointer.y)*H),-1.25,1.25);
-  touch.id=e.pointerId;
-  touch.x=e.clientX;
-  touch.y=e.clientY;
   canvas.setPointerCapture?.(e.pointerId);
   if(e.button===0&&playing&&e.clientX>W*.52&&e.clientY>H*.28){
     fireHeld=true;
@@ -4337,9 +4445,7 @@ canvas.addEventListener('pointermove',e=>{
     photoDrag.y=e.clientY;
     return;
   }
-  if(touch.id===e.pointerId){
-    touch.x=e.clientX;
-    touch.y=e.clientY;
+  if(aimPointer.id===e.pointerId){
     aimPointer.x=e.clientX/W;
     aimPointer.y=e.clientY/H;
     aimAngle=clamp(Math.atan2((aimPointer.x-.5)*W,(.77-aimPointer.y)*H),-1.25,1.25);
@@ -4356,8 +4462,7 @@ canvas.addEventListener('wheel',e=>{
 },{passive:false});
 ['pointerup','pointercancel','pointerleave'].forEach(n=>canvas.addEventListener(n,e=>{
   if(photoDrag)photoDrag.active=false;
-  if(touch.id===e.pointerId){
-    touch.id=null;
+  if(aimPointer.id===e.pointerId){
     aimPointer.id=null;
     fireHeld=false;
   }

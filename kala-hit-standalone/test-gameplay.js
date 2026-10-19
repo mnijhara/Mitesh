@@ -284,6 +284,7 @@ const puppeteer = require('/tmp/node_modules/puppeteer-core');
 
       // 1. Dash i-Frames
       t.setEnergy(100);
+      t.setDashCooldown(0);
       t.dash();
       const iFramesActive = (player.invulnerable > 0);
 
