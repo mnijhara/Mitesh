@@ -438,9 +438,9 @@ const puppeteer = require('/tmp/node_modules/puppeteer-core');
       };
     });
 
-    assert.equal(tagResult.initialFighter, 0, 'Initial active fighter must be Kabir (Delhi Vanguard)');
+    assert.equal(tagResult.initialFighter, 0, 'Initial active fighter must be Commando (Delhi Vanguard)');
     assert.ok(tagResult.isAnanyaActive, 'Tag Switch must switch active fighter to Ananya (Cyber Valkyrie)');
-    assert.ok(tagResult.assistSpawned, 'Tag Assist must call off-screen partner (Kabir) into battle');
+    assert.ok(tagResult.assistSpawned, 'Tag Assist must call off-screen partner (Commando) into battle');
     assert.ok(tagResult.regenerated, 'Reserve partner must regenerate recoverable red health over time');
     console.log('✓ Tag-Team Fighting Systems: Tag Switch, Assist Call, and Red Life Regeneration verified');
 

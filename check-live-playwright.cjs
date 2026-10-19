@@ -112,7 +112,7 @@ const path = require('path');
   // Tag-Team Fighting Mechanics Live Test
   await page.click('#tagSwitchBtn'); // Tag Switch to Ananya
   await page.waitForTimeout(250);
-  await page.click('#tagAssistBtn'); // Call Kabir Assist Strike
+  await page.click('#tagAssistBtn'); // Call Commando Assist Strike
   await page.waitForTimeout(300);
 
   // Capture Tag-Team combat screenshot

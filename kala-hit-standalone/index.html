@@ -874,7 +874,7 @@ let superMeter=0,superActive=false,bossStompWaves=[];
 let scouterMode=false,specialSurgeClock=0,driveImpactClock=0,shoryukenClock=0;
 /* Tag-Team Fighting Dynamics (itch.io HTML5 tag fighter inspired) */
 const ROSTER=[
-  {id:0,name:'KABIR',title:'DELHI VANGUARD',hp:100,maxHp:100,recoverableHp:0,color:'#ff4757',assistName:'SUPPRESSIVE PULSE',bio:'Solar plasma blaster, Agni Hadoken & rising dragon Shoryuken.'},
+  {id:0,name:'COMMANDO',title:'DELHI VANGUARD',hp:100,maxHp:100,recoverableHp:0,color:'#ff4757',assistName:'SUPPRESSIVE PULSE',bio:'Solar plasma blaster, Agni Hadoken & rising dragon Shoryuken.'},
   {id:1,name:'ANANYA',title:'CYBER VALKYRIE',hp:90,maxHp:90,recoverableHp:0,color:'#b08aff',assistName:'ELECTRO-KATAR VORTEX',bio:'Acrobatic twin plasma katars & gravitational shockwave vortex.'},
   {id:2,name:'DEV',title:'HEAVY DEMO',hp:125,maxHp:125,recoverableHp:0,color:'#ff9f43',assistName:'CLUSTER BOMBARDMENT',bio:'Powered exo-armor with concussive mortar shells & shockwave blasts.'},
   {id:3,name:'MEERA',title:'NANITE MEDIC',hp:95,maxHp:95,recoverableHp:0,color:'#2ed573',assistName:'NANITE AEGIS FIELD',bio:'Nanite beam and restorative healing field restoring 22 HP & repelling foes.'}
@@ -2024,7 +2024,7 @@ function drawHero(){
 
   /* Tactical armor vest */
   const curFighter=team[activeFighter];
-  const fName=curFighter?curFighter.name:'KABIR';
+  const fName=curFighter?curFighter.name:'COMMANDO';
   const isAnanya=(fName==='ANANYA'),isDev=(fName==='DEV'),isMeera=(fName==='MEERA');
   let vest=ctx.createLinearGradient(-11,-26,11,0);
   if(isAnanya){vest.addColorStop(0,'#532f82');vest.addColorStop(.5,'#331859');vest.addColorStop(1,'#1c0c33');}
@@ -2090,13 +2090,6 @@ function drawHero(){
   ctx.fillRect(-5,-32.5,4,1.8);
   ctx.fillRect(1,-32.5,4,1.8);
   ctx.shadowBlur=0;
-
-  /* Tag Fighter Name Banner */
-  ctx.fillStyle=isAnanya?'#b08aff':isDev?'#ff9f43':isMeera?'#2ed573':'#ff4757';
-  ctx.font='900 8px system-ui';
-  ctx.textAlign='center';
-  const heroBadge=isAnanya?'⚡ ANANYA':isDev?'💣 DEV':isMeera?'💚 MEERA':'🛡 KABIR';
-  ctx.fillText(heroBadge,0,-46);
 
   /* Left arm (bracing weapon) */
   ctx.strokeStyle='#2d445a';
@@ -2822,7 +2815,7 @@ function triggerTagAssist(){
     }
     addHype(14);
   }else{
-    // Kabir: Suppressive Pulse Barrage
+    // Commando: Suppressive Pulse Barrage
     for(let k=-2;k<=2;k++){
       const a=aimAngle+k*0.12;
       const dx=Math.sin(a),dz=-Math.cos(a);
@@ -4007,7 +4000,7 @@ function showControls(e){
       </div>
       <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(0,255,102,0.35);border-radius:10px">
         <b style="color:#00ff66;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">🤝 TAG ASSIST SUPPORT STRIKE (B)</b>
-        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>B / ASSIST</b> to call your off-screen partner into battle for their signature strike (Ananya: Electro-Vortex, Dev: Cluster Mortar, Meera: Nanite Heal Dome, Kabir: Pulse Barrage).</p>
+        <p style="font-size:11px;color:#a0b8cf;margin:4px 0">Press <b>B / ASSIST</b> to call your off-screen partner into battle for their signature strike (Ananya: Electro-Vortex, Dev: Cluster Mortar, Meera: Nanite Heal Dome, Commando: Pulse Barrage).</p>
       </div>
       <div style="background:rgba(12,24,38,0.7);padding:12px;border:1px solid rgba(255,210,122,0.35);border-radius:10px">
         <b style="color:#ffd27a;font-family:var(--font-display);font-size:11px;letter-spacing:.1em">⚡ DUAL HYPER COMBO · BRAHMASTRA (SPACE / U)</b>
